@@ -5,45 +5,95 @@ import ContentLayout from "astro-theme-university/layouts/ContentLayout.astro";
 import heroImage from "../assets/images/hero-home.avif";
 import { courseMeta } from "../course-config";
 import { sessionLabels, siteConfig } from "../site-config";
-
-// STARTER_CONTENT: replace the hero artwork and its alt text below, then
-// remove this comment.
 ---
 
 <ContentLayout
   title={`${courseMeta.code}: ${courseMeta.title}`}
   description={courseMeta.description}
   heroImage={heroImage}
-  heroImageAlt="A lecture theatre reduced to flat gold and black shapes, rows of seats sweeping past the frame, in a two-ink risograph print"
+  heroImageAlt="Slop Hill as flat gold and black shapes: a kitchen at the foot, two towers on the slope with a gap between them, small houses, a solid line straight up the ridge and a dashed line around the contour to the house at the top, two drones in the air"
   {...siteConfig}
 >
   <ul class="course-tags" aria-label="Course tags">
     {courseMeta.tags.map((tag) => <li>{tag}</li>)}
   </ul>
 
-  <!-- STARTER_CONTENT: replace the authored page below, then remove this comment. -->
+  <p>
+    The first order has a shortest route, and it may not have the battery to come back: #07
+    is on the hilltop, the ridge line is fastest, only the contour route returns. By the sixth
+    order the deadline matters more than the distance. Five drones each find a good route and
+    then wait at the same corridor and the same two charging pads. #13 lives on the far side
+    of that corridor. #20 is hotpot for four, and only the heavy drone can carry it.
+  </p>
+  <p>
+    For twelve weeks this course studies one kitchen's one evening, and turns a program that
+    can find a route into a planner that can schedule twenty dinners. Every improvement has
+    to answer three questions: which assumption changed, why the code changed the way it did,
+    and what the evidence is.
+  </p>
+
   <h2>What you will do</h2>
   <p>
-    Say what a student spends their time on — the making, reading, arguing or
-    measuring that fills the weeks. Name the artefact they walk out with.
+    Design and improve the algorithms, one constraint at a time. The problem grows in five
+    steps: find a route (weeks 1–3); find a route the drone can actually fly and return from
+    (week 4); order many deliveries for one drone (weeks 5–6); divide the work between drones
+    that share two charging pads (weeks 7–8); make the plans of five drones executable
+    together in one shared airspace (weeks 9–12). Each step starts from the method you
+    already have, breaks it on a small example, and makes you change the state, the cost or
+    the check that was wrong.
+  </p>
+  <p>
+    Every week you write a prediction before you run anything, derive one thing by hand,
+    implement one key function, test it against a counterexample, and explain the result
+    under the objective the course fixed. You leave with a cumulative planner — search,
+    scheduling, space-time coordination — and the arguments, tests and records that say what
+    it guarantees and what it does not.
   </p>
 
   <h2>Who it is for</h2>
   <p>
-    Say who this is aimed at and what they need to already know. Be specific
-    enough that someone can rule themselves in or out without emailing you.
+    Third-year undergraduates who have done introductory programming and data structures:
+    functions, loops, lists and dictionaries, queues and priority queues, basic graphs, and
+    enough algebra to sum costs along a path. No robotics, no flight control, no prior
+    optimisation course. If you can write a loop that pops the smallest item from a queue,
+    you can start; if you want a course about real drones and real airspace rules, this is
+    not it — every number here is a teaching setting, and the policies page says so.
   </p>
+
+  <h2>How it is assessed</h2>
+  <p>
+    Two individual assignments. Assignment 1 (40%, due Friday of week 7) is a single-drone
+    planner: correct search, the full round trip with energy, and a justified order for six
+    deliveries. Assignment 2 (60%, due Friday of week 12) extends it to five drones, two
+    charging pads and the shared corridor, and has to show that route cost really feeds back
+    into the schedule. Weekly tutorials are not graded; they are where the two assignments
+    get built.
+  </p>
+
+  <h2>Three orders you will keep meeting</h2>
+  <ul>
+    <li><strong>#07, mapo tofu for the house on the hilltop.</strong> Far and urgent. The
+      ridge route is fastest and burns the return energy; the contour route is slower and
+      gets back.</li>
+    <li><strong>#13, the house across the corridor.</strong> Its shortest route passes the
+      one gap on the hill that only one drone can use at a time.</li>
+    <li><strong>#20, hotpot for four.</strong> Only the heavy drone type can carry it, which
+      decides who takes it before anything about efficiency is discussed.</li>
+  </ul>
 
   <h2>Where to go next</h2>
   <CardGrid columns={2}>
+    <Card title="Lectures" href="/lectures/">
+      <p>Twelve Monday lectures, one question each, from a graph to a plan that flies.</p>
+    </Card>
     <Card title={sessionLabels.plural} href="/sessions/">
-      <p>The weekly schedule and what happens in each teaching session.</p>
+      <p>Twelve Wednesday tutorials: predict, derive, implement, test, explain.</p>
     </Card>
     <Card title="Assessment" href="/assessments/">
-      <p>What is marked, what it is worth, and when it is due.</p>
+      <p>The two assignments, their dates, weights and marking criteria.</p>
     </Card>
     <Card title="People" href="/people/">
-      <p>Who teaches the course and how to reach them.</p>
+      <p>The convenor and the tutor, and who to ask about what.</p>
     </Card>
   </CardGrid>
 </ContentLayout>
