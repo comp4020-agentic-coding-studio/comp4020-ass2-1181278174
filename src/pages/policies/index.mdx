@@ -1,14 +1,100 @@
 ---
-title: Policies and support
+title: Policies and boundaries
 description:
-  The course-wide rules for late work, extensions, academic integrity and
-  getting help.
+  What the simulation is and is not, the parameters it runs on, what a static
+  site can and cannot check, the rules for the two assignments, accessibility,
+  and who to ask.
 ---
 
-# Policies and support
+# Policies and boundaries
 
-{/* STARTER_CONTENT: replace this policy page, then remove this comment. */}
+## 1. What the simulation is
 
-Replace this page. Course-wide rules live here so an assessment brief can link
-to one place; a course with no rules worth a page can delete it, along with its
-entry in `src/site-config.ts`.
+Slop Hill, the kitchen, the twenty orders, the two drone types, the two charging pads and
+the corridor are a teaching model. The constraints come from a real task; the numbers,
+the safety margins and the rules are course settings, chosen so that each week's question
+has a clean answer. Nothing on this site claims that a real drone, a real airspace rule or
+a real delivery business works this way. A result here is a result about this model.
+
+Every page says which model it assumes. The model grows in five steps — weeks 1–3, week 4,
+weeks 5–6, weeks 7–8, weeks 9–12 — and a plan that was correct under an earlier step is
+not wrong in hindsight when a later step changes the answer. Results under different steps
+are labelled and never compared as if they were the same conditions.
+
+## 2. Parameters
+
+The canonical data is five files: the map, the orders, the fleet, the pads and the rules.
+Their checksums are pinned in the repository's own tests, and every weekly case is a
+subset or a view of them. The table below lists what the model depends on and which values
+are fixed. Values marked *to be set* are calibrated against a reference run before the data
+is released, and published here with their range and source when they are.
+
+| Parameter | Value or range | Status |
+|---|---|---|
+| Area | About 2 km × 2 km; about 120 m from the kitchen to the hilltop | fixed |
+| Depot | The kitchen at the foot of the hill; every task starts and ends there | fixed |
+| Orders | #01–#20; ready time, weight, promised time | to be set; the roles of #07, #13 and #20 are fixed |
+| Drone types | L and H: speed, payload, battery | to be set; #20 exceeds L's payload |
+| Energy | Level flight per metre; climb per metre of rise; descent per metre of drop; hover per tick; loading and service | to be set; uphill always costs more than downhill of the same length |
+| Charging pads | Two; effective rate; turnaround time | two fixed; rate and turnaround to be set |
+| Time | Integer ticks; tick length published with each scenario | to be set |
+| Evening | 18:00–21:00 ready and delivery; one evaluation cut-off | to be set |
+| Objective | Total lateness, then all-returned time, then total energy, in that order | fixed |
+| Design target | A complete feasible baseline exists for the normal batch; the reference method delivers at least N orders on time | N to be set |
+
+If the data does not meet the design target, the data changes, not the promise.
+
+## 3. What a static site can and cannot do
+
+This site is static. Everything it computes runs in your browser, and everything it holds
+— the data files, the reference plans, the cases — can be read by anyone who opens the
+page source. The reference plans on the site are labelled *reference plan, re-validated
+live*: the plan was computed in advance; the validator checks it again in front of you.
+
+The workbench's plan check is a local pre-check. It runs the same validator the course
+uses, but it is not a submission and not a mark. Nothing on this site says "received" or
+"submitted", because no service behind it could make that true. Formal submission and
+marking happen through the assignment pages' stated process, on the fixed cases.
+
+Your own records stay in your browser unless you export them. Export before you clear
+your browser data; the site cannot recover them.
+
+## 4. Assignments
+
+Both assignments are individual work. Discussing the problems with other students is
+expected; submitting the same code or the same analysis is not. Name every person you
+discussed the work with and every external source, including code, in the analysis.
+
+AI assistance is allowed and must be declared. It does not replace your own explanation:
+the analysis is yours, in your words, and you should be able to defend any line of it in
+a conversation. A generated report is not an experiment; a claim about a result points at
+your code, your input and your run record.
+
+Every claim of feasibility is checked by the validator before performance is compared. A
+plan with a constraint violation is not a valid plan. An accurate diagnosis of why a plan
+fails earns analysis marks; a plan that "works" with a dropped order or a changed parameter
+earns none.
+
+Late work loses 5% of the assignment's marks per calendar day, for up to five days; after
+that it is not marked. Ask the convenor for an extension before the due date, with the
+reason; extensions after the due date are given only for documented circumstances.
+
+## 5. Accessibility
+
+Every pointer action has a keyboard path: ordering has move-up and move-down buttons,
+selection has lists, playback has previous and next event buttons, and the 3D views have
+orbit buttons. Every 3D view has a text description and a result table beside it, and
+nothing on the site is conveyed by colour alone. The site respects your reduced-motion
+setting: nothing autoplays, and every animation has a static result and a step button.
+The core operations — change, run, compare, locate, export — work at desktop width and on
+a phone; the phone shows tables first and loads 3D only when you ask for it.
+
+If something is not reachable for you, tell the tutor; that is a bug in the site, not a
+limit you should work around.
+
+## 6. Who to ask
+
+The tutor first, for anything in the workbench, your code, a counterexample that will not
+behave, or the practice-pack format — in the Wednesday tutorial, or by email when it
+cannot wait. The convenor for what the course expects, why a rule is the way it is,
+marking and extensions. Both are on the people page.
