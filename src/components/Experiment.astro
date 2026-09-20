@@ -1,0 +1,42 @@
+---
+import { learning } from "../workbench/learning";
+const { week } = Astro.props;
+const step = learning[week];
+---
+<details class="experiment" data-experiment={week}>
+  <summary>Try it yourself · {step.title}</summary>
+  <p><strong>Model:</strong> {step.model}.</p>
+  <label>1. Predict before changing the case
+    <span>{step.prediction}</span>
+    <textarea data-note="prediction" rows="3" placeholder="Write your prediction and the reason…" />
+  </label>
+  <h3>2. Run the experiment</h3>
+  <ol>{step.steps.map((text) => <li>{text}</li>)}</ol>
+  <button type="button" class="wb-control" data-experiment-action="baseline">Save current run as baseline</button>
+  <div class="experiment-comparison" aria-live="polite">
+    <div><strong>Saved baseline</strong><p data-baseline>No baseline saved yet.</p></div>
+    <div><strong>Current run</strong><p data-current>Use the controls above to run a comparison.</p></div>
+  </div>
+  <label>3. Explain the evidence
+    <span>{step.evidence}</span>
+    <textarea data-note="explanation" rows="4" placeholder="What changed, why, and what does this result establish?" />
+  </label>
+  <div class="experiment-actions">
+    <button type="button" class="wb-control" data-experiment-action="export">Export experiment record</button>
+    <button type="button" class="wb-control" data-experiment-action="link">Show reproducible link</button>
+  </div>
+  <label class="experiment-link" hidden>Link to these settings<input type="text" readonly data-experiment-link /></label>
+  <p class="experiment-status" data-experiment-status aria-live="polite">Notes are saved in this browser. Export a copy to keep with your work.</p>
+</details>
+<style>
+  .experiment { margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--at-border); }
+  .experiment > label { display: block; font-weight: 600; margin-top: 1rem; }
+  .experiment label span { display: block; margin-block: 0.4rem; font-weight: 400; }
+  .experiment textarea, .experiment input { display: block; width: 100%; min-width: 0; box-sizing: border-box; font: inherit; color: inherit; background: var(--at-bg); padding: 0.6rem; border: 1px solid var(--at-border); border-radius: 0.35rem; }
+  .experiment-comparison { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; margin-block: 1rem; font-size: 0.9rem; overflow-wrap: anywhere; }
+  .experiment-comparison > div { border-left: 3px solid var(--at-border); padding-left: 0.7rem; }
+  .experiment-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.75rem; }
+  .experiment-status { font-size: 0.85rem; }
+  .experiment-link[hidden] { display: none; }
+  @media (max-width: 540px) { .experiment-comparison { grid-template-columns: 1fr; } }
+</style>

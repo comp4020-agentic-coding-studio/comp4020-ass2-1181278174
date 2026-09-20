@@ -34,7 +34,7 @@ export const replayCase: CaseDef<ReplayState> = {
     const mine = plan.tasks.filter((x) => x.drone === t.drone && x.status === "flown");
     const prev = mine[mine.findIndex((x) => x.order === t.order) - 1];
     parts.push(minimap(world.map, {
-      routes: t.status === "flown" ? [{ path: t.pathOut!, cls: "route-chosen", label: `${t.drone} out to ${t.order}` }, { path: t.pathBack!, cls: "route-fastest", label: `${t.drone} back` }] : [],
+      routes: t.status === "flown" ? [{ path: t.pathOut!, cls: "route-chosen", label: `${t.drone} out to ${t.order}` }, { path: t.pathBack!, cls: "route-return", label: `${t.drone} → Kitchen (return)` }] : [],
       orders: [o],
       ariaLabel: `${t.order}'s route out (solid) and back (dashed) on Slop Hill.`,
     }));

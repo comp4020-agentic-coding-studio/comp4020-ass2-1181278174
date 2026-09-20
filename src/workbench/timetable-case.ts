@@ -1,7 +1,7 @@
 // Weeks 5 and 6: one light drone, the six orders of assignment 1. FIFO and
 // earliest-deadline timetables under the course objective; then the swap
-// improver with every accepted move; then all 720 permutations, which beat
-// the swaps and say by how much.
+// improver with every accepted move; then all 720 permutations, which
+// measure the exact gap, including a zero gap on this canonical case.
 
 import type { FleetData, MapData, OrdersData, RulesData } from "../data/schema.ts";
 import fleetJson from "../data/fleet.json";
@@ -25,7 +25,8 @@ const jobs = jobsOf(six);
 const dish = new Map(six.map((o) => [o.id, o.label]));
 
 export interface TimetableState {
-  rule: "fifo" | "edf" | "swaps" | "enumerate";
+  rule: "fifo" | "edf" | "swaps" | "enumerate" | "manual";
+  sequence: string;
 }
 
 const objectiveText = (o?: Objective) => (o ? `lateness ${fmtTicks(o.lateness)} (${o.lateCount} late), all back ${clock(o.allReturned)}, ${kJ(o.energy)}` : "no feasible timetable");
@@ -48,20 +49,23 @@ export const timetableCase: CaseDef<TimetableState> = {
   caption: (week) =>
     week === 5
       ? { decision: "Which order goes first: the one that is ready, or the one whose promise is nearest — judged by the objective the course fixed, total lateness first.", breaks: "Week 4's single task: each order feasible on its own does not make any order of them on time." }
-      : { decision: "Accept a swap only when it strictly improves the objective, and call the result a local optimum only after every swap has been checked.", breaks: "Week 5's best rule: the swaps beat it, and the 720 permutations beat the swaps." },
-  initial: (week) => ({ rule: week === 5 ? "fifo" : "swaps" }),
+      : { decision: "Accept a swap only when it strictly improves the objective, and call the result a local optimum only after every swap has been checked.", breaks: "A full swap scan establishes a local optimum. Enumeration measures whether it is also global on these six orders." },
+  initial: (week) => ({ rule: week === 5 ? "fifo" : "swaps", sequence: "01, 02, 03, 04, 05, 06" }),
   controls: (state, week): Control[] => [
     { id: "rule", label: "Method", kind: "select", value: state.rule, primary: week === 5, options: [
+      { value: "manual", label: "Try my own sequence" },
       { value: "fifo", label: "FIFO — ready time first" },
       { value: "edf", label: "earliest deadline first" },
       { value: "swaps", label: "best-improvement swaps from earliest deadline" },
       { value: "enumerate", label: "all 720 permutations" },
     ] },
+    ...(state.rule === "manual" ? [{ id: "sequence", label: "Order IDs, each once (e.g. 06, 05, 04, 03, 02, 01)", kind: "text" as const, value: state.sequence }] : []),
     ...(week === 6 && state.rule !== "enumerate" ? [{ id: "enumerate", label: "Run all 720 permutations", kind: "button" as const, primary: true }] : []),
   ],
   apply: (state, action) => {
-    if (action.id === "rule") return { rule: (action.value as TimetableState["rule"]) ?? state.rule };
-    if (action.id === "enumerate") return { rule: "enumerate" };
+    if (action.id === "rule") return { ...state, rule: (action.value as TimetableState["rule"]) ?? state.rule };
+    if (action.id === "enumerate") return { ...state, rule: "enumerate" };
+    if (action.id === "sequence") return { ...state, sequence: (action.value ?? "").slice(0, 100) };
     return state;
   },
   render: (state) => {
@@ -69,13 +73,21 @@ export const timetableCase: CaseDef<TimetableState> = {
     const parts: string[] = [];
     parts.push(minimap(map, { orders: six, box: [0, 0, 2000, 2000], ariaLabel: "Slop Hill with the six orders of assignment 1 labelled." }));
     let count = 0;
-    if (state.rule === "fifo" || state.rule === "edf") {
+    if (state.rule === "manual") {
+      const ids = state.sequence.split(/[,\s→]+/).filter(Boolean).map((id) => `#${id.replace("#", "").padStart(2, "0")}`);
+      if (ids.length !== 6 || new Set(ids).size !== 6 || ids.some((id) => !jobs.some((j) => j.id === id))) return { html: `<p class="wb-summary wb-error" role="alert">Use each order #01 to #06 exactly once, separated by commas. No timetable was computed.</p>`, status: "invalid input · sequence must contain all six orders once" };
+      const seq = ids.map((id) => jobs.find((j) => j.id === id)!);
+      const mine = timetable(seq, cost, opts);
+      parts.push(`<p class="wb-summary"><strong>Your sequence:</strong> ${esc(seqText(seq))}. ${esc(objectiveText(mine.objective))}.</p>`);
+      parts.push(timetableTable(seq, "Your six-order timetable")); count = 1;
+    } else if (state.rule === "fifo" || state.rule === "edf") {
       const seq = state.rule === "fifo" ? fifo(jobs) : earliestDeadline(jobs);
       const other = state.rule === "fifo" ? earliestDeadline(jobs) : fifo(jobs);
       const mine = timetable(seq, cost, opts), theirs = timetable(other, cost, opts);
       const cmp = compareObjective(mine.objective, theirs.objective);
       parts.push(`<p class="wb-summary"><strong>${state.rule === "fifo" ? "FIFO" : "Earliest deadline first"}:</strong> ${seqText(seq)}. ${esc(objectiveText(mine.objective))}. ${cmp < 0 ? "Better" : cmp > 0 ? "Worse" : "Equal"} than ${state.rule === "fifo" ? "earliest deadline" : "FIFO"} (${esc(objectiveText(theirs.objective))}) under the course objective.</p>`);
       parts.push(timetableTable(seq, state.rule === "fifo" ? "FIFO" : "Earliest deadline first"));
+      if (mine.objective?.lateness === 0 && theirs.objective?.lateness === 0) parts.push(`<p>Both presets have zero lateness on these six orders. Compare the all-returned time next; this result does not demonstrate a lateness trade-off.</p>`);
       count = 2;
     } else if (state.rule === "swaps") {
       const start = earliestDeadline(jobs);

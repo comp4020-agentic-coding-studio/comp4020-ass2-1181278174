@@ -102,17 +102,9 @@ function outcome(arr: CorridorState["arrangement"]): Outcome {
 }
 
 function timeline(o: Outcome): string {
-  const t1 = Math.max(bWindow.end, o.aCorridor?.end ?? 0, 1) + 10;
-  const W = 640, H = 96, x = (t: number) => 60 + (t / t1) * (W - 80);
-  const bar = (y: number, s: number, e: number, cls: string, txt: string) => `<rect x="${x(s).toFixed(1)}" y="${y}" width="${(x(e) - x(s)).toFixed(1)}" height="18" class="${cls}"/><text x="${(x(s) + 4).toFixed(1)}" y="${y + 13}" font-size="11" class="mm-label">${esc(txt)}</text>`;
-  const overlap = o.aCorridor && Math.max(bWindow.start, o.aCorridor.start) < Math.min(bWindow.end, o.aCorridor.end)
-    ? `<rect x="${x(Math.max(bWindow.start, o.aCorridor.start)).toFixed(1)}" y="26" width="${(x(Math.min(bWindow.end, o.aCorridor.end)) - x(Math.max(bWindow.start, o.aCorridor.start))).toFixed(1)}" height="46" class="tl-conflict"/>`
-    : "";
-  return `<svg viewBox="0 0 ${W} ${H}" class="timeline" role="img" aria-label="Corridor occupancy: B holds ${bWindow.start} to ${bWindow.end}${o.aCorridor ? `; A holds ${o.aCorridor.start} to ${o.aCorridor.end}` : "; A does not use the corridor"}${overlap ? "; they overlap" : ""}.">
-    <text x="4" y="40" font-size="12" class="mm-label">B</text><text x="4" y="66" font-size="12" class="mm-label">A</text>
-    ${overlap}${bar(28, bWindow.start, bWindow.end, "tl-b", `B ${bWindow.start}–${bWindow.end}`)}${o.aCorridor ? bar(54, o.aCorridor.start, o.aCorridor.end, o.ok ? "tl-a" : "tl-a tl-bad", `A ${o.aCorridor.start}–${o.aCorridor.end}`) : `<text x="60" y="67" font-size="11" class="mm-label">A avoids the corridor</text>`}
-    <line x1="60" y1="80" x2="${W - 20}" y2="80" class="tl-axis"/><text x="60" y="93" font-size="10" class="mm-label">0 s</text><text x="${W - 20}" y="93" font-size="10" text-anchor="end" class="mm-label">${t1} s after A's take-off</text>
-  </svg>`;
+  const end = Math.max(bWindow.end, o.aCorridor?.end ?? 0) + 5, begin = bWindow.start - 5;
+  const lane = (name: string, start: number, stop: number, cls: string) => `<div class="corridor-lane"><span>${name}</span><div class="corridor-track"><i class="${cls}" style="left:${100 * (start - begin) / (end - begin)}%;width:${100 * (stop - start) / (end - begin)}%"></i></div><span>[${start}, ${stop}) s</span></div>`;
+  return `<div class="corridor-timeline" aria-label="Corridor occupancy in seconds"><strong>Corridor occupancy · one drone at a time</strong>${lane("B", bWindow.start, bWindow.end, "corridor-b")}${o.aCorridor ? lane("A", o.aCorridor.start, o.aCorridor.end, "corridor-a") : "<p>A uses the detour and does not enter the corridor.</p>"}<p>${!o.ok ? "Conflict: both occupy the corridor from 107 to 112 s." : o.wait ? "A waits at the west entrance for 5 s, then enters when B leaves." : "No corridor conflict: the two paths use different space."}</p></div>`;
 }
 
 export const corridorCase: CaseDef<CorridorState> = {
@@ -137,7 +129,7 @@ export const corridorCase: CaseDef<CorridorState> = {
     const all = (["both", "wait", "detour"] as const).map((a) => ({ a, o: outcome(a) }));
     const parts: string[] = [];
     parts.push(minimap(map, {
-      routes: [{ path: B.path, cls: "route-fastest", label: "B, flying back" }, { path: o.aPath, cls: o.ok ? "route-chosen" : "route-found", label: `A, ${o.label}` }],
+      routes: [{ path: B.path, cls: "route-b", label: "B → Kitchen (return)" }, { path: o.aPath, cls: "route-a", label: `A → #13 (${o.wait ? "wait 5 s" : state.arrangement === "detour" ? "detour" : "direct"})` }],
       orders: [order],
       box: [200, 400, 1500, 1500],
       ariaLabel: `The ridge and the corridor. B's route back is dashed; A's route out to ${order.id} is solid: ${o.label}.`,

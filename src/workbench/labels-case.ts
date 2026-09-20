@@ -11,6 +11,7 @@ import { pathOf } from "../engine/labels.ts";
 import { planTask } from "../engine/task.ts";
 import type { CaseDef, Control } from "./case.ts";
 import { esc, kJ, table } from "./html.ts";
+import { elevationProfile } from "./profile";
 import { minimap } from "./minimap.ts";
 
 const map = mapJson as MapData;
@@ -21,6 +22,7 @@ const orders = (ordersJson as OrdersData).orders;
 export interface LabelsState {
   drone: "L" | "H";
   fastestOnly: boolean;
+  route: "both" | "fastest" | "chosen";
 }
 
 export const labelsCase: CaseDef<LabelsState> = {
@@ -30,14 +32,16 @@ export const labelsCase: CaseDef<LabelsState> = {
     decision: "Keep the fast route or the cheap one to #07 — and keep both labels until the whole round trip is costed.",
     breaks: "Week 3's habit of keeping one best value per node.",
   }),
-  initial: () => ({ drone: "L", fastestOnly: false }),
+  initial: () => ({ drone: "L", fastestOnly: false, route: "both" }),
   controls: (state): Control[] => [
     { id: "fastestOnly", label: `Keep only the fastest label per node: ${state.fastestOnly ? "on (the wrong version)" : "off"} — switch ${state.fastestOnly ? "off" : "on"}`, kind: "button", primary: true },
+    { id: "route", label: "Map focus", kind: "select", value: state.route, options: [{ value: "both", label: "Compare both routes" }, { value: "fastest", label: "Fastest route" }, { value: "chosen", label: "Route within budget" }] },
     { id: "drone", label: "Drone type", kind: "select", value: state.drone, options: [{ value: "L", label: "L — light: 95 kJ, 1.5 kg" }, { value: "H", label: "H — heavy: 250 kJ, 4 kg" }] },
   ],
   apply: (state, action) => {
     switch (action.id) {
       case "fastestOnly": return { ...state, fastestOnly: !state.fastestOnly };
+      case "route": return { ...state, route: action.value as LabelsState["route"] };
       case "drone": return { ...state, drone: action.value === "H" ? "H" : "L" };
       default: return state;
     }
@@ -51,10 +55,16 @@ export const labelsCase: CaseDef<LabelsState> = {
     const parts: string[] = [];
 
     const routes = [];
-    if (right.fastest && right.fastest !== right.chosen) routes.push({ path: pathOf(right.fastest.out), cls: "route-fastest", label: "the fastest route out, over budget" });
-    if (right.chosen) routes.push({ path: pathOf(right.chosen.out), cls: "route-chosen", label: "the route flown out" });
-    else if (right.fastest) routes.push({ path: pathOf(right.fastest.out), cls: "route-fastest", label: "the fastest route out" });
-    parts.push(minimap(map, { routes, orders: [order], box: [500, 800, 1600, 1900], ariaLabel: `The hilltop. ${routes.map((r) => r.label).join("; ")}.` }));
+    if (right.fastest && right.fastest !== right.chosen) routes.push({ path: pathOf(right.fastest.out), cls: "route-fastest", label: "Fastest outbound route" });
+    if (right.chosen) routes.push({ path: pathOf(right.chosen.out), cls: "route-chosen", label: "Outbound route within budget" });
+    else if (right.fastest) routes.push({ path: pathOf(right.fastest.out), cls: "route-fastest", label: "Fastest outbound route" });
+    const focused = routes.filter((r) => state.route === "both" || (state.route === "fastest" ? r.cls === "route-fastest" || right.fastest === right.chosen : r.cls === "route-chosen"));
+    parts.push(`<p class="wb-summary"><strong>Kitchen → #07 Summit → Kitchen.</strong> Compare complete round trips against a ${(p.budget / 1000).toFixed(2)} kJ usable budget. The map and height profile show the loaded outbound leg.</p>`);
+    const candidates = [{ name: "Fastest round trip", c: right.fastest, color: "#a35218" }, { name: "Chosen round trip", c: right.chosen, color: "#28705b" }].filter((x) => x.c);
+    parts.push(`<div class="route-comparison">${candidates.map(({ name, c, color }) => `<div class="route-option" style="--route-color:${color}"><strong>${name}</strong><p>${c!.time} s · ${kJ(c!.energy)}</p><p>${c!.energy > p.budget ? `Over budget by ${kJ(c!.energy - p.budget)}` : `Within budget · ${kJ(p.budget - c!.energy)} margin`}</p></div>`).join("")}</div>`);
+    parts.push(minimap(map, { routes: focused, orders: [order], ariaLabel: `Kitchen and summit, with directional routes. ${focused.map((r) => r.label).join("; ")}.` }));
+    parts.push(elevationProfile(map, focused));
+    parts.push(`<p class="map-key">A steeper segment means more climb per metre. The full-trip totals also include service and the unloaded return. ${state.fastestOnly ? "The map retains the full-label comparison so you can see the route the fastest-only search discards." : ""}</p>`);
 
     const budgetLine = `Budget for ${type.label} drone ${type.id}: ${kJ(p.budget)} (battery ${kJ(type.batteryJ)} less the ${Math.round(rules.reserveFraction * 100)}% reserve).`;
     if (p.status === "found" && p.fastest && p.chosen) {
@@ -70,6 +80,7 @@ export const labelsCase: CaseDef<LabelsState> = {
       parts.push(`<p class="wb-summary"><strong>No feasible round trip found</strong> (${p.status}). ${p.fastest ? `The only candidate kept, ${p.fastest.time} s at ${kJ(p.fastest.energy)}, is over budget.` : ""} ${esc(budgetLine)}${wrong ? ` <strong>This is the wrong answer.</strong> With every non-dominated label kept, the ${right.chosen!.time} s round trip at ${kJ(right.chosen!.energy)} fits the budget and is flown.` : ""}</p>`);
     }
 
+    parts.push(`<details><summary>Inspect candidates and resource labels</summary>`);
     parts.push(table(
       [{ key: "n", label: "#", align: "right" }, { key: "time", label: "round trip (s)", align: "right" }, { key: "energy", label: "energy", align: "right" }, { key: "verdict", label: "verdict" }, { key: "out", label: "route out" }],
       p.candidates.map((c, i) => ({
@@ -87,6 +98,7 @@ export const labelsCase: CaseDef<LabelsState> = {
       `Labels kept at ${order.id} after the outbound search: ${p.outAtGoal.length}. Pruned on the way: ${p.pruned.dominated} dominated, ${p.pruned.overBudget} over budget${state.fastestOnly ? `, ${p.pruned.notFastest} not the fastest` : ""}.`,
     ));
 
+    parts.push("</details>");
     const ms = Date.now() - t0;
     return { html: parts.join(""), status: `computed in your browser · ${p.candidates.length} candidates · ${ms} ms · engine 0.1 · case ${order.id} hilltop, type ${type.id}${state.fastestOnly ? ", fastest-only" : ""}` };
   },

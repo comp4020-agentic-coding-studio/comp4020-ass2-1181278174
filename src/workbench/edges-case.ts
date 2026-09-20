@@ -22,7 +22,9 @@ const node = (id: string) => map.nodes.find((n) => n.id === id)!;
 const inBlock = (n: MapNode) => n.x <= BOX[2] && n.y <= BOX[3];
 const blockNodes = map.nodes.filter(inBlock);
 const goal = orders[2].node; // #03
-const graph = fromMap(map, L, "time");
+const fullGraph = fromMap(map, L, "time");
+const blockIds = new Set(blockNodes.map((n) => n.id));
+const graph = { nodeIds: () => [...blockIds], neighbours: (id: string) => fullGraph.neighbours(id).filter((e) => blockIds.has(e.to)) };
 
 /** Straight connections between block nodes that are not streets. */
 const proposals = (() => {
@@ -87,14 +89,14 @@ export const edgesCase: CaseDef<EdgesState> = {
     parts.push(minimap(map, {
       routes: [...routes.map((r, i) => ({ path: r.path, cls: i === 0 ? "route-chosen" : "route-found", label: r.name })), { path: [prop.from, prop.to], cls: blocked.length ? "route-fastest" : "route-proposal", label: `the connection checked: ${prop.from} → ${prop.to}` }],
       orders: orders.filter((o) => o.node === goal || o.node === orders[4].node),
-      box: BOX,
-      ariaLabel: `The kitchen's block: the three candidate routes to ${orders[2].id} and the straight connection ${prop.from} → ${prop.to} being checked.`,
+      box: BOX, focus: [prop.from, prop.to], blockedBuildings: blocked.map((b) => b.id),
+      ariaLabel: `The kitchen's block: ${routes.length} candidate routes to ${orders[2].id} and the straight connection ${prop.from} → ${prop.to} being checked.`,
     }));
     parts.push(`<p class="wb-summary"><strong>${esc(prop.from)} → ${esc(prop.to)}:</strong> ${blocked.length ? `not a legal edge — it passes through ${blocked.map((x) => x.id).join(" and ")}. Both endpoints are streets; the line between them is not.` : "no building in the way. It could be a street; it is not one on this map, so it is not an edge either."}</p>`);
     parts.push(table(
       [{ key: "name", label: "route" }, { key: "path", label: "streets" }, { key: "ticks", label: "time for L (s)", align: "right" }],
       routes.map((r) => ({ name: r.name, path: r.path.join(" → "), ticks: r.ticks })),
-      `Three candidate routes from the kitchen to ${orders[2].id}, costed edge by edge`,
+      `${routes.length} candidate routes from the kitchen to ${orders[2].id}, costed edge by edge`,
     ));
     const ms = Date.now() - t0;
     return { html: parts.join(""), status: `computed in your browser · ${routes.length} routes, ${proposals.length} connections checkable · ${ms} ms · engine 0.1 · case the kitchen's block` };

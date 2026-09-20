@@ -1,3 +1,4 @@
+import { esc } from "./html";
 import type { CaseDef } from "./case.ts";
 import { assignCase } from "./assign-case.ts";
 import { corridorCase } from "./corridor-case.ts";
@@ -27,6 +28,7 @@ export function renderControls(def: CaseDef<any>, state: unknown, week: number, 
       if (c.kind === "code") {
         return `<details class="wb-code" open><summary>Edit as code</summary><label class="wb-control"><span>${c.label}</span><textarea data-code-for="${c.id}" name="${id}-${c.id}" rows="4" spellcheck="false">${(c.value ?? "").replace(/[&<>]/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[ch]!)}</textarea></label> <button type="button" class="wb-control" data-control="${c.id}" data-code-from="${c.id}">Run this function</button></details>`;
       }
+      if (c.kind === "text") return `<label class="wb-control"><span>${esc(c.label)}</span><input type="text" data-control="${esc(c.id)}" name="${esc(id)}-${esc(c.id)}" value="${esc(c.value ?? "")}" /></label>`;
       if (c.kind === "radio") {
         const opts = (c.options ?? []).map((o) => `<label class="wb-radio"><input type="radio" name="${id}-${c.id}" data-control="${c.id}" value="${o.value}"${o.value === c.value ? " checked" : ""}> ${o.label}</label>`).join("");
         return `<fieldset class="wb-control wb-radios${c.primary ? " wb-primary-group" : ""}"><legend>${c.label}</legend>${opts}</fieldset>`;

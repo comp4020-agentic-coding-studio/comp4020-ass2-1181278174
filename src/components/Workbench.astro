@@ -2,6 +2,7 @@
 // One week's workbench instance. Rendered with its result at build time; the
 // script below recomputes in the browser when a control changes, using the
 // same case module.
+import Experiment from "./Experiment.astro";
 import { withBase } from "astro-theme-university/url";
 import { caseByKey, caseFor, renderControls } from "../workbench/cases";
 
@@ -9,80 +10,29 @@ interface Props {
   week?: number;
   case?: string;
   title?: string;
+  compact?: boolean;
 }
-const { week = 0, case: key, title = "This week's workbench" } = Astro.props;
+const { week = 0, case: key, title = "This week's workbench", compact = false } = Astro.props;
 const def = key ? caseByKey(key) : caseFor(week);
 if (!def) throw new Error(`no workbench case for ${key ?? `week ${week}`}`);
 const state = def.initial(week);
 const caption = def.caption(week);
 const view = def.render(state, week);
-const id = `wb-${key ?? `w${week}`}`;
+const id = key ? `wb-home-${key}` : `wb-w${week}`;
 ---
 
-<section class="workbench" data-week={week} data-case={def.key} data-state={JSON.stringify(state)} aria-labelledby={`${id}-title`}>
+<section class:list={["workbench", { "workbench-compact": compact }]} data-instance={id} data-week={week} data-case={def.key} data-state={JSON.stringify(state)} aria-labelledby={`${id}-title`}>
   <h2 id={`${id}-title`}>{title}</h2>
   <p class="wb-caption"><strong>This week's decision:</strong> {caption.decision} <strong>What it breaks:</strong> {caption.breaks}</p>
   <div class="wb-controls" set:html={renderControls(def, state, week, id)} />
   <div class="wb-view" set:html={view.html} />
   <p class="wb-status" aria-live="polite">{view.status.replace("computed in your browser", "computed when this page was built")}</p>
-  {week > 0 && !Astro.url.pathname.includes("/lab/") && <p class="wb-lab"><a href={withBase(`/lab/#lab-w${week}`)}>Open in the lab, with every other week</a></p>}
+  {week > 0 && !Astro.url.pathname.includes("/lab/") && <p class="wb-lab"><a href={withBase(`/lab/#lab-w${week}`)}>Continue this experiment in the Lab</a></p>}
+  {!key && week > 0 && <Experiment week={week} />}
 </section>
 
 <script>
-  import { caseByKey, renderControls } from "../workbench/cases";
-
-  function wire(root: HTMLElement, signal: AbortSignal) {
-    const week = Number(root.dataset.week);
-    const def = caseByKey(root.dataset.case ?? "");
-    if (!def) return;
-    let state = JSON.parse(root.dataset.state ?? "null") ?? def.initial(week);
-    // A deep link carries the state: ?wb-<case>=<json>. Every change writes it
-    // back, so a state reached by hand can be handed to someone as a link.
-    const param = `wb-${root.dataset.case}`;
-    const fromUrl = new URL(location.href).searchParams.get(param);
-    if (fromUrl) {
-      try { state = { ...state, ...JSON.parse(fromUrl) }; } catch { /* not ours; ignore */ }
-    }
-    const controls = root.querySelector<HTMLElement>(".wb-controls")!;
-    const view = root.querySelector<HTMLElement>(".wb-view")!;
-    const status = root.querySelector<HTMLElement>(".wb-status")!;
-    const id = `wb-${root.dataset.case}`;
-
-    const update = (action: { id: string; value?: string }, focusId?: string) => {
-      state = def.apply(state, action);
-      const out = def.render(state, week);
-      view.innerHTML = out.html;
-      controls.innerHTML = renderControls(def, state, week, id);
-      status.textContent = out.status;
-      root.dataset.state = JSON.stringify(state);
-      const url = new URL(location.href);
-      url.searchParams.set(param, JSON.stringify(state));
-      history.replaceState(history.state, "", url);
-      if (focusId) controls.querySelector<HTMLElement>(`[data-control="${focusId}"]`)?.focus();
-    };
-    if (fromUrl) update({ id: "" });
-
-    controls.addEventListener("click", (ev) => {
-      const b = (ev.target as HTMLElement).closest<HTMLElement>("button[data-control]");
-      if (!b) return;
-      if (b.dataset.codeFrom) {
-        const ta = controls.querySelector<HTMLTextAreaElement>(`textarea[data-code-for="${b.dataset.codeFrom}"]`);
-        update({ id: b.dataset.control!, value: ta?.value ?? "" }, b.dataset.control);
-      } else update({ id: b.dataset.control! }, b.dataset.control);
-    }, { signal });
-    controls.addEventListener("change", (ev) => {
-      const s = (ev.target as HTMLElement).closest<HTMLSelectElement | HTMLInputElement>("select[data-control], input[data-control]");
-      if (s) update({ id: s.dataset.control!, value: s.value }, s.dataset.control);
-    }, { signal });
-  }
-
-  let aborter: AbortController | null = null;
-  document.addEventListener("astro:page-load", () => {
-    aborter?.abort();
-    aborter = new AbortController();
-    for (const root of document.querySelectorAll<HTMLElement>(".workbench[data-case]")) wire(root, aborter.signal);
-  });
-  document.addEventListener("astro:before-swap", () => aborter?.abort());
+  import "../workbench/client";
 </script>
 
 <style is:global>
@@ -97,7 +47,14 @@ const id = `wb-${key ?? `w${week}`}`;
   fieldset.wb-radios { border: 1px solid var(--at-border, #d9d2c3); border-radius: 0.35rem; padding: 0.4rem 0.8rem; display: flex; flex-wrap: wrap; gap: 0.4rem 1rem; }
   fieldset.wb-primary-group { border-color: var(--at-primary, #b97d1c); }
   .wb-radios legend { font-weight: 600; padding-inline: 0.25rem; }
-  .wb-radio { white-space: nowrap; }
+  .wb-radio { display: flex; align-items: baseline; gap: 0.35rem; white-space: normal; min-width: 0; }
+  .wb-radio input { flex: 0 0 auto; }
+  .wb-radios, .wb-control, .wb-control select { min-width: 0; max-width: 100%; }
+  .workbench, .wb-view { min-width: 0; }
+  .workbench-compact .wb-table, .workbench-compact .wb-status, .workbench-compact .wb-lab { display: none; }
+  .wb-view > details { margin-block: 1rem; }
+  .workbench summary { cursor: pointer; font-weight: 600; }
+  .wb-view code { overflow-wrap: anywhere; }
   .timeline { display: block; width: 100%; max-width: 640px; margin-block: 0.5rem; }
   .tl-b { fill: #b93c1e; opacity: 0.6; }
   .tl-a { fill: #2f7d32; opacity: 0.7; }
@@ -126,7 +83,7 @@ const id = `wb-${key ?? `w${week}`}`;
   .mm-corridor { stroke: #b97d1c; stroke-dasharray: 18 12; }
   .mm-route { fill: none; stroke: #2b2520; stroke-linecap: round; stroke-linejoin: round; }
   .mm-route.route-chosen { stroke: #2f7d32; }
-  .mm-route.route-fastest { stroke: #b93c1e; stroke-dasharray: 22 12; }
+  .mm-route.route-fastest { stroke: #a64c18; stroke-dasharray: 12 7; }
   .mm-route.route-proposal { stroke: #b97d1c; stroke-dasharray: 22 12; }
   .mm-route.route-found { stroke: #6b6154; }
   .mm-node { fill: #fffdf8; stroke: #2b2520; stroke-width: 3; }
@@ -138,4 +95,29 @@ const id = `wb-${key ?? `w${week}`}`;
   .mm-nodelabel { fill: #fffdf8; font-weight: 700; }
   .mm-node.mm-marked + .mm-nodelabel { fill: #fffdf8; }
   .minimap-small .mm-node:not(.mm-marked) + .mm-nodelabel { fill: #2b2520; }
+</style>
+
+<style is:global>
+  .map-figure { margin: 1rem 0; }
+  .map-viewport { width: 100%; overflow: hidden; border: 1px solid var(--at-border, #d9d2c3); border-radius: 0.45rem; }
+  .teaching-map { display: block; width: 100%; height: auto; }
+  .map-legend { display: flex; flex-wrap: wrap; gap: 0.4rem 1rem; padding-block: 0.65rem 0.2rem; font-size: 0.9rem; }
+  .map-legend span { display: flex; gap: 0.4rem; align-items: baseline; }
+  .map-legend i { display: inline-block; width: 1.8rem; flex-shrink: 0; border-top: 3px solid var(--route-color); }
+  .map-key { font-size: 0.8rem; margin-block: 0.3rem; color: var(--at-text-secondary); }
+  .route-comparison { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; }
+  .route-option { border: 1px solid var(--at-border); border-top: 4px solid var(--route-color); padding: 0.75rem; border-radius: 0.4rem; }
+  .route-option p { margin: 0.25rem 0; }
+  .route-option strong { display: block; }
+  .route-option button { margin-top: 0.5rem; }
+  .height-profile { width: 100%; height: auto; display: block; }
+  @media (max-width: 540px) { .route-comparison { grid-template-columns: 1fr; } .workbench { padding: 1rem; } }
+</style>
+<style is:global>
+  .corridor-timeline { margin-block: 1rem; font-size: 0.9rem; }
+  .corridor-lane { display: grid; grid-template-columns: 1rem minmax(50px, 1fr) auto; align-items: center; gap: 0.5rem; margin-top: 0.6rem; font-variant-numeric: tabular-nums; }
+  .corridor-track { position: relative; height: 1rem; background: #e8e5dc; }
+  .corridor-track i { display: block; position: absolute; height: 100%; }
+  .corridor-a { background: #28705b; }
+  .corridor-b { background: #375f9b; }
 </style>

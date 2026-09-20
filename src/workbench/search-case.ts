@@ -40,23 +40,12 @@ function composedH(c: NonNullable<SearchState["compose"]>, goal: string): (id: s
   return (id) => Math.floor((f * (c.dist === "3d" ? dist3d(id, goal) : dist2d(id, goal))) / L.speed);
 }
 
-/** Compiles the escape-hatch body. Runs in the page, so a body that never returns would hang
- *  it; the call budget catches a function that is merely expensive. */
-function customH(body: string, goal: string): { h: (id: string) => number; error?: string } {
-  let calls = 0;
-  try {
-    const fn = new Function("node", "goal", "dist2d", "dist3d", "speed", body) as (n: string, g: string, d2: typeof dist2d, d3: typeof dist3d, s: number) => unknown;
-    const h = (id: string) => {
-      if (++calls > 200000) throw new Error("call budget of 200 000 exceeded");
-      const v = Number(fn(id, goal, dist2d, dist3d, L.speed));
-      if (!Number.isFinite(v)) throw new Error(`h(${id}) is not a finite number`);
-      return v;
-    };
-    h(goal);
-    return { h };
-  } catch (e) {
-    return { h: () => 0, error: e instanceof Error ? e.message : String(e) };
+/** Only validated numeric output crosses from the code runner to the renderer. */
+function customH(values?: Record<string, number>): { h: (id: string) => number; error?: string } {
+  if (!values || typeof values !== "object" || map.nodes.some((n) => typeof values[n.id] !== "number" || !Number.isFinite(values[n.id]) || values[n.id] < 0)) {
+    return { h: () => 0, error: "The isolated function runner must return a finite, non-negative value for every waypoint" };
   }
+  return { h: (id) => values[id] };
 }
 
 const FOUR = [
@@ -69,7 +58,7 @@ const FOUR_H: Record<string, number> = { S: 0, A: 0, B: 3, G: 0 };
 const FOUR_POS: Record<string, [number, number]> = { S: [50, 100], B: [180, 40], A: [180, 160], G: [310, 100] };
 const MAP_GOAL = orders[2].node; // #03, the house nearest the kitchen
 
-function problem(state: SearchState): { graph: WeightedGraph; start: string; goal: string; h: (id: string) => number; error?: string } {
+function problem(state: SearchState, customValues?: Record<string, number>): { graph: WeightedGraph; start: string; goal: string; h: (id: string) => number; error?: string } {
   if (state.graph === "four") {
     return { graph: fromEdges(FOUR), start: "S", goal: "G", h: state.heuristic === "example" ? (id) => FOUR_H[id] ?? 0 : () => 0 };
   }
@@ -78,12 +67,12 @@ function problem(state: SearchState): { graph: WeightedGraph; start: string; goa
   let error: string | undefined;
   if (state.heuristic === "straight") h = straightLineTicks(graph, L, MAP_GOAL);
   else if (state.heuristic === "composed") h = composedH(state.compose ?? { dist: "3d", factor: "1" }, MAP_GOAL);
-  else if (state.heuristic === "custom") ({ h, error } = customH(state.custom ?? DEFAULT_CUSTOM, MAP_GOAL));
+  else if (state.heuristic === "custom") ({ h, error } = customH(customValues));
   return { graph, start: map.kitchen, goal: MAP_GOAL, h, error };
 }
 
-function run(state: SearchState): { result: SearchResult | null; steps: Step[]; finished: boolean; searcher: Searcher } {
-  const { graph, start, goal, h } = problem(state);
+function run(state: SearchState, p = problem(state)): { result: SearchResult | null; steps: Step[]; finished: boolean; searcher: Searcher } {
+  const { graph, start, goal, h } = p;
   const searcher = new Searcher(graph, start, goal, { heuristic: h, reopenClosed: state.reopen });
   if (state.shown < 0) {
     const result = searcher.run();
@@ -99,7 +88,7 @@ function run(state: SearchState): { result: SearchResult | null; steps: Step[]; 
   return { result, steps, finished: result !== null, searcher };
 }
 
-function fourSvg(steps: Step[], result: SearchResult | null): string {
+function fourSvg(steps: Step[], result: SearchResult | null, h: (id: string) => number): string {
   const last = steps[steps.length - 1];
   const closed = new Set(last?.closed ?? []);
   const open = new Set((last?.open ?? []).map((e) => e.node));
@@ -111,9 +100,9 @@ function fourSvg(steps: Step[], result: SearchResult | null): string {
   }).join("");
   const nodes = Object.entries(FOUR_POS).map(([id, [x, y]]) => {
     const cls = ["mm-node", closed.has(id) ? "mm-marked" : "", open.has(id) ? "mm-open" : "", onPath.has(id) ? "mm-onpath" : ""].filter(Boolean).join(" ");
-    return `<circle cx="${x}" cy="${y}" r="14" class="${cls}"/><text x="${x}" y="${y + 5}" font-size="14" text-anchor="middle" class="mm-label mm-nodelabel">${id}</text><text x="${x}" y="${y + 30}" font-size="11" text-anchor="middle" class="mm-label">h=${FOUR_H[id]}</text>`;
+    return `<circle cx="${x}" cy="${y}" r="14" class="${cls}"/><text x="${x}" y="${y + 5}" font-size="14" text-anchor="middle" class="mm-label mm-nodelabel">${id}</text><text x="${x}" y="${y + 30}" font-size="11" text-anchor="middle" class="mm-label">h=${h(id)}</text>`;
   }).join("");
-  return `<svg viewBox="20 10 320 180" class="minimap minimap-small" role="img" aria-label="Four nodes S, A, B, G. Edges S to A cost 3, S to B cost 1, B to A cost 1, A to G cost 2. h is 0 at S, A and G, and 3 at B."><rect x="20" y="10" width="320" height="180" class="mm-bg"/>${edges}${nodes}</svg>`;
+  return `<svg viewBox="20 10 320 180" class="minimap minimap-small" role="img" aria-label="Four nodes S, A, B, G. Edges S to A cost 3, S to B cost 1, B to A cost 1, A to G cost 2. Heuristic values: ${Object.keys(FOUR_POS).map((id) => `${id} = ${h(id)}`).join(", ")}."><rect x="20" y="10" width="320" height="180" class="mm-bg"/>${edges}${nodes}</svg>`;
 }
 
 export const searchCase: CaseDef<SearchState> = {
@@ -141,7 +130,7 @@ export const searchCase: CaseDef<SearchState> = {
         controls.push({ id: "dist", label: "Distance", kind: "select", value: c.dist, options: [{ value: "3d", label: "straight line in 3D" }, { value: "2d", label: "straight line on the map (2D)" }] });
         controls.push({ id: "factor", label: "Factor", kind: "select", value: c.factor, options: [{ value: "0.5", label: "× 0.5" }, { value: "1", label: "× 1" }, { value: "2", label: "× 2" }] });
       }
-      if (state.heuristic === "custom") controls.push({ id: "code", label: "h(node, goal) body — dist2d, dist3d and speed are in scope; runs in this page", kind: "code", value: state.custom ?? DEFAULT_CUSTOM });
+      if (state.heuristic === "custom") controls.push({ id: "code", label: "h(node, goal) body — dist2d, dist3d and speed are in scope; isolated runner, 1 second limit", kind: "code", value: state.custom ?? DEFAULT_CUSTOM });
     }
     controls.push({ id: "step", label: state.shown < 0 ? "Step through from the start" : "Next expansion", kind: "button", primary: week === 2 });
     if (state.shown >= 0) controls.push({ id: "run", label: "Run to the end", kind: "button" });
@@ -159,15 +148,19 @@ export const searchCase: CaseDef<SearchState> = {
       default: return state;
     }
   },
-  render: (state) => {
+  render: (state) => renderSearchResults(state),
+};
+
+export function renderSearchResults(state: SearchState, customValues?: Record<string, number>) {
     const t0 = Date.now();
-    const { result, steps, finished } = run(state);
-    const { graph, goal, h, error } = problem(state);
+    const p = problem(state, customValues);
+    const { graph, goal, h, error } = p;
+    if (error) return { html: `<p class="wb-summary wb-error" role="alert"><strong>Function not run.</strong> ${esc(error)}. Correct the code and run again. No search result or heuristic verdict is reported.</p>`, status: "invalid input · custom heuristic did not produce a result" };
+    const { result, steps, finished } = run(state, p);
     const last = steps[steps.length - 1];
     const parts: string[] = [];
 
     if (state.graph === "map" && (state.heuristic === "composed" || state.heuristic === "custom")) {
-      if (error) parts.push(`<p class="wb-summary wb-error"><strong>Your function did not run:</strong> ${esc(error)}. h = 0 was used instead.</p>`);
       const adm = admissible(graph, h, goal), con = consistent(graph, h);
       const code = state.heuristic === "composed"
         ? `h = (node) => Math.floor(${state.compose?.factor ?? "1"} * dist${state.compose?.dist === "2d" ? "2d" : "3d"}(node, goal) / speed)`
@@ -177,7 +170,7 @@ export const searchCase: CaseDef<SearchState> = {
     }
 
     // the picture
-    if (state.graph === "four") parts.push(fourSvg(steps, result));
+    if (state.graph === "four") parts.push(fourSvg(steps, result, h));
     else parts.push(minimap(map, { marked: last?.closed ?? [], open: (last?.open ?? []).map((e) => e.node), routes: result?.path ? [{ path: result.path, cls: "route-found", label: "the route found" }] : [], orders: orders.filter((o) => o.node === goal), box: [0, 0, 1000, 1000], ariaLabel: `The kitchen's quarter of Slop Hill. Expanded nodes are filled, the open list is ringed${result?.path ? ", the route found is drawn thick" : ""}.` }));
 
     // the summary
@@ -223,5 +216,5 @@ export const searchCase: CaseDef<SearchState> = {
     const ms = Date.now() - t0;
     const status = `computed in your browser · ${result ? result.expansions : steps.length} expansions · ${ms} ms · engine 0.1 · ${state.graph === "four" ? "case four-edge counterexample" : `case kitchen → ${orders[2].id}, type L, time`}`;
     return { html: parts.join(""), status };
-  },
-};
+
+}
