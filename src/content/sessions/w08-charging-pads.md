@@ -33,7 +33,7 @@ Use **Open full Lab** for editable inputs, strategy code, exports and the practi
 
 Record request, charge start, charge end and the next departure. Add a capacity test and name the event that causes a delay to another drone.
 
-**What to keep:** A2: shared-resource evaluation and the first checked fleet plan. These tutorial records are ungraded preparation for the assignment.
+**What to keep:** A2: shared-resource evaluation and the first checked fleet plan. Show the tutor your prediction, experiment and explanation for this week’s participation point; keep the record to develop your assignment.
 
 ## Optional extension
 

@@ -2,8 +2,9 @@
 title: "Assignment 2: multi-drone cooperative delivery planner"
 description: "All twenty orders, up to five drones of two types, two charging pads and one shared corridor. Reuses assignment 1. Released week 7, due week 12."
 week: 12
+release: 2027-04-05
 due: 2027-05-14T17:00:00+10:00
-weight: 60
+weight: 50
 marking:
   mode: weighted
   criteria:
@@ -72,8 +73,9 @@ feasibility is never faked.
 
 Problems in assignment 1 may be fixed and carried forward. If you continue on the credited
 reference searcher, this assignment marks the new work; an early error is not penalised
-twice. Weeks 8, 10 and 11 give ungraded feedback on the resource plan, the smallest
-cooperative case and the experiment design.
+twice. Weeks 8, 10 and 11 give formative feedback on the resource plan, the smallest
+cooperative case and the experiment design. That feedback does not add assignment marks;
+attendance and lab participation count towards the separate tutorial component every week.
 
 ## Evidence for each criterion
 

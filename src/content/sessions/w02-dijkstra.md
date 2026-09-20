@@ -33,7 +33,7 @@ Use **Open full Lab** for editable inputs, strategy code, exports and the practi
 
 Add source=goal, unreachable, repeated-improvement and equal-cost tests. Report the returned path and cost; explain why discovery is too early.
 
-**What to keep:** A1: Dijkstra implementation and its counterexample. These tutorial records are ungraded preparation for the assignment.
+**What to keep:** A1: Dijkstra implementation and its counterexample. Show the tutor your prediction, experiment and explanation for this week’s participation point; keep the record to develop your assignment.
 
 ## Optional extension
 

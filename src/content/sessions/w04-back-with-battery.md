@@ -33,7 +33,7 @@ Use **Open full Lab** for editable inputs, strategy code, exports and the practi
 
 Export a baseline and changed record. Give full-trip seconds, energy and reserve; identify the lost feasible route. Do not call the order impossible because one rule pruned it.
 
-**What to keep:** A1: resource labels, full-task checks and a failure explanation. These tutorial records are ungraded preparation for the assignment.
+**What to keep:** A1: resource labels, full-task checks and a failure explanation. Show the tutor your prediction, experiment and explanation for this week’s participation point; keep the record to develop your assignment.
 
 ## Optional extension
 

@@ -1,0 +1,200 @@
+---
+import { getPublishedCollection } from 'astro-course-university/content';
+import { withBase } from 'astro-theme-university/url';
+import { stageForWeek } from '../data/hill-stops';
+import { tutorialMarking } from '../lib/assessment-plan';
+
+const lectures = (await getPublishedCollection('lectures')).sort((a, b) => a.data.week - b.data.week);
+const tutorials = await getPublishedCollection('sessions');
+const projects = (await getPublishedCollection('assessments'))
+  .filter(entry => entry.id !== 'tutorial-participation')
+  .sort((a, b) => a.data.due.getTime() - b.data.due.getTime());
+const date = (value: Date) => new Intl.DateTimeFormat('en-AU', {
+  day: 'numeric', month: 'short', timeZone: 'Australia/Sydney',
+}).format(value);
+const fullDate = (value: Date) => new Intl.DateTimeFormat('en-AU', {
+  weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Australia/Sydney',
+}).format(value);
+const time = (value: Date) => new Intl.DateTimeFormat('en-AU', {
+  hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZone: 'Australia/Sydney',
+}).format(value);
+const day = (value: Date) => new Intl.DateTimeFormat('en-CA', {
+  year: 'numeric', month: '2-digit', day: '2-digit', timeZone: 'Australia/Sydney',
+}).format(value);
+const projectMilestones = projects.flatMap((project, index) => {
+  const release = project.data.release ? new Date(String(project.data.release)) : undefined;
+  const entries = [{ kind: 'Due', date: project.data.due }];
+  if (release) entries.push({ kind: 'Released', date: release });
+  return entries.map(milestone => ({ ...milestone, project, label: `A${index + 1}` }));
+}).sort((a, b) => a.date.getTime() - b.date.getTime());
+const weeks = lectures.map((lecture, index) => ({
+  lecture,
+  tutorial: tutorials.find(entry => entry.data.week === lecture.data.week)!,
+  milestones: projectMilestones.filter(milestone =>
+    day(milestone.date) >= day(lecture.data.date)
+    && (!lectures[index + 1] || day(milestone.date) < day(lectures[index + 1].data.date))),
+}));
+const stages = [
+  { name: 'Route', title: 'Find a route', start: 1, span: 3 },
+  { name: 'Energy', title: 'Return within budget', start: 4, span: 1 },
+  { name: 'Order', title: 'Order the tasks', start: 5, span: 2 },
+  { name: 'Fleet', title: 'Divide the work', start: 7, span: 2 },
+  { name: 'Together', title: 'Fly together', start: 9, span: 4 },
+];
+---
+<section class="semester-timeline" aria-labelledby="semester-title">
+  <div class="semester-heading">
+    <div>
+      <p class="semester-kicker">Twelve weeks · five stages</p>
+      <h2 id="semester-title">Your semester at a glance</h2>
+    </div>
+    <a class="assessment-link" href={withBase('/assessments/')}>Assessment details <span aria-hidden="true">↗</span></a>
+  </div>
+  <p class="semester-intro">Learn on Monday, experiment on Wednesday. Every tutorial counts towards your grade.</p>
+
+  <div class="assessment-summary">
+    <a class="tutorial-summary" href={withBase('/assessments/tutorial-participation/')}>
+      <span class="assessment-weight">{tutorialMarking.weight}%</span>
+      <span><strong>Weekly tutorials</strong><small>{tutorialMarking.weeks} sessions · attendance + participation</small></span>
+    </a>
+    {projects.map((project, index) => <a href={withBase(`/assessments/${project.id}/`)}>
+      <span class="assessment-weight">{project.data.weight}%</span>
+      <span><strong>Assignment {index + 1}</strong><small>Due <time datetime={project.data.due.toISOString()}>{date(project.data.due)}</time> · {time(project.data.due)} Sydney</small></span>
+    </a>)}
+  </div>
+
+  <div class="semester-chart">
+    <ol class="semester-stages" aria-label="The five course stages">
+      {stages.map(stage => <li data-stage={stageForWeek(stage.start)} style={`grid-column: ${stage.start} / span ${stage.span}`} title={stage.title}>{stage.name}</li>)}
+    </ol>
+    <div class="track-labels" aria-hidden="true">
+      <span>Week<br /><small>Starting Monday</small></span>
+      <span>Assignments<br /><small>Release & due</small></span>
+      <span>Lecture<br /><small>Monday</small></span>
+      <span>Tutorial<br /><small>{tutorialMarking.pointsPerWeek} points weekly</small></span>
+    </div>
+    <ol class="semester-weeks">
+      {weeks.map(({ lecture, tutorial, milestones }) => <li class="semester-week" data-stage={stageForWeek(lecture.data.week)}>
+        <header class="week-heading">
+          <h3><span class="week-number">W{lecture.data.week}</span><span class="week-topic">{lecture.data.title}</span></h3>
+          <time datetime={day(lecture.data.date)}>{date(lecture.data.date)}</time>
+        </header>
+        <div class:list={['week-projects', { 'no-milestone': !milestones.length }]}>
+          {milestones.map(milestone => <a class:list={['project-marker', { 'project-release': milestone.kind === 'Released' }]}
+            href={withBase(`/assessments/${milestone.project.id}/`)}
+            aria-label={`${milestone.label}: ${milestone.project.data.title}. ${milestone.project.data.weight}% of the course. ${milestone.kind} ${fullDate(milestone.date)}${milestone.kind === 'Due' ? ` at ${time(milestone.date)} Sydney time` : ''}.`}>
+            <strong>{milestone.label}<span class="project-percent"> · {milestone.project.data.weight}%</span></strong>
+            <span>{milestone.kind} <time datetime={milestone.date.toISOString()}>{date(milestone.date)}</time></span>
+          </a>)}
+        </div>
+        <a class="material-link lecture-marker" href={withBase(`/lectures/${lecture.id}/`)}
+          title={`W${lecture.data.week} · ${lecture.data.title}`}
+          aria-label={`Week ${lecture.data.week} lecture: ${lecture.data.title}. ${fullDate(lecture.data.date)}.`}>
+          <span class="material-dot" aria-hidden="true"></span>
+          <span class="material-name">Lecture</span>
+          <time datetime={day(lecture.data.date)}>{date(lecture.data.date)}</time>
+          <span class="mobile-material-title">{lecture.data.title}</span>
+        </a>
+        <a class="material-link tutorial-marker" href={withBase(`/sessions/${tutorial.id}/`)}
+          title={`W${tutorial.data.week} · ${tutorial.data.title} · ${tutorialMarking.pointsPerWeek} points`}
+          aria-label={`Week ${tutorial.data.week} tutorial: ${tutorial.data.title}. ${fullDate(tutorial.data.date)}. ${tutorialMarking.attendancePoints} point for attendance and ${tutorialMarking.participationPoints} point for participation.`}>
+          <span class="material-dot" aria-hidden="true"></span>
+          <span class="material-name">Tutorial</span>
+          <time datetime={day(tutorial.data.date)}>{date(tutorial.data.date)}</time>
+          <span class="mobile-material-title">{tutorial.data.title}</span>
+          <span class="tutorial-points">{tutorialMarking.pointsPerWeek} pts</span>
+        </a>
+      </li>)}
+    </ol>
+  </div>
+  <p class="semester-marking"><strong>Each Wednesday:</strong> {tutorialMarking.attendancePoints} point for attendance + {tutorialMarking.participationPoints} point for taking part in the experiment. <a href={withBase('/assessments/tutorial-participation/')}>How participation is marked →</a></p>
+</section>
+
+<style>
+  .semester-timeline { container-type: inline-size; margin-block: 2.5rem; --timeline-gold: light-dark(#785500, #e4c580); --timeline-rule: var(--at-border); }
+  .semester-heading { display: flex; align-items: end; justify-content: space-between; gap: 1rem; }
+  .semester-kicker { margin: 0 0 .25rem; color: var(--at-text-secondary); font-size: .77rem; }
+  .semester-heading h2 { margin: 0; color: var(--at-text); font-size: clamp(1.45rem, 3vw, 2rem); letter-spacing: -.025em; }
+  .assessment-link { flex-shrink: 0; color: var(--timeline-gold); font-size: .78rem; padding-block: .4rem; }
+  .semester-intro { margin: .7rem 0 1.2rem; font-size: .94rem; color: var(--at-text-secondary); }
+  .assessment-summary { display: grid; grid-template-columns: 1.25fr 1fr 1fr; margin-bottom: 1.35rem; border: 1px solid var(--timeline-rule); border-radius: .4rem; overflow: hidden; }
+  .assessment-summary > a { display: flex; align-items: center; gap: .8rem; padding: 1rem; text-decoration: none; color: var(--at-text); background: var(--at-bg-alt); }
+  .assessment-summary > a + a { border-left: 1px solid var(--timeline-rule); }
+  .assessment-summary > a:hover { background: color-mix(in srgb, var(--at-primary) 10%, var(--at-bg)); }
+  .assessment-summary strong, .assessment-summary small { display: block; }
+  .assessment-summary strong { font-size: .85rem; font-weight: 600; }
+  .assessment-summary small { color: var(--at-text-secondary); font-size: .7rem; margin-top: .2rem; }
+  .assessment-weight { font-size: 1.65rem; line-height: 1; font-weight: 650; letter-spacing: -.055em; color: var(--timeline-gold); }
+  .semester-chart { position: relative; padding-left: 6rem; border-bottom: 1px solid var(--timeline-rule); }
+  .semester-stages { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 3px; margin: 0 0 .6rem; padding: 0; list-style: none; }
+  .semester-stages li { margin: 0; font-size: .68rem; font-weight: 600; color: var(--stage-color); background: color-mix(in srgb, var(--stage-color) 9%, var(--at-bg)); border-top: 3px solid var(--stage-color); border-radius: .2rem .2rem 0 0; padding: .45rem .3rem; text-align: center; }
+  .track-labels { position: absolute; bottom: 0; left: 0; display: grid; grid-template-rows: 3.8rem 7rem 4.8rem 5.4rem; width: 6rem; font-size: .73rem; font-weight: 600; }
+  .track-labels > span { display: flex; flex-direction: column; justify-content: center; line-height: 1.55; padding-right: .35rem; }
+  .track-labels small { font-size: .6rem; font-weight: 400; color: var(--at-text-secondary); }
+  .semester-weeks { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); padding: 0; margin: 0; list-style: none; }
+  .semester-week { min-width: 0; display: grid; grid-template-rows: 3.8rem 7rem 4.8rem 5.4rem; border-left: 1px solid var(--timeline-rule); margin: 0; text-align: center; }
+  .semester-week:last-child { border-right: 1px solid var(--timeline-rule); }
+  .week-heading { display: flex; align-items: center; justify-content: center; flex-direction: column; gap: .2rem; }
+  .week-heading h3 { margin: 0; color: var(--at-text); font-size: .8rem; font-weight: 650; }
+  .week-heading > time { font-size: .63rem; color: var(--at-text-secondary); white-space: nowrap; }
+  .week-topic, .mobile-material-title, .material-name { display: none; }
+  .week-projects { display: flex; justify-content: center; flex-direction: column; gap: .3rem; padding: .25rem .2rem; border-block: 1px solid var(--timeline-rule); background: color-mix(in srgb, var(--at-primary) 4%, var(--at-bg)); }
+  .project-marker { display: flex; flex-direction: column; justify-content: center; min-height: 2.7rem; border: 1px solid var(--timeline-gold); border-radius: .25rem; padding: .3rem .1rem; background: color-mix(in srgb, var(--at-primary) 13%, var(--at-bg)); color: var(--timeline-gold); text-decoration: none; line-height: 1.45; }
+  .project-marker strong { font-size: .66rem; white-space: nowrap; }
+  .project-marker > span { font-size: .58rem; }
+  .project-release { border-style: dashed; background: var(--at-bg); }
+  .project-marker:hover { text-decoration: underline; background: color-mix(in srgb, var(--at-primary) 20%, var(--at-bg)); }
+  .material-link { display: flex; align-items: center; justify-content: center; flex-direction: column; gap: .35rem; text-decoration: none; color: var(--stage-color); position: relative; min-width: 0; }
+  .material-link time { font-size: .65rem; white-space: nowrap; color: var(--at-text-secondary); }
+  .material-link:hover { background: color-mix(in srgb, var(--stage-color) 8%, var(--at-bg)); }
+  .material-link:hover time { text-decoration: underline; }
+  .material-dot { display: block; width: .75rem; height: .75rem; border-radius: 50%; border: 2px solid var(--stage-color); background: var(--stage-color); }
+  .tutorial-marker { border-top: 1px solid var(--timeline-rule); background: color-mix(in srgb, var(--stage-color) 4%, var(--at-bg)); }
+  .tutorial-marker .material-dot { border-radius: .18rem; background: var(--at-bg); }
+  .tutorial-points { font-size: .6rem; font-weight: 650; line-height: 1.2; }
+  .semester-marking { font-size: .75rem; color: var(--at-text-secondary); margin: 1rem 0 0; line-height: 1.7; }
+  .semester-marking strong { color: var(--at-text); }
+  .semester-marking a { color: var(--timeline-gold); white-space: nowrap; }
+  .semester-timeline a:focus-visible { outline: 3px solid var(--at-text); outline-offset: 3px; z-index: 1; }
+  @container (min-width: 1100px) {
+    .semester-stages span, .material-link time, .project-marker strong { font-size: .78rem; }
+    .project-marker > span, .tutorial-points, .week-heading > time { font-size: .7rem; }
+    .track-labels { font-size: .82rem; }
+  }
+  @container (max-width: 700px) {
+    .semester-heading { display: block; }
+    .assessment-link { display: inline-block; margin-top: .35rem; }
+    .semester-intro { font-size: .87rem; }
+    .assessment-summary { grid-template-columns: 1fr; }
+    .assessment-summary > a { padding: .9rem; gap: 1rem; }
+    .assessment-summary > a + a { border-left: 0; border-top: 1px solid var(--timeline-rule); }
+    .assessment-weight { width: 3.2rem; font-size: 1.5rem; }
+    .assessment-summary strong { font-size: .9rem; }
+    .assessment-summary small { font-size: .74rem; }
+    .semester-chart { padding-left: 0; border: 0; }
+    .semester-stages { display: flex; flex-wrap: wrap; gap: .3rem; margin-bottom: 1.2rem; }
+    .semester-stages span { font-size: .7rem; flex: 1; padding-inline: .4rem; border-radius: .2rem; white-space: nowrap; }
+    .track-labels { display: none; }
+    .semester-weeks { display: block; }
+    .semester-week, .semester-week:last-child { grid-template-columns: 3.2rem minmax(0, 1fr); grid-template-rows: auto auto auto; border: 0; border-left: 2px solid var(--stage-color); text-align: left; gap: .5rem .7rem; padding: 0 0 1.5rem .6rem; position: relative; }
+    .semester-week::before { content: ''; position: absolute; left: -.34rem; top: .36rem; width: .55rem; height: .55rem; border-radius: 50%; background: var(--stage-color); }
+    .week-heading { grid-column: 1; grid-row: 1 / 4; align-items: start; justify-content: start; padding-top: .15rem; }
+    .week-heading h3 { color: var(--stage-color); font-size: .9rem; }
+    .week-heading > time { font-size: .65rem; }
+    .material-link { grid-column: 2; border: 1px solid var(--timeline-rule); border-radius: .3rem; display: grid; grid-template-columns: auto 1fr auto; justify-content: start; padding: .7rem; gap: .3rem .45rem; }
+    .lecture-marker { grid-row: 1; }
+    .tutorial-marker { grid-row: 2; }
+    .material-name { display: block; font-size: .76rem; font-weight: 650; }
+    .material-link time { font-size: .67rem; }
+    .material-dot { width: .55rem; height: .55rem; }
+    .mobile-material-title { display: block; grid-column: 1 / -1; color: var(--at-text); font-size: .77rem; line-height: 1.4; }
+    .tutorial-points { grid-column: 1 / -1; font-size: .65rem; }
+    .week-projects { grid-column: 2; grid-row: 3; border: 0; padding: 0; gap: .5rem; background: none; }
+    .week-projects.no-milestone { display: none; }
+    .project-marker { padding: .65rem .7rem; }
+    .project-marker strong { font-size: .8rem; }
+    .project-marker > span { font-size: .75rem; }
+    .semester-marking { font-size: .8rem; margin-top: .2rem; }
+    .semester-marking a { white-space: normal; }
+  }
+</style>

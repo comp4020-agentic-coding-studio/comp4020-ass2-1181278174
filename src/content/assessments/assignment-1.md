@@ -2,8 +2,9 @@
 title: "Assignment 1: single-drone routing and delivery plan"
 description: "One drone, the six known orders #01–#06: correct search, the full round trip with energy, and a justified task order. Released week 3, due week 7."
 week: 7
+release: 2027-03-08
 due: 2027-04-09T17:00:00+10:00
-weight: 40
+weight: 30
 marking:
   mode: weighted
   criteria:

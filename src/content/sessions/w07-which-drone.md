@@ -33,7 +33,7 @@ Use **Open full Lab** for editable inputs, strategy code, exports and the practi
 
 Keep the fleet fixed when comparing equal counts and predicted completion. Record one feasibility row and one justified assignment decision.
 
-**What to keep:** A2: feasibility matrix, initial assignment and a migration. These tutorial records are ungraded preparation for the assignment.
+**What to keep:** A2: feasibility matrix, initial assignment and a migration. Show the tutor your prediction, experiment and explanation for this week’s participation point; keep the record to develop your assignment.
 
 ## Optional extension
 

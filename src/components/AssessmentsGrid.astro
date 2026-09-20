@@ -3,20 +3,22 @@ import { getPublishedCollection } from "astro-course-university/content";
 import Card from "astro-theme-university/components/Card.astro";
 import CardGrid from "astro-theme-university/components/CardGrid.astro";
 import { formatCourseDate } from "../lib/dates";
+import { withBase } from "astro-theme-university/url";
 
 const assessments = await getPublishedCollection("assessments");
-const visible = assessments.sort((a, b) => a.data.week - b.data.week);
+const visible = assessments.sort((a, b) =>
+  (a.id === 'tutorial-participation' ? 0 : a.data.week) - (b.id === 'tutorial-participation' ? 0 : b.data.week));
 ---
 
 <CardGrid columns={2}>
   {
     visible.map((assessment) => (
-      <Card headingLevel="h2" title={assessment.data.title} href={`/assessments/${assessment.id}/`}>
+      <Card headingLevel="h2" title={assessment.data.title} href={withBase(`/assessments/${assessment.id}/`)}>
         {assessment.data.description && <p>{assessment.data.description}</p>}
         {assessment.data.weight != null && (
           <p>
             <small>
-              Due {formatCourseDate(assessment.data.due)} · Weight: {assessment.data.weight}%{assessment.data.draft && " · Draft"}
+              {assessment.id === 'tutorial-participation' ? 'Every tutorial · Weeks 1–12' : `Due ${formatCourseDate(assessment.data.due)}`} · Weight: {assessment.data.weight}%{assessment.data.draft && " · Draft"}
             </small>
           </p>
         )}

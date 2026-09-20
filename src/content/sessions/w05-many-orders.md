@@ -33,7 +33,7 @@ Use **Open full Lab** for editable inputs, strategy code, exports and the practi
 
 Test readiness, turnaround and lateness measured at delivery. Submit the per-order table and two objective tuples with one sentence explaining the tie on lateness.
 
-**What to keep:** A1: timetable recurrence and baseline comparison. These tutorial records are ungraded preparation for the assignment.
+**What to keep:** A1: timetable recurrence and baseline comparison. Show the tutor your prediction, experiment and explanation for this week’s participation point; keep the record to develop your assignment.
 
 ## Optional extension
 

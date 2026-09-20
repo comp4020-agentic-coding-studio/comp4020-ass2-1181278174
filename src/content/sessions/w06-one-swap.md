@@ -33,7 +33,7 @@ Use **Open full Lab** for editable inputs, strategy code, exports and the practi
 
 Check the final neighbourhood and retain the exact benchmark. Repeat on the canonical case and report its zero gap without claiming swaps always find an optimum.
 
-**What to keep:** A1: local search, exact comparison and the complete draft. These tutorial records are ungraded preparation for the assignment.
+**What to keep:** A1: local search, exact comparison and the complete draft. Show the tutor your prediction, experiment and explanation for this week’s participation point; keep the record to develop your assignment.
 
 ## Optional extension
 

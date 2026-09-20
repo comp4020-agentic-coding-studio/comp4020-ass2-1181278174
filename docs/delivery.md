@@ -127,7 +127,7 @@ are what carry the distinct position. This is design analysis, not a predicted g
 | A niche SlopU course with 12 dated teaching weeks | Course name, outcomes, week pages and assignments agree; 2027-02-22 to 2027-05-10. |
 | A valid SLOP code, fixed branding and content contract | SLOP3969, level 3; name, logo, palette, collections and generated API kept; `README.md` is the authority. |
 | Staff | Two people pages; starter images replaced. |
-| At least one real lecture deck; assessment totals 100% | The W9 lecture opens a complete deck; assignments are 40% / 60%; each internal rubric sums to 100. |
+| At least one real lecture deck; assessment totals 100% | The W9 lecture opens a complete deck; tutorials are 20% and assignments are 30% / 50%; each internal rubric sums to 100. |
 | Own checks and process material | `spec/`, `pnpm check`, `pnpm check:evidence`; the author's 400–600-word `PROCESS.md`, `CLAUDE.md`, a real commit history. |
 | Live site and source | The assigned public GitHub Pages site and repository; core paths verified at 1920×1080 and 390×844. |
 | Own artwork | Placeholder assets replaced with assets that fit the course and pass the evidence check. |

@@ -33,7 +33,7 @@ Use **Open full Lab** for editable inputs, strategy code, exports and the practi
 
 Add a failed-reservation rollback test. Record priority, budget, delivery, return and energy. Explain why one priority failing does not establish joint impossibility.
 
-**What to keep:** A2: space-time search, priorities and rollback evidence. These tutorial records are ungraded preparation for the assignment.
+**What to keep:** A2: space-time search, priorities and rollback evidence. Show the tutor your prediction, experiment and explanation for this week’s participation point; keep the record to develop your assignment.
 
 ## Optional extension
 

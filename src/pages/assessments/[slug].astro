@@ -21,6 +21,7 @@ export async function getStaticPaths() {
 
 const { assessment } = Astro.props;
 const { Content } = await render(assessment);
+const isTutorial = assessment.id === 'tutorial-participation';
 ---
 
 <ContentLayout
@@ -37,12 +38,12 @@ const { Content } = await render(assessment);
       </Callout>
     )
   }
-  <p><strong>Due:</strong> {formatCourseDate(assessment.data.due)} · 17:00 Australia/Sydney · <strong>Weight:</strong> {assessment.data.weight}%</p>
-  <aside class="assessment-resources" aria-label="Assignment practice resources">
+  <p>{isTutorial ? <><strong>When:</strong> Every Wednesday tutorial, weeks 1–12</> : <><strong>Due:</strong> {formatCourseDate(assessment.data.due)} · 17:00 Australia/Sydney</>} · <strong>Weight:</strong> {assessment.data.weight}%</p>
+  {!isTutorial && <aside class="assessment-resources" aria-label="Assignment practice resources">
     <h2>Start with a reproducible experiment</h2>
     <p>{assessment.id === "assignment-1" ? "Use W3 for the search counterexample, W4 for the return budget, and W5–W6 for your six-order plan." : "Use W8 for charging, W9–W10 for reservations, and W11–W12 for joint evaluation."}</p>
     <p><a href={withBase(assessment.id === "assignment-1" ? "/lab/?assignment=1#lab-w6" : "/lab/#lab-w11")}>Open the relevant Lab →</a></p>
-    <p><a href="#worked-example">Read a worked evidence example ↓</a></p>
+    <p><a href={withBase(`/assessments/${assessment.id}/#worked-example`)}>Read a worked evidence example ↓</a></p>
     <details><summary>Download the scenario, practice pack and sample records</summary>
     <ul>
       <li><a href={withBase("/practice/scenario.json")} download>Download canonical scenario (JSON)</a></li>
@@ -53,9 +54,9 @@ const { Content } = await render(assessment);
     </ul>
     </details>
     <p>Use “My experiment record” in the Lab to save a baseline, explain a change and export the run. Import the sample record and press Run to recompute it. Submit your own code, checked output and analysis through the course submission process; this demonstration site does not receive submissions.</p>
-  </aside>
+  </aside>}
   <Content />
-  <AssessmentExample assignment={assessment.id} />
+  {!isTutorial && <AssessmentExample assignment={assessment.id} />}
   <SpecList spec={assessment.data.spec}>
     The brief poses the problem and leaves room for a response. The spec is the
     fixed part: what a marker checks. Some lines can be checked mechanically;

@@ -33,7 +33,7 @@ Use **Open full Lab** for editable inputs, strategy code, exports and the practi
 
 Inspect an accepted migration and its changed task times. Record the objective before/after, the search budget and a causal explanation. A budget stop is not a local-optimum proof.
 
-**What to keep:** A2: integrated improvement and a same-input comparison. These tutorial records are ungraded preparation for the assignment.
+**What to keep:** A2: integrated improvement and a same-input comparison. Show the tutor your prediction, experiment and explanation for this week’s participation point; keep the record to develop your assignment.
 
 ## Optional extension
 

@@ -33,7 +33,7 @@ Use **Open full Lab** for editable inputs, strategy code, exports and the practi
 
 Write one route-cost table, the task-phase sketch and a geometric counterexample. Check a reverse direction separately.
 
-**What to keep:** A1: problem definition and legal-edge reasoning. These tutorial records are ungraded preparation for the assignment.
+**What to keep:** A1: problem definition and legal-edge reasoning. Show the tutor your prediction, experiment and explanation for this week’s participation point; keep the record to develop your assignment.
 
 ## Optional extension
 

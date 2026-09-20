@@ -49,8 +49,8 @@ the same conditions → say what is still guaranteed.
 | Prerequisites | Functions, loops, lists and dictionaries; queues, priority queues, basic graphs; coordinates, distances, sums. |
 | Contact hours | 12 weeks; a one-hour lecture (Monday) and a two-hour tutorial (Wednesday) each week. Code and reports are finished outside class. |
 | Output | A cumulative set of search, scheduling and space-time coordination modules, with arguments, tests, plans and experiment records. |
-| Assessment | Two individual assignments: 40% and 60%. |
-| Tutorials | Weekly, not graded; they feed the two assignments directly. |
+| Assessment | Tutorial attendance and lab participation: 20%; two individual assignments: 30% and 50%. |
+| Tutorials | All twelve weeks count equally, with one attendance point and one participation point per week; they feed the assignments directly. |
 | Viewpoint | A central planner and verifier. Not a pilot, not a city operator. |
 | Language | The site is in English. |
 
@@ -512,19 +512,31 @@ JSON data, the same function signatures, the same tests. The site does not depen
 demonstrate anything. Assignments require code and explanation; choosing a preset or taking a
 screenshot does not replace an implementation.
 
-## 8. The two assignments
+## 8. Assessment: weekly tutorials and two assignments
 
-Dates and weeks in this section are authoritative. Both are individual; tutorials are not
-graded.
+Dates and weeks in this section are authoritative. Both assignments are individual.
+Tutorial attendance and lab participation are assessed every week as a separate component.
 
-| Assignment | Weight | Released | Due | Teaching it needs |
+| Assessment | Weight | Released | Due | Teaching it needs |
 |---|---:|---|---|---|
-| A1: single-drone routing and delivery plan | 40% | W3, Mon 2027-03-08 | W7, Fri 2027-04-09 17:00 | W1–W6 |
-| A2: multi-drone cooperative delivery planner | 60% | W7, Mon 2027-04-05 | W12, Fri 2027-05-14 17:00 | W7–W11, reusing A1 |
+| Weekly tutorial attendance and lab participation | 20% | W1 | Every Wednesday, W1–W12 | Each week’s case |
+| A1: single-drone routing and delivery plan | 30% | W3, Mon 2027-03-08 | W7, Fri 2027-04-09 17:00 | W1–W6 |
+| A2: multi-drone cooperative delivery planner | 50% | W7, Mon 2027-04-05 | W12, Fri 2027-05-14 17:00 | W7–W11, reusing A1 |
 | **Total** | **100%** | | | |
 
 All times `Australia/Sydney`. A1's due date in W7 covers W1–W6 only; A2 starts with
 assignment and completes coordination as it is taught. A2 is due after the W12 tutorial.
+
+### Weekly tutorial attendance and lab participation
+
+Every week earns up to two raw points: one for attendance, one for a prediction,
+an experiment or comparison, and an explanation shown to the tutor. A failed experiment
+can earn the participation point when its failure is explained. All twelve weeks count;
+24 raw points scale to 20 percentage points of the course grade. Attendance and
+participation are recorded separately, and each contributes half of this component.
+For an approved absence or access need, the student agrees an equivalent activity and
+check-in with the teaching team; the team confirms how credit applies. The website
+does not award points or store attendance.
 
 ### A1: single-drone routing and delivery plan
 
@@ -591,7 +603,7 @@ cases and resources; there are no marks for code volume or rendering quality.
 | **Total** | **100%** |
 
 W8, W10 and W11 check the resource plan, the smallest cooperative case and the experiment
-design; all are ungraded feedback. A1 problems may be fixed; a student who continues A2 on a
+design; this is formative assignment feedback, separate from the weekly tutorial mark. A1 problems may be fixed; a student who continues A2 on a
 credited reference searcher is marked on the new work, not penalised twice for an early error.
 
 ### Shared marking principles

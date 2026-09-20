@@ -5,6 +5,7 @@ import { courseMeta } from '../course-config';
 import { siteConfig } from '../site-config';
 import { withBase } from 'astro-theme-university/url';
 import HillWalk from '../components/HillWalk.astro';
+import SemesterTimeline from '../components/SemesterTimeline.astro';
 import HomeCorridor from '../components/HomeCorridor.astro';
 import Record from '../components/Record.astro';
 const opening = courseMeta.description.match(/^.*?[.!?](?:\s|$)/)?.[0].trim() ?? courseMeta.description;
@@ -24,6 +25,7 @@ const opening = courseMeta.description.match(/^.*?[.!?](?:\s|$)/)?.[0].trim() ??
     </div>
   </section>
   <HillWalk />
+  <SemesterTimeline />
   <section aria-labelledby="home-corridor-title">
     <h2 id="home-corridor-title">One passage, two drones</h2>
     <HomeCorridor />

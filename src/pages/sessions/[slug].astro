@@ -1,5 +1,6 @@
 ---
 import YouAreHere from "../../components/YouAreHere.astro";
+import TutorialCredit from "../../components/TutorialCredit.astro";
 import WeekNavigation from "../../components/WeekNavigation.astro";
 import { render } from "astro:content";
 import { getPublishedCollection } from "astro-course-university/content";
@@ -29,6 +30,7 @@ const { Content } = await render(session);
     <div><p><strong>{formatCourseDate(session.data.date)}</strong></p><WeekNavigation week={session.data.week} kind="sessions" /></div>
     <YouAreHere week={session.data.week} />
   </div>
+  <TutorialCredit week={session.data.week} />
   <details class="tutorial-guide">
     <summary>Two-hour tutorial: preparation, coding and checks</summary>
     <Content />

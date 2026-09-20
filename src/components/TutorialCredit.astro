@@ -1,0 +1,15 @@
+---
+import { withBase } from 'astro-theme-university/url';
+import { tutorialMarking } from '../lib/assessment-plan';
+interface Props { week: number }
+const { week } = Astro.props;
+---
+<aside class="tutorial-credit" aria-label={`Week ${week} tutorial marking`}>
+  <p><strong>This week counts.</strong> {tutorialMarking.attendancePoints} attendance point + {tutorialMarking.participationPoints} participation point.</p>
+  <p>All {tutorialMarking.weeks} weeks contribute to the {tutorialMarking.weight}% tutorial mark. <a href={withBase('/assessments/tutorial-participation/')}>How this is marked →</a></p>
+</aside>
+<style>
+  .tutorial-credit { border-left: 3px solid var(--at-primary); padding: .55rem 1rem; margin-block: 1rem; background: var(--at-bg-alt); font-size: .88rem; }
+  .tutorial-credit p { margin: .25rem 0; }
+  .tutorial-credit p + p { font-size: .8rem; color: var(--at-text-secondary); }
+</style>

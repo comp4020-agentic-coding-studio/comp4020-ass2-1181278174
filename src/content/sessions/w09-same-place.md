@@ -33,7 +33,7 @@ Use **Open full Lab** for editable inputs, strategy code, exports and the practi
 
 Test [0,6) against [5,7) and against [6,8). Explain the waiting point, interval boundary and energy model.
 
-**What to keep:** A2: conflict definition and reservation filtering. These tutorial records are ungraded preparation for the assignment.
+**What to keep:** A2: conflict definition and reservation filtering. Show the tutor your prediction, experiment and explanation for this week’s participation point; keep the record to develop your assignment.
 
 ## Optional extension
 

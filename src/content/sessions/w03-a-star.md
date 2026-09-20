@@ -33,7 +33,7 @@ Use **Open full Lab** for editable inputs, strategy code, exports and the practi
 
 Record the inconsistent edge, the changed parent and returned path. State the conditions on the heuristic separately from the conditions on the implementation.
 
-**What to keep:** A1: A*, heuristic justification and regression tests. These tutorial records are ungraded preparation for the assignment.
+**What to keep:** A1: A*, heuristic justification and regression tests. Show the tutor your prediction, experiment and explanation for this week’s participation point; keep the record to develop your assignment.
 
 ## Optional extension
 

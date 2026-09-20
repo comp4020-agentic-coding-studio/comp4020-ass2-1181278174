@@ -33,7 +33,7 @@ Use **Open full Lab** for editable inputs, strategy code, exports and the practi
 
 Ask another reader to recover one delivery time and its cause. Finish code, tests, checked plan, comparisons and your own explanation; keep a designed extra order in a separate scenario.
 
-**What to keep:** A2: final audit, reproducible files and personal analysis. These tutorial records are ungraded preparation for the assignment.
+**What to keep:** A2: final audit, reproducible files and personal analysis. Show the tutor your prediction, experiment and explanation for this week’s participation point; keep the record to develop your assignment.
 
 ## Optional extension
 
