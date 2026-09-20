@@ -1,10 +1,11 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { corridorAt } from './replay-inspection';
 import type { SceneData } from './model.ts';
 import { fleetAt, padSchedule, routePoints } from './replay.ts';
 import { terrainHeight } from './terrain.ts';
 import { toScene, visualLayout } from './visual-layout';
-import { loadAssets, release, roadSurface } from './scene-assets';
+import { flightNetwork, loadAssets, release, roadSurface } from './scene-assets';
 export function mountScene(host: HTMLElement, data: SceneData, onSelect: (node: string) => void) {
     const scene = new THREE.Scene();
     scene.background = new THREE.Color('#edf1e6');
@@ -33,12 +34,8 @@ export function mountScene(host: HTMLElement, data: SceneData, onSelect: (node: 
     scene.add(new THREE.Mesh(surface, new THREE.MeshStandardMaterial({ color: '#c0cca3', roughness: 1, flatShading: false })));
     const nodes = new Map(data.map.nodes.map(n => [n.id, n]));
     const drawLine = (pts: THREE.Vector3[], color: string, width = 1) => { const geometry = new THREE.BufferGeometry().setFromPoints(pts); const line = new THREE.Line(geometry, new THREE.LineBasicMaterial({ color, linewidth: width })); scene.add(line); return line; };
-    const graph = new THREE.Group(); scene.add(graph); graph.visible = !!data.focusNodes;
+    const graph=flightNetwork(data); scene.add(graph); graph.visible=!!data.focusNodes;
     scene.add(roadSurface(data));
-    for (const e of data.map.edges) {
-        const a = nodes.get(e.from)!, b = nodes.get(e.to)!;
-        graph.add(drawLine(e.polyline.map(([x, y], i) => to3(x, y, a.z + (b.z - a.z) * i / Math.max(1, e.polyline.length - 1) + 3)), e.resource ? '#c0780b' : '#879c85'));
-    }
     const boxes: {
         id: string;
         mesh: THREE.Mesh<THREE.BoxGeometry, THREE.MeshStandardMaterial>;
@@ -209,9 +206,10 @@ export function mountScene(host: HTMLElement, data: SceneData, onSelect: (node: 
             caption.el.dataset.drone=state.drone; caption.el.dataset.phase=state.phase; caption.el.dataset.parcel=String(state.parcel);
             if(followed===state.drone) { const delta=point.clone().sub(controls.target); controls.target.copy(point); camera.position.add(delta); controls.update(); }
         }
-        const occupants=data.events.filter(e=>e.resource==='corridor'&&e.start<=t&&t<e.end);
-        passage.material.color.set(occupants.length>1?'#c23838':occupants.length?'#de9b19':'#c79726'); passage.material.opacity=occupants.length>1?.4:.15;
-        corridorLabel.textContent=occupants.length>1?'CORRIDOR · CONFLICT':`CORRIDOR · ${occupants.map(e=>e.drone).join(', ')||'free'}`;
+        const corridor=corridorAt(data,t);
+        passage.material.color.set(corridor.color); passage.material.opacity=['closed','conflict'].includes(corridor.state)?.4:.15;
+        corridorLabel.textContent=`CORRIDOR · ${corridor.state==='closed'?'CLOSED':corridor.state==='conflict'?'CONFLICT':corridor.occupants.map(e=>e.drone).join(', ')||'free'}`;
+        host.dataset.corridorState=corridor.state;
         const charging=padSchedule(data).filter(p=>p.event.start<=t&&t<p.event.end);
         padLabels.forEach((el,i)=>{ const owner=charging.find(p=>p.pad===i)?.event.drone; el.textContent=`PAD ${i+1} · ${owner?'charging '+owner:'free'}`; });
         render();

@@ -5,7 +5,7 @@ import { startRun } from './runner.ts';
 import { basePath, esc, mapPoint, tableHtml, workspaceHtml } from './render.ts';
 import { sourceFor } from './strategies.ts';
 import { demonstrationInput } from './teaching';
-import { replayIssues, resourceReadout, skipIdle, waitReason, waits, type ReplayIssue } from './replay-inspection';
+import { corridorAt, replayIssues, resourceReadout, skipIdle, waitReason, waits, type ReplayIssue } from './replay-inspection';
 import { fleetAt, routePoints } from './replay.ts';
 type Archive = {
     name: string;
@@ -300,8 +300,7 @@ export function mountWorkspace(root: HTMLElement) {
             slider.value = String(t);
             q('[data-time-output]').textContent = `${Math.round(t)} s`;
         }
-        if (!run.scene?.events.length)
-            return;
+        if (!run.scene) return;
         scene?.time(t);
         const states = fleetAt(run.scene, t), layer = content.querySelector('[data-map-drones]');
         if (layer)
@@ -309,8 +308,10 @@ export function mountWorkspace(root: HTMLElement) {
         const matching = selected?.kind === 'task' ? states.filter(s => s.event.order === selected!.id) : states;
         const current = matching.length ? matching : states;
         const resources=q('[data-resource-state]'); if(resources) resources.textContent=resourceReadout(run.scene,t);
-        const clash=run.scene.events.filter(e=>e.resource==='corridor'&&e.start<=t&&t<e.end).length>1;
-        content.querySelector('[data-corridor]')?.setAttribute('stroke',clash?'#c23838':'#c79726');
+        const corridor=corridorAt(run.scene,t);
+        const indicator=content.querySelector<SVGElement>('[data-corridor]');
+        indicator?.setAttribute('stroke',corridor.color); if(indicator) indicator.dataset.state=corridor.state;
+        if (!states.length) return;
         const out = q('[data-live-position]');
         if (out)
             out.textContent = current.slice(0, 5).map(s => { const type = canonical.fleet.types.find(t => t.id === (run.scene!.droneTypes?.[s.drone] ?? config.scenario.drones.find(d => d.id === s.drone)?.type ?? 'L'))!; return `${s.drone} · ${s.event.order}: ${s.phase}, ${Math.round(s.position.z)} m elevation, ${Math.round(type.batteryJ - s.energyUsed)} J remaining${s.parcel ? ', carrying parcel' : ', no parcel'}${s.pad !== undefined && s.pad >= 0 ? ', pad '+(s.pad+1) : ''}`; }).join(' | ');

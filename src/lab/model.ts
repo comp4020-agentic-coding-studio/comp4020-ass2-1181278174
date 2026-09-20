@@ -127,6 +127,7 @@ export interface SceneData {
     blockedBuildings?: string[];
     focusNodes?: string[];
     legOnly?: boolean;
+    closures?: {start: number; end: number}[];
 }
 export interface LabRun {
     format: "slop3969-lab-run";

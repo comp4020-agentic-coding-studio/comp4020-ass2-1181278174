@@ -34,3 +34,28 @@ describe('replay evidence navigation',()=>{
         expect(moving.z).toBeCloseTo(points[2].z,6);
     });
 });
+
+describe('closed corridors are visible constraints',()=>{
+    it('shows closure boundaries even when no drone is in the corridor',()=>{
+        const input=defaultConfig(10);input.scenario.closures=[{start:5100,end:5300}];
+        const run=runExperiment(input), scene=run.scene!;
+        expect(resourceReadout(scene,5200)).toContain('CLOSED [5100, 5300)');
+        expect(resourceReadout(scene,5099)).not.toContain('CLOSED');
+        expect(resourceReadout(scene,5300)).not.toContain('CLOSED');
+        expect(scene.closures).toEqual(input.scenario.closures);
+    });
+    it('locates a flight through a closure even when the planner ignored it',()=>{
+        const input=defaultConfig(10);input.method='independent';
+        const initial=runExperiment(input), flight=initial.scene!.events.find(e=>e.resource==='corridor')!;
+        input.scenario.closures=[{start:flight.start,end:flight.end}];
+        const run=runExperiment(input), issue=replayIssues(run).find(i=>i.id.startsWith('closure-'))!;
+        expect(issue).toBeDefined();expect(issue.tick).toBe(flight.start);expect(issue.end).toBe(flight.end);
+        expect(resourceReadout(run.scene!,flight.start)).toContain('CONFLICT');
+        expect(run.status).toBe('diagnostic');
+    });
+    it('names a closure that blocks a recorded entrance wait',()=>{
+        const input=defaultConfig(9);input.arrangement='wait';const scene=runExperiment(input).scene!;
+        scene.closures=[{start:100,end:112}];
+        expect(waitReason(scene,waits(scene)[0])).toContain('corridor closure [100, 112)');
+    });
+});

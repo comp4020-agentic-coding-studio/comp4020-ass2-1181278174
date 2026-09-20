@@ -3,6 +3,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import type { SceneData } from './model';
 import { houseModels, toScene, visualLayout } from './visual-layout';
 import { terrainHeight } from './terrain';
+import { routePoints } from './replay';
 
 export function release(root: THREE.Object3D) {
     const geometries = new Set<THREE.BufferGeometry>(), materials = new Set<THREE.Material>();
@@ -42,4 +43,14 @@ export function roadSurface(data: SceneData) {
     }
     const geometry=new THREE.BufferGeometry(); geometry.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3)); geometry.computeVertexNormals();
     return new THREE.Mesh(geometry,new THREE.MeshStandardMaterial({color:'#9da897',roughness:1,side:THREE.DoubleSide}));
+}
+
+export function flightNetwork(data: SceneData) {
+    const graph=new THREE.Group();
+    for(const edge of data.map.edges) {
+        const points=routePoints(data,[edge.from,edge.to]).map(p=>new THREE.Vector3(...toScene(p.x,p.y,p.z+3)));
+        const line=new THREE.Line(new THREE.BufferGeometry().setFromPoints(points),new THREE.LineBasicMaterial({color:edge.resource?'#c0780b':'#879c85'}));
+        line.userData.edge=edge.id;graph.add(line);
+    }
+    return graph;
 }

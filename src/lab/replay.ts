@@ -47,7 +47,7 @@ export function fleetAt(scene: SceneData, tick: number) {
         const airborne=!!active&&(event.kind==='move'||event.kind==='hover');
         const phase=active ? event.phase==='service'?'delivering':event.kind==='hover'?'hovering':event.kind==='ground-wait'&&['out','back'].includes(event.phase)?'ground wait':phases[event.phase]
             : tick<own[0].start ? (scene.orders.find(o=>o.id===event.order)?.ready??0)>tick?'order not ready':'idle' : scene.legOnly?'leg complete':'idle';
-        const parcel=!!active&&['out','load','service'].includes(event.phase);
+        const parcel=(!!active&&['out','load','service'].includes(event.phase)) || !!scene.legOnly&&event.phase==='out'&&tick>=event.end;
         const airSeconds=own.filter(e=>e.kind==='move'||e.kind==='hover').reduce((sum,e)=>sum+(e.end-e.start)*progress(tick,e.start,e.end),0);
         const pad=phase==='charging'?pads.find(p=>p.event.id===event.id)?.pad:undefined;
         return {drone,event,position,energyUsed,phase,airborne,parcel,pad,rotorAngle:airSeconds*40};

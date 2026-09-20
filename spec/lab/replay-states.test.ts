@@ -56,3 +56,15 @@ describe('the replay follows recorded task boundaries', () => {
         expect(run.scene!.events).toEqual([]); expect(fleetAt(run.scene!,100)).toEqual([]);
     });
 });
+
+describe('a flight leg is not a completed delivery',()=>{
+    it('keeps the outgoing parcel at the end of the W9 leg',()=>{
+        const scene=runExperiment(defaultConfig(9)).scene!;
+        const end=Math.max(...scene.events.filter(e=>e.drone==='A').map(e=>e.end));
+        const at=(tick:number)=>fleetAt(scene,tick).find(s=>s.drone==='A')!;
+        expect(at(end-.01).parcel).toBe(true);
+        expect(at(end).phase).toBe('leg complete');expect(at(end).parcel).toBe(true);
+        expect(at(end+10).parcel).toBe(true);
+        expect(fleetAt(scene,end+10).find(s=>s.drone==='B')!.parcel).toBe(false);
+    });
+});
