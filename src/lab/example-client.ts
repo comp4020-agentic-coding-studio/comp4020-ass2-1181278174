@@ -1,3 +1,4 @@
+import { presentation } from './presentation';
 import { type LabRun } from './model';
 import { demonstrationInput } from './teaching';
 import { startRun } from './runner';
@@ -13,6 +14,7 @@ function mount(root:HTMLElement) {
   let run=initial,mode='start',scene:ReturnType<typeof import('./scene')['mountScene']>|undefined,selectedOrder:string|undefined,selectedPath:string[]=[],blocked:string[]=[],tick=0,trace=-1,playing=false,raf=0,last=0,generation=0,disposed=false,prefer2D=false,loading3D=false;
   let active:ReturnType<typeof startRun>|undefined;
   const content=root.querySelector<HTMLElement>('[data-example-content]')!,controller=new AbortController(),signal=controller.signal;
+  const expanded=presentation(root);
   const q=<T extends HTMLElement=HTMLElement>(selector:string)=>content.querySelector<T>(selector);
   const status=(text:string)=>{const el=q('[data-example-status]');if(el)el.textContent=text;};
   function pause(){playing=false;cancelAnimationFrame(raf);const b=q('[data-example-action="play"]');if(b)b.textContent='Play flight';}
@@ -35,6 +37,8 @@ function mount(root:HTMLElement) {
     content.querySelectorAll<HTMLElement>('[data-search-from]').forEach(el=>el.classList.toggle('is-in-path',path.some((id,i)=>id===el.dataset.searchFrom&&path[i+1]===el.dataset.searchTo)));
     const points=run.scene?routePoints(run.scene,path).map(p=>mapPoint(run.scene!,p.x,p.y).join(',')).join(' '):'';
     q('[data-map-selection]')?.setAttribute('points',points);
+    const target=path.at(-1)==='kitchen'?run.scene?.orders.find(o=>path.includes(o.node))?.node:path.at(-1);
+    content.querySelectorAll<HTMLElement>('[data-customer-homes] [data-node],[data-map-markers] [data-node]').forEach(el=>el.classList.toggle('is-destination',el.dataset.node===target));
     content.querySelectorAll<SVGElement>('[data-building]').forEach(e=>e.setAttribute('fill',obstacles.includes(e.dataset.building!)?'#dc6a54':'#adb3a2'));
     q('[data-example-technical]')!.innerHTML=`<p>${esc(path.map(placeName).join(' → '))}</p><code>${esc(path.join(' → '))}</code>`;
     scene?.select(path,obstacles);
@@ -56,12 +60,14 @@ function mount(root:HTMLElement) {
     const task=run.plan?.tasks.find(t=>t.order===id),route=task?.pathOut??run.scene?.routes.find(r=>r.order===id)?.path;
     q('[data-example-selection]')!.textContent=`${id} → ${placeName(item.node)}`;
     const evidence=run.tables.find(t=>t.id==='tasks')?.rows.find(r=>r.id===id)?.detail;
-    q('[data-example-detail]')!.textContent=placeText(evidence??`${item.label}. The teal doorstep beside ${placeName(item.node)} is the delivery point.${route?' Pink shows the outbound route.':' This case marks the address; it does not record a complete flight for this order.'}`);
+    const delivery=task?.deliver!==undefined?`Drone ${task.drone} delivers at ${task.deliver} s (${task.late?'late by '+task.late+' s':'on time'}) and returns at ${task.land} s.`:evidence??(run.scene?.legOnly?'This is a recorded flight leg, not a complete delivery task.':'This case marks the address; no complete flight is recorded for this order.');
+    q('[data-example-detail]')!.textContent=placeText(`${item.label}. Delivery point: the teal doorstep at ${placeName(item.node)}. ${delivery}`);
     mark(route??[item.node]);
+    if(evidence)q('[data-example-technical]')!.innerHTML+=`<p>${esc(placeText(evidence))}</p>`;
     scene?.layers(week===1,false,id);
     content.querySelectorAll<HTMLElement>('[data-route],[data-route-key]').forEach(e=>e.style.display=!e.dataset.order||e.dataset.order===id?'':'none');
     content.querySelectorAll<HTMLElement>('[data-example-action="order"]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.order===id)));
-    if(focus)scene?.view('destination');
+    if(focus)scene?.view('route');
     if(task?.depart!==undefined)time(task.depart);
   }
   function node(id:string){const delivery=run.scene?.orders.find(o=>o.node===id);if(delivery)order(delivery.id);else {q('[data-example-selection]')!.textContent=placeName(id);q('[data-example-detail]')!.textContent='A route can pass through this location. The numbered homes are delivery addresses.';mark([id]);}}
@@ -77,7 +83,7 @@ function mount(root:HTMLElement) {
   }
   function draw(){
     pause();generation++;scene?.dispose();scene=undefined;loading3D=false;selectedPath=[];blocked=[];selectedOrder=undefined;trace=-1;tick=0;
-    content.innerHTML=exampleHtml(run,initial,mode);
+    content.innerHTML=exampleHtml(run,initial,mode);expanded.refresh();
     if(week===1)inspect(mode==='start'?'route0':run.tables.find(t=>t.id==='connections')!.rows.find(r=>r.values[1]==='Building intersection')!.id);
     else if(run.scene?.orders.length)order(run.scene.orders[0].id,false);
     time(tick);
@@ -90,7 +96,7 @@ function mount(root:HTMLElement) {
     if(week===7&&next!=='start'){input.assignment=structuredClone(initial.assignment!);for(const ids of Object.values(input.assignment)){const at=ids.indexOf('#20');if(at>=0)ids.splice(at,1);}input.assignment.A.push('#20');input.method='manual';}
     content.querySelectorAll<HTMLButtonElement>('.example-options button').forEach(b=>b.disabled=true);status('Recomputing this case…');
     active=startRun(input,n=>status(`Checking candidate ${n}…`));
-    try{const result=await active.promise;if(disposed||current!==generation)return;run=result;mode=next;draw();if(week===7&&next!=='start')order('#20',false);if(next!=='start'&&replayIssues(run).length)issue();}
+    try{const result=await active.promise;if(disposed||current!==generation)return;run=result;mode=next;draw();if(week===7&&next!=='start')order('#20',false);if(next!=='start'&&replayIssues(run).length)issue();else if(next!=='start'){const wait=run.scene?.events.find(e=>e.phase==='pad-queue'||e.kind==='hover'&&e.phase!=='service');if(wait){order(wait.order,false);time(wait.start);}}}
     catch(e){if(current===generation){status((e as Error).message);content.querySelectorAll<HTMLButtonElement>('.example-options button').forEach(b=>b.disabled=false);}}
   }
   function issue(){const found=replayIssues(run)[0];if(!found)return;pause();if(found.order)order(found.order,false);time(found.tick);q('[data-example-detail]')!.textContent=placeText(found.detail);if(found.resource==='corridor')scene?.view('corridor');}
@@ -102,11 +108,12 @@ function mount(root:HTMLElement) {
     if(b.dataset.action==='timeline'){time(Number(b.dataset.start));return;}
     const action=b.dataset.exampleAction;
     if(['start','change','reserved'].includes(action!))await change(action!);
+    else if(action==='expand')await expanded.toggle();
     else if(action==='inspect')inspect(b.dataset.id!);
     else if(action==='order')order(b.dataset.order!);
     else if(action==='map-3d')await enable3D();
     else if(action==='map-2d'){prefer2D=true;q('[data-scene-host]')!.hidden=true;q('[data-map-host]')!.hidden=false;q('[data-example-camera]')!.hidden=true;b.setAttribute('aria-pressed','true');q('[data-example-action="map-3d"]')?.setAttribute('aria-pressed','false');}
-    else if(action==='overview')scene?.view(week===1?'block':'overview');
+    else if(action==='overview')scene?.view(week===1?'block':[9,10].includes(week)?'corridor':'overview');
     else if(action==='top')scene?.view('top');
     else if(action==='destination')scene?.view('destination');
     else if(action==='play'){if(playing)pause();else{if(tick>=replayBounds(run).max)time(replayBounds(run).min);playing=true;last=0;b.textContent='Pause flight';raf=requestAnimationFrame(animate);}}
@@ -118,7 +125,7 @@ function mount(root:HTMLElement) {
   content.addEventListener('change',event=>{const el=event.target as HTMLSelectElement;if(el.matches('[data-example-table]'))q('[data-example-table-host]')!.innerHTML=tableHtml(run.tables.find(t=>t.id===el.value)!);},{signal});
   content.addEventListener('keydown',event=>{const el=(event.target as HTMLElement).closest<HTMLElement>('[data-node]');if(el&&(event.key==='Enter'||event.key===' ')){event.preventDefault();node(el.dataset.node!);}},{signal});
   draw();
-  return ()=>{disposed=true;generation++;pause();active?.cancel();scene?.dispose();controller.abort();};
+  return ()=>{disposed=true;generation++;pause();active?.cancel();scene?.dispose();expanded.dispose();controller.abort();};
 }
 function boot(){const root=document.querySelector<HTMLElement>('[data-weekly-example]');if(root===mounted)return;cleanup?.();mounted=root??undefined;cleanup=root?mount(root):undefined;}
 document.addEventListener('astro:page-load',boot);

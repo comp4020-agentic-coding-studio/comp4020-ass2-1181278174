@@ -4,6 +4,7 @@ import { importRecord, verifyPlanForInput } from './import.ts';
 import { startRun } from './runner.ts';
 import { basePath, esc, mapPoint, tableHtml, workspaceHtml } from './render.ts';
 import { sourceFor } from './strategies.ts';
+import { presentation } from './presentation';
 import { placeName, placeText } from './places';
 import { demonstrationInput } from './teaching';
 import { corridorAt, replayBounds, replayIssues, resourceReadout, skipIdle, waitReason, waits, type ReplayIssue } from './replay-inspection';
@@ -41,6 +42,8 @@ export function mountWorkspace(root: HTMLElement) {
     let network=!!run.scene?.focusNodes, allRoutes=false, focusedOrder=run.scene?.routes.find(r=>r.order)?.order;
     let issues=replayIssues(run), sceneSelection:{path:string[];blocked:string[]}|undefined;
     const content = root.querySelector<HTMLElement>('[data-workspace-content]')!;
+    const expanded=presentation(root);let panel='experiment';
+    function showPanel(name:string){panel=name;root.dataset.panel=name;content.querySelectorAll<HTMLElement>('[data-lab-panel]').forEach(el=>el.hidden=el.dataset.labPanel!==name);content.querySelectorAll<HTMLElement>('[data-action="panel"]').forEach(el=>el.setAttribute('aria-pressed',String(el.dataset.panel===name)));}
     const q = <T extends HTMLElement = HTMLElement>(selector: string) => content.querySelector<T>(selector)!;
     try {
         const stored = JSON.parse(localStorage.getItem(STORAGE) ?? 'null');
@@ -63,7 +66,7 @@ export function mountWorkspace(root: HTMLElement) {
     const disposeScene = () => { sceneGeneration++; sceneLoading = false; scene?.dispose(); scene = undefined; };
     function draw() { const opened = new Set([...content.querySelectorAll('details[open]')].map(d => d.querySelector('summary')?.textContent)); stopPlayback(); disposeScene(); content.innerHTML = workspaceHtml({ ...run, input: config }, semester, compact, guided); content.querySelectorAll('details').forEach(d => { if (opened.has(d.querySelector('summary')?.textContent))
         d.open = true; }); tableId = (run.tables.find(t => t.primary) ?? run.tables[0]).id; page = 0; filter = ''; selected = undefined; sceneSelection=undefined; traceIndex = -1; time = 0; for (const el of content.querySelectorAll<HTMLTextAreaElement>('[data-note]'))
-        el.value = storage.notes[`${config.week}:${el.dataset.note}`] ?? ''; issues=replayIssues(run); network=!!run.scene?.focusNodes; allRoutes=false; focusedOrder=run.scene?.routes.find(r=>r.order)?.order; recordUi(); updateLayers(); updateTime(0); if (wants3D())
+        el.value = storage.notes[`${config.week}:${el.dataset.note}`] ?? ''; issues=replayIssues(run); network=!!run.scene?.focusNodes; allRoutes=false; focusedOrder=run.scene?.routes.find(r=>r.order)?.order; showPanel(panel);expanded.refresh();recordUi(); updateLayers(); updateTime(0); if (wants3D())
         void enable3D(); }
     function wants3D() { return !prefer2D && !!run.scene && [1, 4, 9, 10, 12].includes(config.week) && matchMedia('(min-width: 900px)').matches && !matchMedia('(prefers-reduced-motion: reduce)').matches; }
     async function enable3D() {
@@ -168,6 +171,7 @@ export function mountWorkspace(root: HTMLElement) {
                 next.objective = checked.objective;
             }
             run = next;
+            panel='experiment';
             draft = false;
             storage.weeks[config.week] = structuredClone(config);
             storage.lastWeek = config.week;
@@ -240,7 +244,7 @@ export function mountWorkspace(root: HTMLElement) {
     }
     function snapshot(): Archive { return { name: `W${run.input.week} · ${run.input.caseId} · ${new Date().toLocaleTimeString()}`, input: run.input, inputHash: run.inputHash, modelHash: run.modelHash, metrics: run.metrics, notes: { ...storage.notes }, facts: run.plan?.tasks.map(t => ({ id: t.order, drone: t.drone, deliver: t.deliver, land: t.land })) }; }
     function download(name: string, value: unknown) { const url = URL.createObjectURL(new Blob([JSON.stringify(value, null, 2)], { type: 'application/json' })); const a = document.createElement('a'); a.href = url; a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000); }
-    function evidenceTable() { const t = run.tables.find(t => t.id === tableId) ?? run.tables[0]; q('[data-table-host]').innerHTML = tableHtml(t, filter, page); const n = t.rows.filter(x => x.values.join(' ').toLowerCase().includes(filter.toLowerCase())).length; q('[data-table-count]').textContent = `${n} rows · ${n ? Math.min(page * 80 + 1, n) : 0}–${Math.min((page + 1) * 80, n)}`; (q('[data-action="rows-prev"]') as HTMLButtonElement).disabled = page === 0; (q('[data-action="rows-next"]') as HTMLButtonElement).disabled = (page + 1) * 80 >= n; }
+    function evidenceTable() { const t = run.tables.find(t => t.id === tableId) ?? run.tables[0]; q('[data-table-host]').innerHTML = tableHtml(t, filter, page); const n = t.rows.filter(x => (x.values.join(' ')+' '+placeText(x.values.join(' '))).toLowerCase().includes(filter.toLowerCase())).length; q('[data-table-count]').textContent = `${n} rows · ${n ? Math.min(page * 80 + 1, n) : 0}–${Math.min((page + 1) * 80, n)}`; (q('[data-action="rows-prev"]') as HTMLButtonElement).disabled = page === 0; (q('[data-action="rows-next"]') as HTMLButtonElement).disabled = (page + 1) * 80 >= n; }
     function updateLayers() {
         content.querySelector<SVGElement>('[data-flight-network]')?.style.setProperty('display',network?'':'none');
         content.querySelectorAll<SVGElement>('[data-route],[data-route-key]').forEach(el=>el.style.display=allRoutes||!el.dataset.order||el.dataset.order===focusedOrder?'':'none');
@@ -290,6 +294,8 @@ export function mountWorkspace(root: HTMLElement) {
         if (run.scene && path) {
             const pts = routePoints(run.scene, path).map(n => mapPoint(run.scene!, n.x, n.y).join(',')).join(' ');
             content.querySelector('[data-map-selection]')?.setAttribute('points', pts);
+            const target=path.at(-1)==='kitchen'?run.scene.orders.find(o=>path.includes(o.node))?.node:path.at(-1);
+            content.querySelectorAll<HTMLElement>('[data-customer-homes] [data-node],[data-map-markers] [data-node]').forEach(el=>el.classList.toggle('is-destination',el.dataset.node===target));
             const blocked = run.input.week === 1 && selection.kind === 'route' ? String(row?.values[2] ?? '').split(',').map(s => s.trim()) : [];
             content.querySelectorAll<SVGElement>('[data-building]').forEach(el => el.setAttribute('fill', blocked.includes(el.dataset.building!) ? '#df7161' : '#adb3a2'));
             sceneSelection={path,blocked};
@@ -405,7 +411,9 @@ export function mountWorkspace(root: HTMLElement) {
         }
         const action = target.dataset.action;
         try {
-            if (action === 'run')
+            if(action==='panel')showPanel(target.dataset.panel!);
+            else if(action==='expand')await expanded.toggle();
+            else if (action === 'run')
                 await execute();
             else if (action === 'cancel') {
                 active?.cancel();
@@ -449,7 +457,7 @@ export function mountWorkspace(root: HTMLElement) {
                     q('[data-selection-title]').textContent=`${order.id} → ${placeName(order.node)}`;
                     q('[data-selection-detail]').textContent=`${order.label}. Deliver to the teal doorstep beside ${placeName(order.node)}. ${route?'The highlighted line is the outbound route. Playback includes the recorded return.':'This example marks the delivery address; no complete flight is recorded for this order.'}`;
                     content.querySelectorAll('[data-action="destination"]').forEach(el=>el.setAttribute('aria-pressed',String((el as HTMLElement).dataset.order===order.id)));
-                    scene?.view('destination');
+                    scene?.view('route');
                 }
             }
             else if (action === 'inspect')
@@ -617,7 +625,7 @@ export function mountWorkspace(root: HTMLElement) {
         try {
             if (el.matches('[data-address]'))
                 select({ kind: 'node', id: el.value });
-            else if (el.matches('[data-week-slider]'))
+            else if (el.matches('[data-week-slider],[data-week-picker]'))
                 await switchWeek(Number(el.value));
             else if (el.matches('[data-table-select]')) {
                 tableId = el.value;
@@ -749,7 +757,7 @@ export function mountWorkspace(root: HTMLElement) {
     catch { } try {
         localStorage.setItem(STORAGE, JSON.stringify(storage));
     }
-    catch { } controller.abort(); request++; active?.cancel(); stopPlayback(); disposeScene(); };
+    catch { } expanded.dispose();controller.abort(); request++; active?.cancel(); stopPlayback(); disposeScene(); };
 }
 function boot() { const root = document.querySelector<HTMLElement>('[data-lab-workspace]'); if (root && root === mountedRoot && disposeCurrent)
     return; disposeCurrent?.(); mountedRoot = root ?? undefined; disposeCurrent = root ? mountWorkspace(root) : undefined; }

@@ -58,7 +58,7 @@ try {
             events.length = 0;
             await nav(base + path);
             await sleep(180);
-            const info = await js(`(()=>({path:location.pathname,width:innerWidth,scrollWidth:document.documentElement.scrollWidth,roots:document.querySelectorAll('[data-lab-workspace]').length,canvases:document.querySelectorAll('[data-scene-host] canvas').length,frames:document.querySelectorAll('iframe[title="Isolated experiment runner"]').length}))()`);
+            const info = await js(`(()=>({path:location.pathname,width:innerWidth,scrollWidth:document.documentElement.scrollWidth,roots:document.querySelectorAll('[data-lab-workspace],[data-weekly-example]').length,canvases:document.querySelectorAll('[data-scene-host] canvas').length,frames:document.querySelectorAll('iframe[title="Isolated experiment runner"]').length}))()`);
             info.errors = events.filter(x => x.method === 'Runtime.exceptionThrown');
             results.push(info);
         }
@@ -76,7 +76,7 @@ try {
             if (await js(`location.pathname.includes(${JSON.stringify(slug)}) && !!document.querySelector('[data-scene-host] canvas')`))
                 break;
         }
-        const ok = await js(`document.querySelectorAll('[data-lab-workspace]').length===1 && document.querySelectorAll('[data-scene-host] canvas').length===1 && window.__oldGl?.isContextLost()===true`);
+        const ok = await js(`document.querySelectorAll('[data-lab-workspace],[data-weekly-example]').length===1 && document.querySelectorAll('[data-scene-host] canvas').length===1 && window.__oldGl?.isContextLost()===true`);
         if (ok)
             disposals++;
         console.log(JSON.stringify({ navigation: slug, disposed: ok }));
@@ -85,7 +85,7 @@ try {
     const { identifier } = await call('Page.addScriptToEvaluateOnNewDocument', { source: `(()=>{const original=HTMLCanvasElement.prototype.getContext;HTMLCanvasElement.prototype.getContext=function(type,...args){if(type==='webgl'||type==='webgl2'||type==='experimental-webgl')return null;return original.call(this,type,...args);};})()` });
     await nav(base + '/sessions/w04-back-with-battery/');
     await sleep(600);
-    checks.push({ name: 'WebGL unavailable retains readable 2D map and evidence', ok: await js(`!document.querySelector('[data-map-host]').hidden && document.querySelector('[data-table-host] table')!==null && document.querySelector('[data-run-state]').textContent.includes('3D is unavailable')`) });
+    checks.push({ name: 'WebGL unavailable retains readable 2D map and evidence', ok: await js(`!document.querySelector('[data-map-host]').hidden && document.querySelector('[data-example-table-host] table')!==null && document.querySelector('[data-example-status]').textContent.includes('3D could not open')`) });
     await call('Page.removeScriptToEvaluateOnNewDocument', { identifier });
     checks.push({ name: 'all 74 page/viewports have no overflow or runtime exceptions', ok: results.length === 74 && results.every(x => x.scrollWidth <= x.width && !x.errors.length) });
     checks.push({ name: '3D loads only on seven designated desktop pages', ok: results.filter(x => x.width === 1920 && x.canvases).length === 7 });

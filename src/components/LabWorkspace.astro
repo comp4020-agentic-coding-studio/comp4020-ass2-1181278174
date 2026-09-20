@@ -7,7 +7,7 @@ interface Props { week?: number; semester?: boolean; compact?: boolean; guided?:
 const { week=4, semester=false, compact=false, guided=false }=Astro.props;
 const run=runExperiment(defaultConfig(week));
 ---
-<div class:list={["lab-workspace", {"lab-guided": guided}]} data-lab-workspace data-semester={String(semester)} data-compact={String(compact)} data-guided={String(guided)}>
+<div class:list={["lab-workspace", {"lab-guided": guided, "lab-studio": semester}]} data-lab-workspace data-semester={String(semester)} data-compact={String(compact)} data-guided={String(guided)}>
   <script is:inline type="application/json" data-initial-run set:html={JSON.stringify(run).replace(/</g,'\\u003c')} />
   <div data-workspace-content set:html={workspaceHtml(run,semester,compact,guided)} />
   <noscript><p>The default experiment above was computed at build time. Enable JavaScript to change inputs, step through the search, save a record or load 3D. The result tables and 2D map remain readable.</p></noscript>

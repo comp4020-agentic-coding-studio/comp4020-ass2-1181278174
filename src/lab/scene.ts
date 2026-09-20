@@ -104,10 +104,11 @@ export function mountScene(host: HTMLElement, data: SceneData, onSelect: (node: 
         marker.userData.node = n.id;
         clickable.push(marker);
         scene.add(marker);
-        if (o.id !== '#07')
-            label(placeName(n.id), n.x, n.y, n.z + 22, n.id);
+        if (o.id !== '#07') { const home=scenery.homes.find(h=>h.node===n.id);label(data.orders.length>3?o.id.slice(1):placeName(n.id),home?.x??n.x,home?.y??n.y,(home?home.z+home.h:n.z)+15,n.id); }
     }
     for(const home of scenery.homes) {
+        const plot=new THREE.Mesh(new THREE.PlaneGeometry(home.w+8,home.d+8),new THREE.MeshBasicMaterial({color:'#76b8a6',side:THREE.DoubleSide}));
+        plot.rotation.x=-Math.PI/2;plot.position.copy(to3(home.x,home.y,home.z+.7));scene.add(plot);
         const n=nodes.get(home.node)!;
         const link=new THREE.Line(new THREE.BufferGeometry().setFromPoints([to3(n.x,n.y,n.z+1),to3(home.x,home.y,home.z+1)]),new THREE.LineDashedMaterial({color:'#07796b',dashSize:5,gapSize:4,depthTest:false}));
         link.computeLineDistances();scene.add(link);
@@ -160,6 +161,7 @@ export function mountScene(host: HTMLElement, data: SceneData, onSelect: (node: 
     const inspectedNodes=new Set(inspectionLabels.map(l=>l.node).filter(Boolean));
     for (const item of [...labels].sort((a,b)=>Number(!!b.priority)-Number(!!a.priority))) {
         if(!item.priority&&item.node&&inspectedNodes.has(item.node)){item.el.hidden=true;continue;}
+        if(data.orders.length>3&&focusedOrder&&item.el.dataset.drone&&!data.events.some(e=>e.order===focusedOrder&&e.drone===item.el.dataset.drone)){item.el.hidden=true;continue;}
         const p = item.point.clone().project(camera);
         item.el.hidden = p.z > 1 || p.z < -1 || Math.abs(p.x) > 1 || Math.abs(p.y) > 1;
         const w = item.el.offsetWidth, h = item.el.offsetHeight, x = Math.max(w/2+6, Math.min(host.clientWidth-w/2-6, (p.x+1)/2*host.clientWidth));
@@ -181,7 +183,7 @@ export function mountScene(host: HTMLElement, data: SceneData, onSelect: (node: 
         host.dataset.selectionInView=String(inspectionFrame.length>0&&inspectionFrame.every(inView));
     }
     };
-    const size = () => { const w = Math.max(200, host.clientWidth), h = Math.max(330, Math.min(500, w * .72)); renderer.setSize(w, h); camera.aspect = w / h; camera.updateProjectionMatrix(); if(autoFrame)frame(autoFrame.points,autoFrame.top);else render(); };
+    const size = () => { const w = Math.max(200, host.clientWidth), h = host.closest('.lab-expanded,.lab-example') ? Math.max(200,host.clientHeight) : Math.max(330, Math.min(500, w * .72)); renderer.setSize(w, h); camera.aspect = w / h; camera.updateProjectionMatrix(); if(autoFrame)frame(autoFrame.points,autoFrame.top);else render(); };
     const resize = new ResizeObserver(size);
     resize.observe(host);
     controls.addEventListener('change', render);
@@ -199,8 +201,9 @@ export function mountScene(host: HTMLElement, data: SceneData, onSelect: (node: 
         autoFrame={points,top};controls.target.copy(fitInspection(camera,points,top));controls.update();render();
     }
     function view(name: string) {
-        if(name==='destination'&&selectedPath.length) {
-            const home=scenery.homes.find(h=>h.node===(selectedPath.at(-1)==='kitchen'?data.orders.find(o=>selectedPath.includes(o.node))?.node:selectedPath.at(-1))),points=routePoints(data,selectedPath).map(p=>to3(p.x,p.y,p.z+20));
+        if((name==='destination'||name==='route')&&selectedPath.length) {
+            const id=selectedPath.at(-1)==='kitchen'?data.orders.find(o=>selectedPath.includes(o.node))?.node:selectedPath.at(-1),home=scenery.homes.find(h=>h.node===id),node=nodes.get(id??'');
+            const points=name==='destination'&&node?[to3(node.x,node.y,node.z+10)]:routePoints(data,selectedPath).map(p=>to3(p.x,p.y,p.z+20));
             if(home)points.push(to3(home.x,home.y,home.z+home.h+20));
             frame(points);return;
         }

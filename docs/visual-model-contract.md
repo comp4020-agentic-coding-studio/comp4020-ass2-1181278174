@@ -67,3 +67,19 @@ deterministic seeking, two viewports, optional mobile 3D, model-load fallback an
 cleanup. Target combined GLB size under 1.2 MB; measure renderer calls and geometry. Preserve
 all canonical hashes, formal outcomes, protected course content and build hooks. Commit each
 completed stage separately, with `pnpm check` before each commit. Publication is separate.
+
+## Desktop teaching view — 21 September 2026
+
+Twenty named customer homes now sit beside the canonical delivery points. Their placement
+leaves legal flight edges and existing obstacles clear; a dotted doorstep link explains the
+short visual offset. A teal plot distinguishes a customer home from background buildings.
+The home number follows the original order address, including when an added order uses that
+address. Display aliases replace graph IDs in normal labels; technical details and exported
+plans retain the IDs.
+
+Tutorials use `WeeklyExample.astro` and a dedicated controller. Each starts from the published
+weekly input, independently of saved Lab settings, and recomputes its advertised change.
+Inputs, strategy editors and saved records live in the separate Lab's three sections.
+Expanded view keeps the same scene and clock, supports browser fullscreen or a full-window
+fallback, traps keyboard focus, and returns with Escape. It does not restart or duplicate a
+simulation. Desktop and laptop layouts take priority in this revision.
