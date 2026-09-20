@@ -1,0 +1,42 @@
+---
+// The five model upgrades on the one instance, with numbers where the engine
+// already reaches. Computed at build time; nothing here is a stored result.
+import { withBase } from "astro-theme-university/url";
+import { record } from "../workbench/record";
+const entries = record();
+---
+
+<section class="record" aria-labelledby="record-title">
+  <h2 id="record-title">Five upgrades, one instance</h2>
+  <p>
+    The same kitchen, the same twenty orders, the same hill. Each stage changes the model, breaks
+    something the previous stage relied on, and keeps the rest. What was right under an earlier
+    model is not wrong in hindsight; it is labelled with its model.
+  </p>
+  <ol class="record-list">
+    {entries.map((e) => (
+      <li class="record-card">
+        <h3>{e.stage} <small>{e.weeks}</small></h3>
+        <dl>
+          <dt>What changed</dt><dd>{e.changed}</dd>
+          <dt>What it broke</dt><dd>{e.broke}</dd>
+          <dt>What survived</dt><dd>{e.survived}</dd>
+        </dl>
+        {e.computed && <p class="record-computed">{e.computed}</p>}
+        <p><a href={withBase(e.href)}>See this stage's workbench</a></p>
+      </li>
+    ))}
+  </ol>
+</section>
+
+<style>
+  .record { margin-block: 1.5rem 2.5rem; }
+  .record-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr)); }
+  .record-card { border: 1px solid var(--at-border, #d9d2c3); border-radius: 0.5rem; padding: 1rem 1.1rem; background: var(--at-bg-alt, #f7f3ea); }
+  .record-card h3 { margin-top: 0; font-size: 1.05rem; }
+  .record-card h3 small { display: block; font-weight: 400; color: var(--at-text-secondary, #6b6154); }
+  .record-card dl { margin: 0; }
+  .record-card dt { font-weight: 600; margin-top: 0.4rem; }
+  .record-card dd { margin: 0.1rem 0 0; }
+  .record-computed { font-variant-numeric: tabular-nums; border-top: 1px solid var(--at-border, #d9d2c3); padding-top: 0.5rem; margin-top: 0.7rem; }
+</style>
