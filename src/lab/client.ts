@@ -298,13 +298,13 @@ export function mountWorkspace(root: HTMLElement) {
         const slider = q<HTMLInputElement>('[data-time-slider]');
         if (slider) {
             slider.value = String(t);
-            q('[data-time-output]').textContent = `${Math.round(t)} s`;
+            q('[data-time-output]').textContent = `${Math.floor(t)} s`;
         }
         const timeline=q<HTMLElement>('.lab-timeline'), clock=q('[data-timeline-time]');
         if(timeline) {
             const {min,max}=replayBounds(run);
             timeline.style.setProperty('--replay-progress',`${Math.max(0,Math.min(100,(t-min)/(max-min)*100))}%`);
-            if(clock) clock.textContent=`${Math.round(t)} ${['six-jobs','waiting'].includes(run.input.caseId)?'units':'s'}`;
+            if(clock) clock.textContent=`${Math.floor(t)} ${['six-jobs','waiting'].includes(run.input.caseId)?'units':'s'}`;
             timeline.querySelectorAll<HTMLButtonElement>('[data-event]').forEach(bar=>{
                 const active=Number(bar.dataset.start)<=t&&t<Number(bar.dataset.end);
                 if(active) bar.setAttribute('aria-current','time'); else bar.removeAttribute('aria-current');
@@ -325,7 +325,7 @@ export function mountWorkspace(root: HTMLElement) {
         const out = q('[data-live-position]');
         if (out)
             out.textContent = current.slice(0, 5).map(s => { const type = canonical.fleet.types.find(t => t.id === (run.scene!.droneTypes?.[s.drone] ?? config.scenario.drones.find(d => d.id === s.drone)?.type ?? 'L'))!; return `${s.drone} · ${s.event.order}: ${s.phase}, ${Math.round(s.position.z)} m elevation, ${Math.round(type.batteryJ - s.energyUsed)} J remaining${s.parcel ? ', carrying parcel' : ', no parcel'}${s.pad !== undefined && s.pad >= 0 ? ', pad '+(s.pad+1) : ''}`; }).join(' | ');
-        const status=q('[data-replay-state]'); if(status) status.textContent=(!matching.length&&selected?.kind==='task'?`${selected.id} has no current event at ${Math.round(t)} s. Fleet: `:'')+current.map(s=>`${s.drone} · ${s.event.order}: ${s.phase}${s.parcel ? ' · parcel aboard' : ''}`).join(' | ');
+        const status=q('[data-replay-state]'); if(status) status.textContent=(!matching.length&&selected?.kind==='task'?`${selected.id} has no current event at ${Math.floor(t)} s. Fleet: `:'')+current.map(s=>`${s.drone} · ${s.event.order}: ${s.phase}${s.parcel ? ' · parcel aboard' : ''}`).join(' | ');
     }
     function showIssue(issue: ReplayIssue) {
         stopPlayback();

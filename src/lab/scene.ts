@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { corridorAt } from './replay-inspection';
+import { displayPose } from './replay-pose';
 import type { SceneData } from './model.ts';
 import { fleetAt, padSchedule, routePoints } from './replay.ts';
 import { terrainHeight } from './terrain.ts';
@@ -190,11 +191,7 @@ export function mountScene(host: HTMLElement, data: SceneData, onSelect: (node: 
         const states=fleetAt(data,t);
         for (const [i,state] of states.entries()) {
             const p=state.position, drone=drones.get(state.drone)!;
-            const offset=!state.airborne&&state.event.from===data.map.kitchen ? {x:30+i*40,y:-35} : {x:0,y:0};
-            let point=to3(p.x+offset.x,p.y+offset.y,p.z+(state.airborne?22:3));
-            if(state.pad!==undefined&&state.pad>=0) point=to3(kitchen.x+50+state.pad*48,kitchen.y,kitchen.z+5);
-            // An isolated outward leg stops in the air; it does not invent service or landing.
-            if(data.legOnly&&state.phase==='leg complete'&&state.event.phase==='out') point=to3(p.x,p.y,p.z+22);
+            const pose=displayPose(data,state,t,i),point=to3(pose.x,pose.y,pose.z);
             drone.position.copy(point); drone.rotation.y=p.heading;
             drone.traverse(o=>{ const anchor=o.userData.anchor as string|undefined;
                 if(anchor==='parcel') o.visible=state.parcel;
@@ -203,7 +200,7 @@ export function mountScene(host: HTMLElement, data: SceneData, onSelect: (node: 
             const caption=droneLabels.get(state.drone)!;
             caption.point.copy(point).add(new THREE.Vector3(0,45,0));
             caption.el.textContent=`${state.drone} · ${state.phase}`;
-            caption.el.dataset.drone=state.drone; caption.el.dataset.phase=state.phase; caption.el.dataset.parcel=String(state.parcel);
+            caption.el.dataset.drone=state.drone; caption.el.dataset.phase=state.phase; caption.el.dataset.parcel=String(state.parcel); caption.el.dataset.pose=JSON.stringify(pose);
             if(followed===state.drone) { const delta=point.clone().sub(controls.target); controls.target.copy(point); camera.position.add(delta); controls.update(); }
         }
         const corridor=corridorAt(data,t);

@@ -54,6 +54,8 @@ try {
     const until=async expression=>{for(let i=0;i<80;i++){if(await js(expression))return true;await sleep(100);}return false;};
     const click=action=>js(`document.querySelector('[data-action="${action}"]').click()`);
     const seek=tick=>js(`(()=>{const s=document.querySelector('[data-time-slider]');s.value=${tick};s.dispatchEvent(new Event('input',{bubbles:true}));})()`);
+    const pose=async(tick,drone)=>{await js(`document.querySelector('[data-time-slider]').step='any'`);await seek(tick);return js(`JSON.parse(document.querySelector('[data-drone="${drone}"]').dataset.pose)`);};
+    const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y,a.z-b.z);
     const shot=async(name,selector)=>{await js(`document.querySelector('${selector}').scrollIntoView({behavior:'instant',block:'center'})`);await sleep(150);const r=await call('Page.captureScreenshot',{format:'png'});writeFileSync(out+'/'+name+'.png',Buffer.from(r.data,'base64'));};
     for(const width of [1920,390]) {
         await call('Emulation.setDeviceMetricsOverride',{width,height:width===1920?1080:844,deviceScaleFactor:1,mobile:false});
@@ -69,6 +71,21 @@ try {
         await shot('closure-'+width,width===1920?'[data-scene-host]':'.lab-playback');
         await seek(5300);
         check(width+' closure ends on the same boundary everywhere',await js(`!document.querySelector('[data-resource-state]').textContent.includes('CLOSED')&&document.querySelector('[data-corridor]').dataset.state!=='closed'&&document.querySelector('[data-scene-host]').dataset.corridorState!=='closed'`));
+        const charge=await js(`(()=>{const bar=document.querySelector('.lab-timeline button.charge');return {start:Number(bar.dataset.start),end:Number(bar.dataset.end),drone:bar.closest('.lab-lane').querySelector('strong').textContent};})()`);
+        check(width+' charging starts without a position jump',distance(await pose(charge.start-.0001,charge.drone),await pose(charge.start,charge.drone))<.05);
+        check(width+' charging ends without a position jump',distance(await pose(charge.end-.0001,charge.drone),await pose(charge.end,charge.drone))<.05);
+        const docked=await pose((charge.start+charge.end)/2,charge.drone),waiting=await pose(charge.start,charge.drone);
+        check(width+' charging visibly moves onto the pad',distance(docked,waiting)>5);
+        await nav(base+'/sessions/w04-back-with-battery/');
+        if(width===390) await click('map-3d');
+        await until(`document.querySelector('[data-scene-host]').dataset.models==='loaded'`);
+        const task=await js(`JSON.parse(document.querySelector('[data-initial-run]').textContent).plan.tasks[0]`);
+        check(width+' take-off keeps a continuous model position',distance(await pose(task.depart-.0001,'A'),await pose(task.depart,'A'))<.05);
+        check(width+' landing keeps a continuous model position',distance(await pose(task.land-.0001,'A'),await pose(task.land,'A'))<.05);
+        const rising=await pose(task.depart+1,'A');await pose(task.land,'A');
+        check(width+' seeking back restores the same transition',distance(rising,await pose(task.depart+1,'A'))===0);
+        await js(`document.querySelector('[data-camera="kitchen"]').click()`);
+        await shot('take-off-'+width,'[data-scene-host]');
         await nav(base+'/sessions/w09-same-place/');
         if(width===390) await click('map-3d');
         await until(`document.querySelector('[data-scene-host]').dataset.models==='loaded'`);
@@ -80,6 +97,8 @@ try {
         check(width+' both overlapping intervals remain visible',await js(`(()=>{const bars=[...document.querySelectorAll('.lab-timeline [aria-current="time"]')];return bars.length===2&&bars[0].getBoundingClientRect().top!==bars[1].getBoundingClientRect().top;})()`));
         check(width+' cursor shares the flight clock and is visible',await js(`(()=>{const run=JSON.parse(document.querySelector('[data-initial-run]').textContent),end=Math.max(...run.scene.events.map(e=>e.end)),cursor=document.querySelector('[data-time-cursor]');return document.querySelector('[data-timeline-time]')?.textContent==='107 s'&&Math.abs(parseFloat(document.querySelector('.lab-timeline').style.getPropertyValue('--replay-progress'))-107/end*100)<.01&&getComputedStyle(cursor).backgroundColor!=='rgba(0, 0, 0, 0)';})()`));
         await shot('timeline-'+width,'.lab-timeline');
+        await js(`document.querySelector('[data-time-slider]').step='any'`);await seek(111.9);
+        check(width+' clock does not round up before an interval ends',await js(`document.querySelector('[data-time-output]').textContent==='111 s'&&document.querySelector('[data-timeline-time]').textContent==='111 s'&&document.querySelectorAll('.lab-timeline [aria-current="time"]').length===2`));
         await seek(112);
         check(width+' active intervals exclude their end',await js(`document.querySelectorAll('.lab-timeline [aria-current="time"]').length===1`));
         await js(`document.querySelector('.lab-timeline button').focus()`);

@@ -40,6 +40,13 @@ heading follows the current polyline segment. Ground/pad offsets are visible pre
 positions, while the readout keeps the canonical location and time. Camera follow is
 optional and suppressed under reduced motion. The initial scene never auto-plays.
 
+For full tasks, take-off and landing offsets ease over at most three seconds inside the
+first/last movement. Docking and undocking offsets ease inside each recorded charge
+reservation. These are illustrative transitions, explicitly labelled in the playback panel;
+they add no simulation time, energy or occupancy. The parked pose joins every ground phase
+continuously. Isolated W9 legs remain at flight height at both ends and invent no landing.
+All poses are derived from the requested tick, including backwards seeking.
+
 “First issue”, “Next wait”, selected-order focus and slow playback reveal recorded failures
 and delays. They do not infer collision from pixels or confuse search steps with flight time.
 Invalid plans remain diagnostic. A failed strategy does not acquire a successful animation.
