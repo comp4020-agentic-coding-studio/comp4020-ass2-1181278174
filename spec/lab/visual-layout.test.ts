@@ -1,6 +1,6 @@
 import { it, expect } from 'vitest';
 import { canonical } from '../../src/lab/model';
-import { distanceToSegment, toScene, visualLayout } from '../../src/lab/visual-layout';
+import { customerHomes, distanceToSegment, toScene, visualLayout } from '../../src/lab/visual-layout';
 it('decorations leave every flight edge, address and original obstacle clear',()=>{
   const before=JSON.stringify(canonical), {houses}=visualLayout(canonical.map);
   expect(houses).toHaveLength(22);
@@ -23,4 +23,19 @@ it('street drawing never duplicates directed pairs or implies the corridor is a 
 it('presentation scaling has one east/north/elevation transform',()=>{
   expect(toScene(1000,1000,50)).toEqual([0,150,0]);
   expect(toScene(1100,1200,0)).toEqual([100,0,-200]);
+});
+it('gives all twenty orders a home clear of the unchanged delivery nodes and flight edges',()=>{
+  const before=JSON.stringify(canonical),homes=customerHomes(canonical.map);
+  expect(homes).toHaveLength(20);
+  for(const order of canonical.orders) {
+    const home=homes.find(h=>h.order===order.id)!;
+    expect(home.node).toBe(order.node);
+    const node=canonical.map.nodes.find(n=>n.id===order.node)!;
+    expect(Math.hypot(home.x-node.x,home.y-node.y)).toBeGreaterThan(30);
+    expect(Math.hypot(home.x-node.x,home.y-node.y)).toBeLessThan(141);
+    for(const edge of canonical.map.edges)for(let i=1;i<edge.polyline.length;i++)
+      expect(distanceToSegment(home.x,home.y,edge.polyline[i-1],edge.polyline[i])).toBeGreaterThanOrEqual(Math.hypot(home.w,home.d)/2+8);
+  }
+  expect(customerHomes(canonical.map)).toEqual(homes);
+  expect(JSON.stringify(canonical)).toBe(before);
 });

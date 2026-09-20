@@ -1,4 +1,4 @@
-import type { SceneData } from './model';
+import { canonical, type SceneData } from './model';
 import type { MapData } from '../data/schema';
 import { terrainHeight } from './terrain';
 
@@ -43,7 +43,33 @@ export function displayArea(data:SceneData) {
 }
 export function sceneScenery(data:SceneData) {
   const area=displayArea(data),layout=visualLayout(data.map),focus=data.focusNodes?new Set(data.focusNodes):undefined;
+  const homes=customerHomes(data.map);
   const visible=(x:number,y:number,w:number,d:number)=>x+w>=area.left&&x<=area.right&&y+d>=area.bottom&&y<=area.top;
   const localEdges=new Set(data.map.edges.filter(e=>!focus||focus.has(e.from)&&focus.has(e.to)).map(e=>'street-'+e.id));
-  return {buildings:data.map.buildings.filter(b=>visible(b.x,b.y,b.w,b.d)),houses:layout.houses.filter(b=>visible(b.x-b.w/2,b.y-b.d/2,b.w,b.d)),roads:layout.roads.filter(r=>localEdges.has(r.id))};
+  return {buildings:data.map.buildings.filter(b=>visible(b.x,b.y,b.w,b.d)),houses:layout.houses.filter(b=>visible(b.x-b.w/2,b.y-b.d/2,b.w,b.d)&&homes.every(h=>Math.hypot(h.x-b.x,h.y-b.y)>Math.hypot(h.w+b.w,h.d+b.d)/2+12)),homes:homes.filter(h=>visible(h.x-h.w/2,h.y-h.d/2,h.w,h.d)),roads:layout.roads.filter(r=>localEdges.has(r.id))};
+}
+
+/** A home sits beside its existing delivery point; its path is a visual doorstep link. */
+export function customerHomes(map:MapData) {
+  const homes:(VisualHouse&{node:string;order:string})[]=[];
+  for(const [index,order] of canonical.orders.entries()) {
+    const node=map.nodes.find(n=>n.id===order.node);if(!node)continue;
+    const w=32,d=26,radius=Math.hypot(w,d)/2;
+    let position:{x:number;y:number}|undefined;
+    for(const distance of [48,65,85,110,140]) {
+      for(let i=0;i<24;i++) {
+        const angle=(i+index%6)*Math.PI/12,x=node.x+Math.cos(angle)*distance,y=node.y+Math.sin(angle)*distance;
+        if(x-w/2<0||y-d/2<0||x+w/2>map.world.width||y+d/2>map.world.height)continue;
+        if(map.edges.some(e=>e.polyline.slice(1).some((b,j)=>distanceToSegment(x,y,e.polyline[j],b)<radius+8)))continue;
+        if(map.nodes.some(n=>Math.hypot(n.x-x,n.y-y)<radius+8))continue;
+        if(map.buildings.some(b=>x+w/2+8>b.x&&x-w/2-8<b.x+b.w&&y+d/2+8>b.y&&y-d/2-8<b.y+b.d))continue;
+        if(homes.some(h=>Math.hypot(h.x-x,h.y-y)<radius+Math.hypot(h.w,h.d)/2+10))continue;
+        position={x,y};break;
+      }
+      if(position)break;
+    }
+    if(!position)throw new Error('No clear visual home position for '+order.id);
+    homes.push({id:'home-'+order.id.slice(1),order:order.id,node:order.node,model:houseModels[index%4],...position,w,d,h:12,z:terrainHeight(position.x,position.y)});
+  }
+  return homes;
 }

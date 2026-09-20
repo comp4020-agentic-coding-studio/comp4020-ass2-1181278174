@@ -30,3 +30,5 @@
 .lab-lane>strong{overflow-wrap:normal;word-break:normal}@media(max-width:480px){.lab-lane{grid-template-columns:70px 1fr}.lab-time-axis{margin-left:80px!important}}
 
 .lab-scene-label[data-inspection="endpoint"]{border:2px solid #ba1d72;color:#7a164e;background:#fff8fc}.lab-scene-label[data-inspection="building"]{border:2px solid #b13e2d;color:#872e20;background:#fff7ee}
+
+.lab-destinations{margin-bottom:18px;padding-bottom:16px;border-bottom:1px solid var(--lab-border)}.lab-destinations h3{margin-top:0}.lab-destinations p{font-size:.74rem}.lab-order-list{display:grid;gap:6px;max-height:250px;overflow:auto}.lab-order-list button{text-align:left;padding:10px 12px}.lab-order-list strong,.lab-order-list small{display:block}.lab-order-list button[aria-pressed="true"]{border-color:#ac286d;background:#fceef6}.lab-node-details{font-size:.72rem}.lab-node-details summary{padding:7px 0}.lab-map [data-customer-homes] [role=button]{cursor:pointer}.lab-map [data-customer-homes] text{font-weight:750}

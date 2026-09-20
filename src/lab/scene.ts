@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { placeName } from './places';
 import { corridorAt } from './replay-inspection';
 import { displayPose } from './replay-pose';
 import type { SceneData } from './model.ts';
@@ -37,7 +38,6 @@ export function mountScene(host: HTMLElement, data: SceneData, onSelect: (node: 
     surface.computeVertexNormals();
     scene.add(new THREE.Mesh(surface, new THREE.MeshStandardMaterial({ color: '#c0cca3', roughness: 1, flatShading: false })));
     const nodes = new Map(data.map.nodes.map(n => [n.id, n]));
-    const drawLine = (pts: THREE.Vector3[], color: string, width = 1) => { const geometry = new THREE.BufferGeometry().setFromPoints(pts); const line = new THREE.Line(geometry, new THREE.LineBasicMaterial({ color, linewidth: width })); scene.add(line); return line; };
     const graph=flightNetwork(data); scene.add(graph); graph.visible=!!data.focusNodes;
     scene.add(roadSurface(data));
     const boxes: {
@@ -52,7 +52,7 @@ export function mountScene(host: HTMLElement, data: SceneData, onSelect: (node: 
         fallback.add(box);
         boxes.push({ id: b.id, mesh: box, color: box.material.color.clone() });
     }
-    for (const b of scenery.houses) {
+    for (const b of [...scenery.houses,...scenery.homes]) {
         const box = new THREE.Mesh(new THREE.BoxGeometry(b.w, b.h * 3, b.d), new THREE.MeshStandardMaterial({color:'#d9decd', roughness:1}));
         box.position.copy(to3(b.x,b.y,b.z+b.h/2)); fallback.add(box);
     }
@@ -86,8 +86,8 @@ export function mountScene(host: HTMLElement, data: SceneData, onSelect: (node: 
         el.addEventListener('click', () => onSelect(node));
     } overlay.append(el); labels.push({ el, point: to3(x, y, z), node, priority }); return el; }
     const kitchen = nodes.get(data.map.kitchen)!;
-    label('KITCHEN', kitchen.x, kitchen.y, kitchen.z + 40, data.map.kitchen);
-    if(!isBlock)label(data.orders.some(o => o.id === '#07') ? 'SUMMIT · #07 · 165m' : 'SUMMIT · 165m', 1240, 1460, 195, data.orders.find(o => o.id === '#07')?.node);
+    label('KITCHEN · dispatch', kitchen.x, kitchen.y, kitchen.z + 40, data.map.kitchen);
+    if(!isBlock)label(data.orders.some(o => o.id === '#07') ? 'Home 07 · Hilltop' : 'SUMMIT · 165m', 1240, 1460, 195, data.orders.find(o => o.id === '#07')?.node);
     const corridor = data.map.edges.find(e => e.resource === 'corridor')!;
     const ca = nodes.get(corridor.from)!, cb = nodes.get(corridor.to)!;
     if (data.orders.length === 1 && data.orders[0].id === '#07') {
@@ -104,8 +104,15 @@ export function mountScene(host: HTMLElement, data: SceneData, onSelect: (node: 
         marker.userData.node = n.id;
         clickable.push(marker);
         scene.add(marker);
-        if (o.id !== '#07' && (data.orders.length <= 3 || ['#13', '#20'].includes(o.id)))
-            label(o.id, n.x, n.y, n.z + 22, n.id);
+        if (o.id !== '#07')
+            label(placeName(n.id), n.x, n.y, n.z + 22, n.id);
+    }
+    for(const home of scenery.homes) {
+        const n=nodes.get(home.node)!;
+        const link=new THREE.Line(new THREE.BufferGeometry().setFromPoints([to3(n.x,n.y,n.z+1),to3(home.x,home.y,home.z+1)]),new THREE.LineDashedMaterial({color:'#07796b',dashSize:5,gapSize:4,depthTest:false}));
+        link.computeLineDistances();scene.add(link);
+        const hit=new THREE.Mesh(new THREE.BoxGeometry(home.w,home.h*3,home.d),new THREE.MeshBasicMaterial({transparent:true,opacity:0,depthWrite:false}));
+        hit.position.copy(to3(home.x,home.y,home.z+home.h/2));hit.userData.node=home.node;scene.add(hit);clickable.push(hit);
     }
     if(isBlock)for(const id of data.focusNodes!) {
         const n=nodes.get(id)!;
@@ -142,7 +149,7 @@ export function mountScene(host: HTMLElement, data: SceneData, onSelect: (node: 
     const highlights = new THREE.Group(); scene.add(highlights);
     let assetSource: THREE.Object3D | undefined;
     const blockFrame=(data.focusNodes??[]).map(id=>{const n=nodes.get(id)!;return to3(n.x,n.y,n.z+12);});
-    let inspectionFrame:THREE.Vector3[]=[],topDown=false,autoFrame:{points:THREE.Vector3[];top:boolean}|undefined;
+    let selectedPath:string[]=[],inspectionFrame:THREE.Vector3[]=[],topDown=false,autoFrame:{points:THREE.Vector3[];top:boolean}|undefined;
     const inspectionLabels:typeof labels=[];
     const render = () => { if (disposed) return; renderer.render(scene, camera); host.dataset.drawCalls=String(renderer.info.render.calls); host.dataset.triangles=String(renderer.info.render.triangles); const placed: {
         x: number;
@@ -192,6 +199,11 @@ export function mountScene(host: HTMLElement, data: SceneData, onSelect: (node: 
         autoFrame={points,top};controls.target.copy(fitInspection(camera,points,top));controls.update();render();
     }
     function view(name: string) {
+        if(name==='destination'&&selectedPath.length) {
+            const home=scenery.homes.find(h=>h.node===(selectedPath.at(-1)==='kitchen'?data.orders.find(o=>selectedPath.includes(o.node))?.node:selectedPath.at(-1))),points=routePoints(data,selectedPath).map(p=>to3(p.x,p.y,p.z+20));
+            if(home)points.push(to3(home.x,home.y,home.z+home.h+20));
+            frame(points);return;
+        }
         if(isBlock) {
             if(name==='block'||name==='overview'||name==='kitchen'){topDown=false;frame(blockFrame);}
             else if(name==='top'){topDown=true;frame(inspectionFrame.length?inspectionFrame:blockFrame,true);}
@@ -208,17 +220,18 @@ export function mountScene(host: HTMLElement, data: SceneData, onSelect: (node: 
         release(highlights);highlights.clear();
         if(selected){scene.remove(selected);release(selected);selected=undefined;}
         for(const item of inspectionLabels.splice(0)){item.el.remove();labels.splice(labels.indexOf(item),1);}
+        selectedPath=path;
         host.dataset.selectedPath=path.join('>');host.dataset.selectedBuildings=blocked.filter(id=>data.map.buildings.some(b=>b.id===id)).join(',');
         if(isBlock) {
             const inspection=blockInspection(data,path,blocked);selected=inspection.group;scene.add(selected);inspectionFrame=inspection.frame;
             for(const id of [...new Set([path[0],path.at(-1)])].filter((id):id is string=>!!id)) {
-                const n=nodes.get(id)!,order=data.orders.find(o=>o.node===id);
-                const el=label(`${order?order.id+' · ':''}${id==='kitchen'?'Kitchen':id}`,n.x,n.y,n.z+14,id,true);
+                const n=nodes.get(id)!;
+                const el=label(placeName(id),n.x,n.y,n.z+14,id,true);
                 el.dataset.inspection='endpoint';inspectionLabels.push(labels.at(-1)!);
             }
             for(const b of data.map.buildings.filter(b=>blocked.includes(b.id))) {
                 const x=b.x+b.w/2,y=b.y+b.d/2;
-                const el=label(`${b.id} · blocked`,x,y,terrainHeight(x,y)+b.h+8,undefined,true);
+                const el=label(`${placeName(b.id)} · blocked`,x,y,terrainHeight(x,y)+b.h+8,undefined,true);
                 el.dataset.inspection='building';inspectionLabels.push(labels.at(-1)!);
             }
             host.dataset.selectionStroke=String(path.length>1?5:0);
@@ -228,9 +241,15 @@ export function mountScene(host: HTMLElement, data: SceneData, onSelect: (node: 
             const outline = new THREE.Mesh(box.mesh.geometry.clone(), new THREE.MeshBasicMaterial({color:'#d44b44',wireframe:true,depthTest:false}));
             outline.position.copy(box.mesh.position);outline.scale.setScalar(1.06);highlights.add(outline);
         }
+        const home=scenery.homes.find(h=>h.node===(path.at(-1)==='kitchen'?data.orders.find(o=>path.includes(o.node))?.node:path.at(-1)));
+        if(home) {
+            const marker=new THREE.Mesh(new THREE.RingGeometry(23,28,32),new THREE.MeshBasicMaterial({color:'#df258a',side:THREE.DoubleSide,depthTest:false}));
+            marker.rotation.x=-Math.PI/2;marker.position.copy(to3(home.x,home.y,home.z+1));marker.renderOrder=10;highlights.add(marker);
+            const el=label(placeName(home.node)+' · destination',home.x,home.y,home.z+home.h+13,home.node,true);inspectionLabels.push(labels.at(-1)!);el.dataset.inspection='destination';
+        }
         const pts=routePoints(data,path).map(n=>to3(n.x,n.y,n.z+23));
         if(pts.length===1)pts.push(pts[0].clone().add(new THREE.Vector3(0,100,0)));
-        selected=pts.length?drawLine(pts,'#f02d95',5):undefined;render();
+        selected=pts.length>1?readableLine(pts,'#d72388',4):undefined;if(selected)scene.add(selected);render();
     }
     function follow(id?: string) {
         followed=matchMedia('(prefers-reduced-motion: reduce)').matches?undefined:id;
@@ -268,7 +287,7 @@ export function mountScene(host: HTMLElement, data: SceneData, onSelect: (node: 
         assetSource=assets.source; fallback.visible=false; scene.add(assets.scenery);
         pads.children.forEach(pad=>{ pad.visible=false; const model=assets.clone('charging_pad'); model.scale.set(40,40,40); model.position.copy(pad.position); scene.add(model); });
         for (const [id,group] of drones) { release(group); group.clear(); const model=assets.clone(data.droneTypes?.[id]==='H'?'drone_H':'drone_L'); model.scale.setScalar(22); group.add(model); }
-        host.dataset.models='loaded'; host.dataset.buildings=String(scenery.buildings.length+scenery.houses.length); time(currentTime);
+        host.dataset.models='loaded'; host.dataset.buildings=String(scenery.buildings.length+scenery.houses.length+scenery.homes.length); time(currentTime);
     }).catch(()=>{ if (!disposed) host.dataset.models='fallback'; });
     size();
     layers(!!data.focusNodes,false);

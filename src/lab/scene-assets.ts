@@ -27,7 +27,7 @@ export async function loadAssets(data: SceneData) {
     }
     const layout=sceneScenery(data);
     layout.buildings.forEach(b => { const x = b.x + b.w / 2, y = b.y + b.d / 2, i=data.map.buildings.indexOf(b); instance(b.kind === 'kitchen' || b.kind === 'tower' ? b.kind : houseModels[i % 4], x, y, terrainHeight(x, y), b.w, b.h * 3, b.d); });
-    layout.houses.forEach(b => instance(b.model, b.x, b.y, b.z, b.w, b.h * 3, b.d));
+    [...layout.houses,...layout.homes].forEach(b => instance(b.model, b.x, b.y, b.z, b.w, b.h * 3, b.d));
     const scenery = new THREE.Group();
     for (const bucket of buckets.values()) { const m = new THREE.InstancedMesh(bucket.geometry, bucket.material, bucket.matrices.length); bucket.matrices.forEach((matrix, i) => m.setMatrixAt(i, matrix)); scenery.add(m); }
     const clone = (name: string) => { const obj = prototypes.get(name)!.clone(true); obj.position.set(0, 0, 0); return obj; };

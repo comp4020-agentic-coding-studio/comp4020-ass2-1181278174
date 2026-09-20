@@ -4,6 +4,7 @@ import { importRecord, verifyPlanForInput } from './import.ts';
 import { startRun } from './runner.ts';
 import { basePath, esc, mapPoint, tableHtml, workspaceHtml } from './render.ts';
 import { sourceFor } from './strategies.ts';
+import { placeName, placeText } from './places';
 import { demonstrationInput } from './teaching';
 import { corridorAt, replayBounds, replayIssues, resourceReadout, skipIdle, waitReason, waits, type ReplayIssue } from './replay-inspection';
 import { fleetAt, routePoints } from './replay.ts';
@@ -263,14 +264,14 @@ export function mountWorkspace(root: HTMLElement) {
         if (selection.kind === 'node' && run.scene) {
             const n = run.scene.map.nodes.find(n => n.id === selection.id)!;
             const o = run.scene.orders.find(o => o.node === n.id);
-            title = o ? `${o.id} · ${o.label}` : n.kind === 'kitchen' ? 'Kitchen' : n.id;
-            detail = `Node ${n.id}: ${n.x} m east, ${n.y} m north, ${Math.round(n.z * 10) / 10} m elevation. ${o ? `Payload ${o.weight} kg; ready ${o.ready}; promised ${o.promised}.` : ''} ${n.wait ? 'Waiting is allowed here.' : ''}`;
+            title = o ? `${o.id} → ${placeName(n.id)}` : placeName(n.id);
+            detail = `${placeName(n.id)}: ${n.x} m east, ${n.y} m north, ${Math.round(n.z * 10) / 10} m elevation. ${o ? `Payload ${o.weight} kg; ready ${o.ready}; promised ${o.promised}.` : ''} ${n.wait ? 'Waiting is allowed here.' : ''}`;
             path = [n.id];
         }
         const order = run.scene?.orders.find(o=>o.id===selection.id || o.node===selection.id)?.id ?? event?.order;
         if (order) { focusedOrder=order; updateLayers(); if(q('[data-action="follow"]')?.getAttribute('aria-pressed')==='true') scene?.follow(run.scene?.events.find(e=>e.order===order)?.drone); }
         if (selection.kind === 'task' && run.scene)
-            path = run.scene.routes.find(r => r.order === selection.id)?.path;
+            path = run.plan?.tasks.find(t=>t.order===selection.id)?.pathOut ?? run.scene.routes.find(r => r.order === selection.id)?.path;
         if (event) {
             title = `${event.drone} · ${event.order} · ${event.phase}`;
             detail = `${event.kind}: ${event.from} → ${event.to}, [${event.start}, ${event.end}) s; energy ${event.energy} J${event.resource ? `; occupies ${event.resource}` : ''}.`;
@@ -281,9 +282,10 @@ export function mountWorkspace(root: HTMLElement) {
             updateTime(interval.start);
         else if (trace?.tick !== undefined)
             updateTime(trace.tick);
-        q('[data-selection-title]').textContent = String(title);
-        q('[data-selection-detail]').textContent = detail;
-        q('[data-selection-facts]').innerHTML = path ? `<p><strong>Path</strong> ${esc(path.join(' → '))}</p>` : '';
+        q('[data-selection-title]').textContent = placeText(title);
+        q('[data-selection-detail]').textContent = placeText(detail);
+        q('[data-selection-facts]').innerHTML = path ? `<p><strong>Path</strong> ${esc(path.map(placeName).join(' → '))}</p>` : '';
+        const technical=q('[data-node-details]');if(technical)technical.textContent=path?.join(' → ')??'No graph path for this selection.';
         content.querySelectorAll('[data-row]').forEach(el => el.classList.toggle('lab-selected', (el as HTMLElement).dataset.row === selection.id));
         if (run.scene && path) {
             const pts = routePoints(run.scene, path).map(n => mapPoint(run.scene!, n.x, n.y).join(',')).join(' ');
@@ -438,6 +440,17 @@ export function mountWorkspace(root: HTMLElement) {
                 }
                 const result = q('[data-verdict]');
                 result?.setAttribute('tabindex', '-1'); result?.focus({ preventScroll: true });
+            }
+            else if(action==='destination') {
+                const order=run.scene?.orders.find(o=>o.id===target.dataset.order);
+                if(order) {
+                    const route=run.plan?.tasks.find(t=>t.order===order.id)?.pathOut ?? run.scene?.routes.find(r=>r.order===order.id)?.path;
+                    select(route?{kind:'task',id:order.id}:{kind:'node',id:order.node});
+                    q('[data-selection-title]').textContent=`${order.id} → ${placeName(order.node)}`;
+                    q('[data-selection-detail]').textContent=`${order.label}. Deliver to the teal doorstep beside ${placeName(order.node)}. ${route?'The highlighted line is the outbound route. Playback includes the recorded return.':'This example marks the delivery address; no complete flight is recorded for this order.'}`;
+                    content.querySelectorAll('[data-action="destination"]').forEach(el=>el.setAttribute('aria-pressed',String((el as HTMLElement).dataset.order===order.id)));
+                    scene?.view('destination');
+                }
             }
             else if (action === 'inspect')
                 select(run.tables.flatMap(t => t.rows).find(x => x.id === target.dataset.rowId)?.selection ?? { kind: 'route', id: target.dataset.rowId! });
