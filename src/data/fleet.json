@@ -5,34 +5,51 @@
       "id": "L",
       "label": "light",
       "speed": 12,
-      "maxClimb": 1.5,
+      "maxClimb": 3.0,
       "payloadKg": 1.5,
-      "batteryJ": 60000,
+      "batteryJ": 95000,
       "cruiseW": 120,
       "payloadFactor": 0.15,
       "climbW": 300,
-      "liftJPerM": 40,
-      "hoverW": 100
+      "liftJPerM": 60,
+      "hoverW": 100,
+      "gradeFactor": 20
     },
     {
       "id": "H",
       "label": "heavy",
       "speed": 8,
-      "maxClimb": 1.0,
+      "maxClimb": 2.0,
       "payloadKg": 4,
-      "batteryJ": 150000,
+      "batteryJ": 250000,
       "cruiseW": 200,
       "payloadFactor": 0.08,
       "climbW": 500,
-      "liftJPerM": 70,
-      "hoverW": 220
+      "liftJPerM": 90,
+      "hoverW": 220,
+      "gradeFactor": 20
     }
   ],
   "drones": [
-    { "id": "A", "type": "L" },
-    { "id": "B", "type": "L" },
-    { "id": "C", "type": "L" },
-    { "id": "D", "type": "H" },
-    { "id": "E", "type": "H" }
+    {
+      "id": "A",
+      "type": "L"
+    },
+    {
+      "id": "B",
+      "type": "L"
+    },
+    {
+      "id": "C",
+      "type": "L"
+    },
+    {
+      "id": "D",
+      "type": "H"
+    },
+    {
+      "id": "E",
+      "type": "H"
+    }
   ]
 }

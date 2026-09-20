@@ -22,14 +22,17 @@ export function edgeTicks(edge: MapEdge, type: DroneType): number {
 }
 
 /** Joules to fly an edge with a payload: cruise power for the cruise time,
- *  climb power for any time the climb limit adds, and lift for the rise.
- *  Descent adds nothing and refunds nothing. */
+ *  climb power for any time the climb limit adds, and lift for the rise —
+ *  dearer per metre of rise the steeper the edge (gradeFactor). Descent adds
+ *  nothing and refunds nothing. */
 export function edgeEnergy(edge: MapEdge, type: DroneType, payloadKg = 0): number {
+  const rise = Math.max(edge.rise, 0);
   const cruise = edge.length / type.speed;
-  const climb = Math.max(edge.rise, 0) / type.maxClimb;
+  const climb = rise / type.maxClimb;
   const cruiseW = type.cruiseW * (1 + type.payloadFactor * payloadKg);
   const extra = Math.max(0, climb - cruise);
-  return Math.round(cruiseW * cruise + type.climbW * extra + type.liftJPerM * Math.max(edge.rise, 0));
+  const grade = edge.length > 0 ? rise / edge.length : 0;
+  return Math.round(cruiseW * cruise + type.climbW * extra + type.liftJPerM * rise * (1 + type.gradeFactor * grade));
 }
 
 export function hoverEnergy(type: DroneType, ticks: number): number {

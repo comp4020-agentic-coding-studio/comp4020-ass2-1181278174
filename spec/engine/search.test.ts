@@ -110,7 +110,7 @@ describe("the real map", () => {
   const time = fromMap(map, L, "time");
 
   it("costs a steep edge more time and more energy than a gentle one of the same length", () => {
-    const steep = { id: "x", from: "a", to: "b", length: 300, rise: 60, polyline: [] as [number, number][] };
+    const steep = { id: "x", from: "a", to: "b", length: 300, rise: 120, polyline: [] as [number, number][] };
     const gentle = { ...steep, rise: 15 };
     const down = { ...steep, rise: -60 };
     expect(edgeTicks(steep, L)).toBeGreaterThan(edgeTicks(gentle, L));

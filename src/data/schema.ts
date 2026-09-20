@@ -78,8 +78,12 @@ export interface DroneType {
   payloadFactor: number;
   /** Power while climb-limited, watts. */
   climbW: number;
-  /** Energy per metre of rise on top of the time-based terms, joules. */
+  /** Energy per metre of rise on top of the time-based terms, joules, scaled by
+   *  (1 + gradeFactor × grade): a steep climb costs more per metre of rise than
+   *  a gentle one, so a short steep route can be faster yet dearer than a long
+   *  gentle one. */
   liftJPerM: number;
+  gradeFactor: number;
   hoverW: number;
 }
 
