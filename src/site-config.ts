@@ -1,3 +1,4 @@
+import "./styles/stages.css";
 import { defineSiteConfig } from "astro-theme-university/types";
 import { slopBranding } from "astro-theme-slop";
 import { courseMeta } from "./course-config";

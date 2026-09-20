@@ -90,7 +90,7 @@ export function mountWorkspace(root: HTMLElement) {
             const mod = await import('./scene.ts');
             if (signal.aborted || generation !== sceneGeneration || !host.isConnected)
                 return;
-            scene = mod.mountScene(host, run.scene, node => select({ kind: 'node', id: node }));
+            scene = mod.mountScene(host, run.scene, node => select({ kind: 'node', id: node }), new URLSearchParams(location.search).get('lighting') === 'evening' ? { lighting: 'evening', labels: false } : {});
             q('[data-map-host]').hidden = true;
             q('[data-camera-tools]').hidden = false;
             q('[data-action="map-3d"]').textContent = '3D scene';

@@ -1,0 +1,12 @@
+:root {
+  --stage-route: light-dark(#28644e, #a2d7be);
+  --stage-energy: light-dark(#934222, #efb099);
+  --stage-order: light-dark(#785500, #e4c580);
+  --stage-fleet: light-dark(#4d5782, #bbc5f0);
+  --stage-corridor: light-dark(#654274, #d7b6e7);
+}
+[data-stage="route"] { --stage-color: var(--stage-route); }
+[data-stage="energy"] { --stage-color: var(--stage-energy); }
+[data-stage="order"] { --stage-color: var(--stage-order); }
+[data-stage="fleet"] { --stage-color: var(--stage-fleet); }
+[data-stage="corridor"] { --stage-color: var(--stage-corridor); }

@@ -10,10 +10,12 @@ import { terrainScene } from './scene-terrain';
 import { sceneScenery, toScene } from './visual-layout';
 import { blockInspection, fitInspection, readableLine } from './scene-inspection';
 import { flightNetwork, loadAssets, release, roadSurface } from './scene-assets';
-export function mountScene(host: HTMLElement, data: SceneData, onSelect: (node: string) => void) {
+export interface SceneOptions { lighting?: 'day' | 'evening'; labels?: boolean }
+export function mountScene(host: HTMLElement, data: SceneData, onSelect: (node: string) => void, options: SceneOptions = {}) {
+    const evening = options.lighting === 'evening';
     const isBlock=!!data.focusNodes, scenery=sceneScenery(data);
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color('#edf1e6');
+    scene.background = new THREE.Color(evening ? '#353e48' : '#edf1e6');
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
     renderer.setPixelRatio(Math.min(devicePixelRatio, 1.7));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -26,9 +28,9 @@ export function mountScene(host: HTMLElement, data: SceneData, onSelect: (node: 
     controls.maxDistance = 4400;
     controls.maxPolarAngle = Math.PI * .49;
     const to3 = (x: number, y: number, z: number) => new THREE.Vector3(...toScene(x, y, z));
-    scene.add(new THREE.HemisphereLight(0xffffff, 0x4d5840, 1.7));
-    const sun = new THREE.DirectionalLight(0xfff5dd, 2.1);
-    sun.position.set(-500, 1700, 800);
+    scene.add(new THREE.HemisphereLight(evening ? 0xabb9d8 : 0xffffff, 0x4d5840, evening ? 1.1 : 1.7));
+    const sun = new THREE.DirectionalLight(evening ? 0xffbd77 : 0xfff5dd, evening ? 2.8 : 2.1);
+    sun.position.set(-1100, evening ? 550 : 1700, 800);
     scene.add(sun);
     scene.add(terrainScene(data));
     const nodes = new Map(data.map.nodes.map(n => [n.id, n]));
@@ -73,6 +75,7 @@ export function mountScene(host: HTMLElement, data: SceneData, onSelect: (node: 
     }[] = [];
     const overlay = document.createElement('div');
     overlay.className = 'lab-scene-labels';
+    overlay.hidden = options.labels === false;
     host.append(overlay);
     function label(text: string, x: number, y: number, z: number, node?: string, priority=false) { const interactive=!!node&&!host.closest('[data-weekly-example]');const el = document.createElement(interactive ? 'button' : 'span'); el.textContent = text; el.className = 'lab-scene-label'; if (interactive) {
         el.setAttribute('type', 'button');
@@ -285,7 +288,16 @@ export function mountScene(host: HTMLElement, data: SceneData, onSelect: (node: 
     host.dataset.models='loading';
     void loadAssets(data).then(assets=>{
         if (disposed) { release(assets.source); return; }
-        assetSource=assets.source; fallback.visible=false; scene.add(assets.scenery);
+        assetSource=assets.source;
+        if(evening) assets.source.traverse(object => {
+            const mesh=object as THREE.Mesh;
+            for(const material of mesh.material ? (Array.isArray(mesh.material) ? mesh.material : [mesh.material]) : []) {
+                if(material instanceof THREE.MeshStandardMaterial && /glass/i.test(material.name)) {
+                    material.emissive.set('#ffc074'); material.emissiveIntensity=.65;
+                }
+            }
+        });
+        fallback.visible=false; scene.add(assets.scenery);
         pads.children.forEach(pad=>{ pad.visible=false; const model=assets.clone('charging_pad'); model.scale.set(40,40,40); model.position.copy(pad.position); scene.add(model); });
         for (const [id,group] of drones) { release(group); group.clear(); const model=assets.clone(data.droneTypes?.[id]==='H'?'drone_H':'drone_L'); model.scale.setScalar(22); group.add(model); }
         host.dataset.models='loaded'; host.dataset.buildings=String(scenery.buildings.length+scenery.houses.length+scenery.homes.length); time(currentTime);
