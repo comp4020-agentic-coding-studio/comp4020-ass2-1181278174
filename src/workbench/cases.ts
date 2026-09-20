@@ -1,6 +1,7 @@
 import type { CaseDef } from "./case.ts";
 import { assignCase } from "./assign-case.ts";
 import { corridorCase } from "./corridor-case.ts";
+import { designCase } from "./design-case.ts";
 import { edgesCase } from "./edges-case.ts";
 import { labelsCase } from "./labels-case.ts";
 import { levelsCase } from "./levels-case.ts";
@@ -10,7 +11,7 @@ import { replayCase } from "./replay-case.ts";
 import { searchCase } from "./search-case.ts";
 import { timetableCase } from "./timetable-case.ts";
 
-const all: CaseDef<any>[] = [edgesCase, searchCase, labelsCase, timetableCase, assignCase, padsCase, corridorCase, priorityCase, levelsCase, replayCase];
+const all: CaseDef<any>[] = [edgesCase, searchCase, labelsCase, timetableCase, assignCase, padsCase, corridorCase, priorityCase, levelsCase, replayCase, designCase];
 
 export function caseByKey(key: string): CaseDef<any> | undefined {
   return all.find((c) => c.key === key);

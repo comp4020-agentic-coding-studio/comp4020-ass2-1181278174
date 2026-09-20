@@ -28,7 +28,7 @@ const titles: Record<number, string> = {
 
 <ContentLayout
   title="Lab"
-  description="Every week's workbench on one page. Drag the semester slider to open the weeks in order; each instance is live, and its state is in the link."
+  description="Every week's workbench on one page, a scenario of your own underneath. Drag the semester slider to open the weeks in order; each instance is live, and its state is in the link."
   {...siteConfig}
 >
   <p>
@@ -36,6 +36,12 @@ const titles: Record<number, string> = {
     below is the workbench from that week's tutorial, already run. Drag the slider to open the
     semester week by week, or jump to a week. Anything you set is written into the page's link;
     copy the link to keep the state or hand it to someone.
+  </p>
+  <p>
+    Three of the weeks take a plan made by hand — week 5 a sequence, week 7 an assignment, week 9
+    a delay and a route — and hold it to the same validator as the presets. Below the weeks,
+    <a href="#design">design a scenario</a>: add orders, close the corridor, change the pads and
+    the fleet, and read what the planner does with it.
   </p>
 
   <div class="lab-slider">
@@ -53,6 +59,10 @@ const titles: Record<number, string> = {
         <Workbench week={w} title={`Week ${w}: ${titles[w]}`} />
       </div>
     ))}
+  </div>
+
+  <div id="design" class="lab-design">
+    <Workbench case="design" week={0} title="Design a scenario" />
   </div>
 
   <Record />
@@ -83,4 +93,5 @@ const titles: Record<number, string> = {
   .lab-slider input[type="range"] { width: 100%; max-width: 40rem; display: block; margin: 0.4rem 0; }
   .lab-jump { display: flex; flex-wrap: wrap; gap: 0.35rem 0.8rem; margin: 0.25rem 0 0; font-size: 0.95rem; }
   .lab-week { scroll-margin-top: 6rem; }
+  .lab-design { scroll-margin-top: 6rem; margin-top: 2.5rem; }
 </style>

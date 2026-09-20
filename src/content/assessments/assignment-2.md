@@ -52,15 +52,16 @@ after the week 12 tutorial. It starts with assignment and completes coordination
    changed an assignment or an order. Attach the results under fixed conditions and a
    failure explanation.
 6. Design one new order — place, weight, promised time — that makes the reference method
-   late or infeasible. Import it into the workbench, validate it, and explain which
-   assumption of the reference method it hits.
+   late or infeasible. Build it in the lab's [scenario panel](../../lab/#design), where the
+   same planner and validator run on it, and explain which assumption of the reference
+   method it hits.
 
 ## What you submit
 
 - Code and tests, with algorithm and configuration versions.
 - The twenty-order plan, with per-order and resource event records.
 - The comparison tables for the three levels and the two priorities.
-- The designed order and its validation, as an export or a link.
+- The designed order and its validation, as the lab link that carries the scenario.
 - A personal analysis of at most 1,600 English words. Formal evaluation uses the fixed cases
   and resources; there are no marks for code volume or rendering quality.
 
