@@ -10,10 +10,10 @@ reads it as a prospective student for about ten minutes. Process is 45% of the m
 site 20%, the response to the brief 35%. This file, `PROCESS.md` and the commit history
 are the process evidence.
 
-The design is in `docs/design/course-plan.md` (what the course is) and
-`docs/design/teaching-and-implementation.md` (what the site does, the engine contract, the
-presentation rules, the tests). They are in Chinese; the site is in English. When this file
-and the design disagree, stop and ask.
+The design is in `docs/` — `docs/README.md` lists the files. Read `docs/course.md` before
+any content, `docs/site.md` before any page, `docs/engine.md` before anything in `src/engine`
+or `src/data`, `docs/delivery.md` before a test or a ship. When this file and the design
+disagree, stop and ask.
 
 ## Commands
 
@@ -136,7 +136,7 @@ Bad: `fix stuff`
   inside `startDate`–`endDate`. Assessment weights sum to 100; each `marking` block sums
   to 100. The deck path matches `/^\/decks\/[a-z0-9-]+\/$/` and is linked from the W9
   lecture. `description` is 80–300 characters, `tags` is 1–3.
-- **Everything on the site is English.** Chinese stays in `docs/design/` and in chat.
+- **Everything on the site is English.** Chinese stays in chat.
 - Every page states which model it assumes (W1–W3, W4, W5–W6, W7–W8, W9–W12).
 
 ### Engine
