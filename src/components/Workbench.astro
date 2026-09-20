@@ -21,7 +21,7 @@ const id = `wb-${key ?? `w${week}`}`;
 
 <section class="workbench" data-week={week} data-case={def.key} data-state={JSON.stringify(state)} aria-labelledby={`${id}-title`}>
   <h2 id={`${id}-title`}>{title}</h2>
-  <p class="wb-caption"><strong>This week's decision:</strong> {caption.decision} <strong>What it breaks:</strong> {caption.breaks}</p>
+  <p class="wb-caption"><strong>{week > 0 ? "This week's decision:" : "The decision:"}</strong> {caption.decision} <strong>What it breaks:</strong> {caption.breaks}</p>
   <div class="wb-controls" set:html={renderControls(def, state, week, id)} />
   <div class="wb-view" set:html={view.html} />
   <p class="wb-status" aria-live="polite">{view.status.replace("computed in your browser", "computed when this page was built")}</p>
