@@ -1,7 +1,10 @@
 ---
+import { Image } from "astro:assets";
 import { render } from "astro:content";
 import { getPublishedCollection } from "astro-course-university/content";
-import ContentLayout from "astro-theme-university/layouts/ContentLayout.astro";
+import BaseLayout from "astro-theme-university/layouts/BaseLayout.astro";
+import { withBase } from "astro-theme-university/url";
+import { peopleArt } from "../../lib/people-art";
 import { siteConfig } from "../../site-config";
 
 export async function getStaticPaths() {
@@ -12,63 +15,124 @@ export async function getStaticPaths() {
 const { person } = Astro.props;
 const { Content } = await render(person);
 
-// Map the role enum (convenor|tutor|guest|other) to display labels rather than
-// rendering the raw lowercase value.
 const roleLabels: Record<string, string> = {
   convenor: "Convenor",
   tutor: "Tutor",
   guest: "Guest lecturer",
   other: "",
 };
-const roleLabel = person.data.role ? roleLabels[person.data.role] : undefined;
-// Astro's generated type does not retain the image/alt refinement relationship,
-// so narrow the alt at the rendering boundary as well.
-const rawPhotoAlt = (person.data as { photoAlt?: unknown }).photoAlt;
-const photoAlt = typeof rawPhotoAlt === "string" ? rawPhotoAlt : "";
-// Every page owes a description --- it is what a search result and a shared
-// link show underneath the title.
-const description = person.data.description;
+const roleLabel = roleLabels[person.data.role] ?? person.data.role;
+const art = peopleArt[person.id as keyof typeof peopleArt];
+const transitionName = `card-title-${Astro.url.pathname.replace(/^\/|\/$/g, "").replace(/\//g, "-")}`;
 ---
 
-<ContentLayout
-  title={person.data.title}
-  description={description}
-  heroImage={person.data.photo ?? undefined}
-  heroImageAlt={photoAlt}
-  {...siteConfig}
->
-  <dl>
-    {roleLabel && (
-      <>
+<BaseLayout title={person.data.title} description={person.data.description} {...siteConfig}>
+  {art && (
+    <section slot="hero" class="person-hero" aria-labelledby="person-title" style={`--portrait-position: ${art.position}`}>
+      <Image
+        src={art.banner}
+        alt={art.alt}
+        widths={[640, 1280, 1920].filter((width) => width <= art.banner.width)}
+        width={Math.min(1920, art.banner.width)}
+        sizes="(max-width: 700px) 62.5rem, 100vw"
+        format="avif"
+        loading="eager"
+        fetchpriority="high"
+      />
+      <div class="person-hero-copy">
+        <p>{roleLabel} · Twenty Dinners, One Hill</p>
+        <h1 id="person-title" transition:name={transitionName}>{person.data.title}</h1>
+      </div>
+    </section>
+  )}
+  {!art && <h1 transition:name={transitionName}>{person.data.title}</h1>}
+
+  <nav class="people-back" aria-label="People">
+    <a href={withBase("/people/")}><span aria-hidden="true">←</span> All people</a>
+  </nav>
+  <p class="lead">{person.data.description}</p>
+  <div class="person-profile">
+    <div class="person-biography"><Content /></div>
+    <aside class="person-contact" aria-labelledby="contact-title">
+      <h2 id="contact-title">Get in touch</h2>
+      <dl>
         <dt>Role</dt>
         <dd>{roleLabel}</dd>
-      </>
-    )}
-    {person.data.affiliation && (
-      <>
-        <dt>Affiliation</dt>
-        <dd>{person.data.affiliation}</dd>
-      </>
-    )}
-    {person.data.email && (
-      <>
-        <dt>Email</dt>
-        <dd>
-          <a href={`mailto:${person.data.email}`}>{person.data.email}</a>
-        </dd>
-      </>
-    )}
-    {person.data.url && (
-      <>
-        <dt>Web</dt>
-        <dd>
-          <a href={person.data.url}>{person.data.url}</a>
-        </dd>
-      </>
-    )}
-    <dt>Contact</dt>
-    <dd>{person.data.contact}</dd>
-  </dl>
+        {person.data.affiliation && <><dt>Group</dt><dd>{person.data.affiliation}</dd></>}
+        {person.data.email && (
+          <><dt>Email</dt><dd><a href={`mailto:${person.data.email}`}>{person.data.email}</a></dd></>
+        )}
+        {person.data.url && <><dt>Web</dt><dd><a href={person.data.url}>{person.data.url}</a></dd></>}
+      </dl>
+      {person.data.contact && <p>{person.data.contact}</p>}
+    </aside>
+  </div>
+</BaseLayout>
 
-  <Content />
-</ContentLayout>
+<style>
+  .person-hero {
+    grid-column: full;
+    min-height: 25rem;
+    height: min(29rem, 50vw);
+    position: relative;
+    isolation: isolate;
+    display: grid;
+    align-items: end;
+    padding: 2.2rem max(1.5rem, calc((100vw - 48rem) / 2));
+    background: #312c23;
+    color: #fffaf0;
+  }
+  .person-hero > img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: var(--portrait-position);
+    z-index: -2;
+  }
+  .person-hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: linear-gradient(to top, #16140fea, #16140f78 42%, #16140f00 80%);
+  }
+  .person-hero-copy { max-width: 48rem; }
+  :global(body:has(.person-hero)::after) { display: none; }
+  .person-hero-copy p { margin: 0 0 .65rem; font-size: .85rem; color: #f7dfaf; }
+  .person-hero h1 {
+    margin: 0;
+    color: inherit;
+    font-size: clamp(2rem, 4vw, 3.5rem);
+    line-height: 1.08;
+    font-weight: 500;
+    letter-spacing: -.035em;
+    text-wrap: balance;
+  }
+  .person-hero h1::after {
+    content: "";
+    display: block;
+    width: 3.5rem;
+    height: 3px;
+    margin-top: 1.2rem;
+    background: #d7a945;
+  }
+  .people-back { margin-bottom: 1rem; font-size: .9rem; }
+  .people-back a { display: inline-block; padding-block: .35rem; }
+  .person-profile { display: grid; grid-template-columns: minmax(0, 1fr) 15rem; gap: 2rem; align-items: start; }
+  .person-biography { min-width: 0; }
+  .person-biography :global(h2:first-child) { margin-top: 0; }
+  .person-contact { border: 1px solid var(--at-border); border-top: 3px solid var(--at-primary); padding: 1.1rem; background: var(--at-bg-alt); }
+  .person-contact h2 { font-size: 1.1rem; margin: 0 0 1rem; color: var(--at-text); }
+  .person-contact dl { margin: 0; }
+  .person-contact dt { margin-top: .85rem; font-size: .8rem; color: var(--at-text-secondary); }
+  .person-contact dd { margin: .15rem 0 0; font-size: .9rem; overflow-wrap: anywhere; }
+  .person-contact p { margin: 1.2rem 0 0; font-size: .85rem; }
+  @media (max-width: 700px) {
+    .person-hero { height: 25rem; min-height: 0; padding: 1.5rem; }
+    .person-hero h1 { max-width: 15ch; }
+    .person-hero-copy p { font-size: .75rem; max-width: 22rem; }
+    .person-profile { grid-template-columns: minmax(0, 1fr); gap: 1.5rem; }
+  }
+</style>

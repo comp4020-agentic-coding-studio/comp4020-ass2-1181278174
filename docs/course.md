@@ -58,8 +58,8 @@ the same conditions → say what is still guaranteed.
 
 | Role | Person | Line |
 |---|---|---|
-| Convenor | Dr Ines Halvorsen-Tan (placeholder name) | "A planner saying 'no conflicts' does not count. The plan passes the validator first, then me." |
-| Tutor | Kofi Marchetti (placeholder name) | Runs the workbench and the tutorials. "The reference answer does not open until your prediction is written down." |
+| Convenor | Ines Halvorsen-Tan | A fictional researcher in energy-aware search and shared-resource coordination. Leads the Monday lectures and oversees assessment. |
+| Tutor | Kofi Marchetti | A fictional simulation and testing researcher. Leads the Wednesday tutorials, records attendance and participation, and helps students explain their experiments. |
 
 ## 2. The world
 

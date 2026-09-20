@@ -1,0 +1,18 @@
+---
+import BaseLayout from 'astro-theme-university/layouts/BaseLayout.astro';
+import PeopleGrid from '../../components/PeopleGrid.astro';
+import { siteConfig } from '../../site-config';
+const description = 'Meet the teaching team behind Twenty Dinners, One Hill.';
+---
+<BaseLayout title="People" description={description} {...siteConfig}>
+  <header class="people-intro">
+    <h1>People</h1>
+    <p class="lead">{description}</p>
+  </header>
+  <PeopleGrid />
+</BaseLayout>
+<style>
+  .people-intro { margin-bottom: .5rem; }
+  .people-intro h1 { margin: 0 0 .6rem; }
+  .people-intro p { margin: 0; }
+</style>

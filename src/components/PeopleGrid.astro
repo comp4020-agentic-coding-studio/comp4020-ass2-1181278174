@@ -2,6 +2,7 @@
 import { getPublishedCollection } from "astro-course-university/content";
 import Card from "astro-theme-university/components/Card.astro";
 import CardGrid from "astro-theme-university/components/CardGrid.astro";
+import { withBase } from "astro-theme-university/url";
 
 const people = await getPublishedCollection("people");
 
@@ -36,23 +37,41 @@ const visible = people.sort((a, b) => {
 });
 ---
 
+<div class="people-cards">
 <CardGrid columns={2}>
   {
     visible.map((person) => (
       <Card
         headingLevel="h2"
         title={person.data.title}
-        href={`/people/${person.id}/`}
+        href={withBase(`/people/${person.id}/`)}
         image={person.data.photo ?? undefined}
         imageAlt={photoAlt(person.data)}
+        imageWidths={[320, 640]}
+        imageSizes="(min-width: 48rem) 24rem, calc(100vw - 3rem)"
+        imageFormat="avif"
       >
         {person.data.role && roleLabels[person.data.role] && (
-          <p>
-            <small>{roleLabels[person.data.role]}</small>
-          </p>
+          <p class="person-role">{roleLabels[person.data.role]}</p>
         )}
         <p>{person.data.description}</p>
+        <span class="person-more">Meet {person.data.title.split(" ")[0]} <span aria-hidden="true">→</span></span>
       </Card>
     ))
   }
 </CardGrid>
+</div>
+
+<style>
+  .people-cards { margin-block: 1rem 2rem; }
+  .people-cards :global(.at-card-image-frame) { aspect-ratio: 1; background: #f6eed8; }
+  .people-cards :global(.at-card-image) { width: 100%; height: 100%; object-fit: cover; }
+  .people-cards :global(.at-card-body) { padding-top: 1.2rem; }
+  .people-cards :global(.at-card-title) { font-size: 1.45rem; line-height: 1.25; }
+  .person-role { margin-block: .45rem .8rem; font-weight: 600; color: var(--at-text-secondary); }
+  .person-more { display: inline-block; margin-top: .45rem; color: var(--at-link); font-weight: 600; }
+  @media (prefers-reduced-motion: reduce) {
+    .people-cards :global(.at-card-image) { transition: none; transform: none; }
+    .people-cards :global(a.at-card:hover .at-card-image) { transform: none; }
+  }
+</style>
