@@ -3,6 +3,8 @@ title: "Why did it return cost 5, not 4?"
 description: "An admissible but inconsistent heuristic on a four-edge graph: predict, trace, find the bug, fix re-expansion, then compare h = 0 with a legal heuristic."
 week: 3
 date: 2027-03-10
+teachers:
+  - kofi-marchetti
 spec:
   - "your fixed A* returns cost 4 on the four-edge graph, and the test fails on the unfixed one"
   - "you can state the heuristic's conditions and the implementation's conditions separately"

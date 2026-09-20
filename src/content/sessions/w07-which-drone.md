@@ -3,6 +3,8 @@ title: "Three drones, ten orders, one hotpot"
 description: "Assign #01–#09 and #20 across three drones, then two types; build an equal-counts, unequal-time counterexample."
 week: 7
 date: 2027-04-07
+teachers:
+  - kofi-marchetti
 spec:
   - "infeasible drone–order pairs are excluded before any efficiency comparison"
   - "you can explain why one migration changes another drone's finish time"

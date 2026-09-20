@@ -3,6 +3,8 @@ title: "Three methods, one causal chain"
 description: "Compare independent-cost assignment, fixed assignment with coordination, and assignment with cost feedback; trace one order through the chain."
 week: 11
 date: 2027-05-05
+teachers:
+  - kofi-marchetti
 spec:
   - "your record shows route cost reaching the assignment decision, not two tables side by side"
   - "all three methods were run on the same inputs, priority and budget"

@@ -3,6 +3,8 @@ title: "Three routes on the kitchen's block"
 description: "Hand-compute three candidate routes on the eight-node block graph, find the edge that passes through a building, and draw the task state diagram."
 week: 1
 date: 2027-02-24
+teachers:
+  - kofi-marchetti
 spec:
   - "you can say whether a given object changes the legal edge set, and which edge"
   - "you can name the leg a task description is missing"

@@ -3,6 +3,8 @@ title: "Neighbours, reservations, two priorities"
 description: "Complete neighbour generation and reservation filtering, compare two priorities, and add a failed-reservation rollback test."
 week: 10
 date: 2027-04-28
+teachers:
+  - kofi-marchetti
 spec:
   - "your search never reuses a reservation left behind by a failed attempt"
   - "you can explain the guarantee range of prioritised planning without the word optimal"

@@ -3,6 +3,8 @@ title: "One drone, many orders: write \"a good plan\" as a formula first"
 description: "The timetable recurrence, and four objectives that are not the same objective."
 week: 5
 date: 2027-03-22
+teachers:
+  - ines-halvorsen-tan
 related:
   - "sessions/w05-many-orders"
   - "lectures/w06-one-swap"

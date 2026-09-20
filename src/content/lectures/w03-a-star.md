@@ -3,6 +3,8 @@ title: "A*: what the heuristic speeds up, and why it is still correct"
 description: "f = g + h, lower bounds with units, admissible versus consistent, and what re-expansion is for."
 week: 3
 date: 2027-03-08
+teachers:
+  - ines-halvorsen-tan
 related:
   - "sessions/w03-a-star"
   - "lectures/w04-back-with-battery"

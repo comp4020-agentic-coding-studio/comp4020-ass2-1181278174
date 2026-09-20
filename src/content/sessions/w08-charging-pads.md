@@ -3,6 +3,8 @@ title: "Two pads, five drones, one queue"
 description: "Schedule a two-drone, one-pad case by hand, run the five-drone, two-pad case, and locate where shared charging changes the answer."
 week: 8
 date: 2027-04-14
+teachers:
+  - kofi-marchetti
 spec:
   - "you can trace a delay from one drone's charging to another drone's departure"
   - "queueing appears in your evaluation as a resource, not as a constant per drone"

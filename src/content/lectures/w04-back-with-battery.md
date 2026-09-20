@@ -3,6 +3,8 @@ title: "The shortest route may not bring the drone back"
 description: "Payload, energy and the return leg; time–energy labels, dominance, and why the fastest arrival is not enough."
 week: 4
 date: 2027-03-15
+teachers:
+  - ines-halvorsen-tan
 related:
   - "sessions/w04-back-with-battery"
   - "lectures/w05-many-orders"

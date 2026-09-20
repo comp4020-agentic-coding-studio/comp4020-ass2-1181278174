@@ -3,6 +3,8 @@ title: "Six orders by hand, then by recurrence"
 description: "Compute the first orders by hand, implement the recurrence, and compare FIFO with earliest-deadline on the course's objective."
 week: 5
 date: 2027-03-24
+teachers:
+  - kofi-marchetti
 spec:
   - "you can check the program's timetable by hand for the first three orders"
   - "you declare the objective before the run and explain the result against it"

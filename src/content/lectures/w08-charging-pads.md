@@ -3,6 +3,8 @@ title: "Before the battery is full: shared resources in the timetable"
 description: "Two charging pads as a shared resource: discrete events, capacity intervals, the queue recurrence and how a change reaches a third drone."
 week: 8
 date: 2027-04-12
+teachers:
+  - ines-halvorsen-tan
 related:
   - "sessions/w08-charging-pads"
   - "lectures/w09-same-place"

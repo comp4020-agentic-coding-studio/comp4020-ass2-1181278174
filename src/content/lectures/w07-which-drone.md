@@ -3,6 +3,8 @@ title: "From ordering to assignment: which drone takes which order"
 description: "One sequence per drone, a feasibility matrix, earliest-completion greedy assignment and cross-drone migration."
 week: 7
 date: 2027-04-05
+teachers:
+  - ines-halvorsen-tan
 related:
   - "sessions/w07-which-drone"
   - "lectures/w08-charging-pads"

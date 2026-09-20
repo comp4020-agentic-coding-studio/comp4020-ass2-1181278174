@@ -3,6 +3,8 @@ title: "Dijkstra: when to trust the current shortest path"
 description: "Tentative distances, settled nodes and relaxation; why the goal being discovered is not the goal being found."
 week: 2
 date: 2027-03-01
+teachers:
+  - ines-halvorsen-tan
 related:
   - "sessions/w02-dijkstra"
   - "lectures/w03-a-star"

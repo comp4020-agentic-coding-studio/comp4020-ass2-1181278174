@@ -3,6 +3,8 @@ title: "The routes changed, so the assignment must be reconsidered"
 description: "Assignment, routes, resources and the objective as one evaluation; full re-evaluation of every candidate; what a decomposed method can claim."
 week: 11
 date: 2027-05-03
+teachers:
+  - ines-halvorsen-tan
 related:
   - "sessions/w11-routes-changed"
   - "lectures/w12-twenty-dinners"

@@ -3,6 +3,8 @@ title: "Same place, not the same search state"
 description: "Defining a conflict, putting time into the state, half-open occupancy intervals, and why visited[node] deletes waiting."
 week: 9
 date: 2027-04-19
+teachers:
+  - ines-halvorsen-tan
 slides: /decks/same-place/
 related:
   - "sessions/w09-same-place"

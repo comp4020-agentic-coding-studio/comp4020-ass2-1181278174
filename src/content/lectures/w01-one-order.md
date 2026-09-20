@@ -3,6 +3,8 @@ title: "Writing one order as a planning problem"
 description: "Why a line from the kitchen to the customer is not yet a problem definition: graph, state, legal edges, goal and cost."
 week: 1
 date: 2027-02-22
+teachers:
+  - ines-halvorsen-tan
 related:
   - "sessions/w01-one-order"
 ---

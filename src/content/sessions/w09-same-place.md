@@ -3,6 +3,8 @@ title: "The conflict in the corridor"
 description: "Mark the conflict between two independent trajectories, complete the reservation query, and show the spatial-visited bug at the waiting point."
 week: 9
 date: 2027-04-21
+teachers:
+  - kofi-marchetti
 spec:
   - "you can give concrete evidence of \"same place, different future choices\""
   - "your overlap test uses half-open intervals and catches the [0,6) against [5,7) case"

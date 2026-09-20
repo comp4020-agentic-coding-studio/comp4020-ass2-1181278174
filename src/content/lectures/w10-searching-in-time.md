@@ -3,6 +3,8 @@ title: "Searching in time: leaving the next drone a way through"
 description: "A* over (place, phase, time) under committed reservations; prioritised planning and what it does and does not guarantee."
 week: 10
 date: 2027-04-26
+teachers:
+  - ines-halvorsen-tan
 related:
   - "sessions/w10-searching-in-time"
   - "lectures/w11-routes-changed"

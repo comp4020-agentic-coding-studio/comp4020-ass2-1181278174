@@ -3,6 +3,8 @@ title: "Trace a Dijkstra that returns too early"
 description: "Trace a wrong implementation, complete the search core, and test the four cases that catch it."
 week: 2
 date: 2027-03-03
+teachers:
+  - kofi-marchetti
 spec:
   - "you can predict the settle order on a new small graph before running it"
   - "you can build a counterexample that exposes settle-on-discovery"

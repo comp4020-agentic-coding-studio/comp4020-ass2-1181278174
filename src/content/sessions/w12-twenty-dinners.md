@@ -3,6 +3,8 @@ title: "Audit the twenty-order plan"
 description: "Run the final plan, trace one late or unscheduled order to its cause, and reproduce someone else's conclusion."
 week: 12
 date: 2027-05-12
+teachers:
+  - kofi-marchetti
 spec:
   - "you can say why your algorithm works, when it fails, and at which level the next change belongs"
   - "every claim in your explanation points at a run record or a test"

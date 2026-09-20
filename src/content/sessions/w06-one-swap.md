@@ -3,6 +3,8 @@ title: "The swaps stop; 720 permutations do not"
 description: "Implement a swap improver, find where it stops, and prove with the enumerator that a better sequence exists."
 week: 6
 date: 2027-03-31
+teachers:
+  - kofi-marchetti
 spec:
   - "your improver's stopping condition matches what your report claims"
   - "you can show a sequence the enumerator finds that your swaps did not"

@@ -3,6 +3,8 @@ title: "The two routes to #07"
 description: "Ridge or contour: complete the budget and dominance checks, show what single-label pruning loses, confirm by enumeration."
 week: 4
 date: 2027-03-17
+teachers:
+  - kofi-marchetti
 spec:
   - "you can tell \"this candidate failed\" from \"no feasible route exists in the stated search range\""
   - "your dominance rule keeps both labels at Q, and the fastest-only version reports no solution"

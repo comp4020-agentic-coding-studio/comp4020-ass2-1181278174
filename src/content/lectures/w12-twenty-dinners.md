@@ -3,6 +3,8 @@ title: "Twenty dinners: deliver the algorithm, and state its limits"
 description: "From spatial nodes to resource labels to space-time states; proven properties, tested results and untested generalisations."
 week: 12
 date: 2027-05-10
+teachers:
+  - ines-halvorsen-tan
 related:
   - "sessions/w12-twenty-dinners"
 ---

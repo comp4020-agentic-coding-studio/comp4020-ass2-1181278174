@@ -3,6 +3,8 @@ title: "Improving the order: why one swap is worth accepting"
 description: "Plans as permutations, a swap neighbourhood, strict improvement, and what a local optimum does and does not mean."
 week: 6
 date: 2027-03-29
+teachers:
+  - ines-halvorsen-tan
 related:
   - "sessions/w06-one-swap"
   - "lectures/w07-which-drone"
