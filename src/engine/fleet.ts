@@ -163,7 +163,7 @@ export function evaluate(world: World, assignment: Assignment, options: FleetOpt
     else if (corridor) {
       const r = planSpaceTimeTask({ map, rules, type, order, table, drone, depart, maxExpansions: options.maxExpansions });
       expansions += r.expansions;
-      if (r.status !== "found") failure = r.status === "budget" ? "not found within the expansion budget" : r.status === "over-budget" ? "no round trip within the energy budget under the reservations" : "no route under the reservations";
+      if (r.status !== "found") failure = r.status === "budget" ? "not found within the expansion budget" : r.status === "over-budget" ? "no round trip within the energy budget under the reservations" : "no route under the reservations before the cut-off";
       else { outTicks = r.out.ticks - r.out.groundWait; groundWait = r.out.groundWait; backTicks = r.back.ticks; hover = r.out.hover + r.back.hover; energyUsed = r.energy; pathOut = r.out.path; pathBack = r.back.path; }
     } else {
       const s = staticTask(world, type, order);
