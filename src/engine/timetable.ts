@@ -57,6 +57,8 @@ export interface TimetableOptions {
   availableFrom?: number;
   loadingTicks?: number;
   turnaroundTicks?: number;
+  compare?: (a?: Objective, b?: Objective) => number;
+  requestedDepartures?: Record<string, number>;
 }
 
 export function timetable(sequence: Job[], cost: CostFn, options: TimetableOptions = {}): Timetable {
@@ -66,7 +68,7 @@ export function timetable(sequence: Job[], cost: CostFn, options: TimetableOptio
   const slots: Slot[] = [];
   const infeasible: string[] = [];
   for (const job of sequence) {
-    const start = Math.max(job.ready, available);
+    const start = Math.max(job.ready, available, (options.requestedDepartures?.[job.id] ?? 0) - loading);
     const c = cost(job, start);
     if (!c) {
       infeasible.push(job.id);
@@ -128,6 +130,7 @@ export interface SwapResult {
   /** local-optimum: every pairwise swap was checked and none improves strictly. */
   status: "local-optimum" | "budget" | "infeasible";
   neighboursChecked: number;
+  candidates?: { iteration: number; i: number; j: number; sequence: string[]; objective?: Objective; accepted: boolean }[];
 }
 
 /** Best-improvement pairwise swaps from a starting sequence. Every candidate is
@@ -139,9 +142,11 @@ export function improveBySwaps(start: Job[], cost: CostFn, options: TimetableOpt
   let currentT = timetable(current, cost, options);
   if (!currentT.feasible) return { sequence: current, moves: [], status: "infeasible", neighboursChecked: 0 };
   const moves: SwapMove[] = [];
+  const candidates: NonNullable<SwapResult["candidates"]> = [];
+  const compare = options.compare ?? compareObjective;
   let checked = 0;
   for (let iter = 0; ; iter++) {
-    if (iter >= maxIterations) return { sequence: current, objective: currentT.objective, moves, status: "budget", neighboursChecked: checked };
+    if (iter >= maxIterations) return { sequence: current, objective: currentT.objective, moves, candidates, status: "budget", neighboursChecked: checked };
     let best: { i: number; j: number; seq: Job[]; t: Timetable } | null = null;
     for (let i = 0; i < current.length; i++) {
       for (let j = i + 1; j < current.length; j++) {
@@ -149,13 +154,15 @@ export function improveBySwaps(start: Job[], cost: CostFn, options: TimetableOpt
         [seq[i], seq[j]] = [seq[j], seq[i]];
         const t = timetable(seq, cost, options);
         checked++;
+        candidates.push({ iteration: iter + 1, i, j, sequence: seq.map(x => x.id), objective: t.objective, accepted: false });
         if (!t.feasible) continue;
-        if (compareObjective(t.objective, currentT.objective) < 0 && (!best || compareObjective(t.objective, best.t.objective) < 0)) {
+        if (compare(t.objective, currentT.objective) < 0 && (!best || compare(t.objective, best.t.objective) < 0)) {
           best = { i, j, seq, t };
         }
       }
     }
-    if (!best) return { sequence: current, objective: currentT.objective, moves, status: "local-optimum", neighboursChecked: checked };
+    if (!best) return { sequence: current, objective: currentT.objective, moves, candidates, status: "local-optimum", neighboursChecked: checked };
+    candidates.find(c => c.iteration === iter + 1 && c.i === best!.i && c.j === best!.j)!.accepted = true;
     moves.push({ i: best.i, j: best.j, before: currentT.objective!, after: best.t.objective!, sequence: best.seq.map((x) => x.id) });
     current = best.seq;
     currentT = best.t;
@@ -181,7 +188,7 @@ export function enumerate(jobs: Job[], cost: CostFn, options: TimetableOptions &
       count++;
       const t = timetable(prefix, cost, options);
       if (!t.feasible) return;
-      const c = compareObjective(t.objective, best);
+      const c = (options.compare ?? compareObjective)(t.objective, best);
       if (best === undefined || c < 0) {
         best = t.objective;
         optima = [prefix.map((x) => x.id)];

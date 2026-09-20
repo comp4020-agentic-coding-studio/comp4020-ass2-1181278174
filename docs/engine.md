@@ -181,3 +181,34 @@ entry; any "course-set" parameter appears in the policies page's simulation-boun
 If the data does not meet the design target, the data changes, not the promise.
 
 The historic metrics in `reference.json` are provenance for the stored assignment. Runtime comparisons re-evaluate the assignment and each migration under the current evaluator; they do not reuse the historic objective values.
+
+## 9. Lab engine contract — 21 September 2026
+
+The Lab rebuild preserves the canonical inputs, their hashes and calibrated defaults.
+`search.ts`, `labels.ts`, `task.ts`, `timetable.ts`, `fleet.ts` and `assign.ts` now accept
+the documented strategy hooks. Incorrect teaching rules are diagnostic; they cannot
+relax the independent physical constraints. Ordering alternatives report their teaching
+objective separately from the formal lexicographic course objective.
+
+Flight results contain directed edge moves, airborne waits and task phases. Static and
+space-time planning produce the same action format. Fixed route candidates can still wait
+legally around reservations. Requested departures constrain take-off without changing the
+canonical ready time. Resource caches distinguish the map and drone properties, and a
+failed full task leaves no reservations behind.
+
+`check-plan.ts` independently reconstructs each submitted action against the world. It
+checks adjacency, travel duration, outbound payload, service, unloaded return, energy and
+reserve, ready time, loading, turnaround, charging requests, FCFS/capacity, corridor
+reservations, closures and completion. It recomputes objective values and rejects altered
+action energy, missing returns, duplicate orders and invalid physical records. Reported
+scores and success flags are not evidence. Complete worker results and imported records
+pass this check outside the realm that can execute a custom strategy.
+
+The Lab adapter validates scenario copies before planning. It records model/input/source
+versions and explicit non-cryptographic fingerprints for comparison, not authentication.
+Symbolic examples retain their separate units. Search and candidate budgets are reported;
+exhausting one is distinct from exhausting a neighbourhood or proving no solution. The
+twenty-order reference is recomputed and checked, not claimed to be globally optimal.
+
+See `lab-rebuild-verification.md` for reproduced results, the checker mutation test and
+runtime limits. No canonical data file or pinned hash changed in this revision.

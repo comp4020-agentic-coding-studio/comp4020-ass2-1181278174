@@ -19,6 +19,7 @@ export interface LabelEvent {
   node: string;
   time: number;
   energy: number;
+  path: string[];
   outcome: "kept" | "dominated" | "over-budget" | "not-fastest";
   /** For "dominated": the label that dominates it. */
   by?: { time: number; energy: number };
@@ -29,6 +30,8 @@ export interface LabelSearchOptions {
   budget?: number;
   keepOnly?: "pareto" | "fastest";
   maxExpansions?: number;
+  dominates?: (a: { time: number; energy: number }, b: { time: number; energy: number }) => boolean;
+  withinBudget?: (label: { time: number; energy: number }, budget: number) => boolean;
 }
 
 export type LabelStatus = "found" | "none-in-domain" | "budget";
@@ -66,6 +69,8 @@ export function pathOf(label: Label): string[] {
 export function labelSearch(graph: BiGraph, start: string, goal: string, options: LabelSearchOptions = {}): LabelSearchResult {
   const budget = options.budget ?? Infinity;
   const fastestOnly = options.keepOnly === "fastest";
+  const compare = options.dominates ?? dominates;
+  const fits = options.withinBudget ?? withinBudget;
   const maxExpansions = options.maxExpansions ?? Infinity;
   const perNode = new Map<string, Label[]>();
   const events: LabelEvent[] = [];
@@ -76,9 +81,9 @@ export function labelSearch(graph: BiGraph, start: string, goal: string, options
 
   const offer = (label: Label): boolean => {
     const here = perNode.get(label.node) ?? [];
-    if (label.energy > budget) {
+    if (!fits(label, budget)) {
       pruned.overBudget++;
-      events.push({ node: label.node, time: label.time, energy: label.energy, outcome: "over-budget" });
+      events.push({ node: label.node, time: label.time, energy: label.energy, path: pathOf(label), outcome: "over-budget" });
       if (label.node === goal) overBudgetAtGoal.push(label);
       return false;
     }
@@ -86,20 +91,20 @@ export function labelSearch(graph: BiGraph, start: string, goal: string, options
       const best = here[0];
       if (best && best.time <= label.time) {
         pruned.notFastest++;
-        events.push({ node: label.node, time: label.time, energy: label.energy, outcome: "not-fastest", by: { time: best.time, energy: best.energy } });
+        events.push({ node: label.node, time: label.time, energy: label.energy, path: pathOf(label), outcome: "not-fastest", by: { time: best.time, energy: best.energy } });
         return false;
       }
       perNode.set(label.node, [label]);
     } else {
-      const dom = here.find((h) => dominates(h, label) || (h.time === label.time && h.energy === label.energy));
+      const dom = here.find((h) => compare(h, label) || (h.time === label.time && h.energy === label.energy));
       if (dom) {
         pruned.dominated++;
-        events.push({ node: label.node, time: label.time, energy: label.energy, outcome: "dominated", by: { time: dom.time, energy: dom.energy } });
+        events.push({ node: label.node, time: label.time, energy: label.energy, path: pathOf(label), outcome: "dominated", by: { time: dom.time, energy: dom.energy } });
         return false;
       }
-      perNode.set(label.node, [...here.filter((h) => !dominates(label, h)), label]);
+      perNode.set(label.node, [...here.filter((h) => !compare(label, h)), label]);
     }
-    events.push({ node: label.node, time: label.time, energy: label.energy, outcome: "kept" });
+    events.push({ node: label.node, time: label.time, energy: label.energy, path: pathOf(label), outcome: "kept" });
     queue.push(label);
     return true;
   };
@@ -126,11 +131,11 @@ export function labelSearch(graph: BiGraph, start: string, goal: string, options
     }
   }
   const atGoal = [...(perNode.get(goal) ?? [])].sort((a, b) => a.time - b.time || a.energy - b.energy);
-  const feasible = atGoal.filter((l) => withinBudget(l, budget));
+  const feasible = atGoal.filter((l) => fits(l, budget));
   let all: Label[] = [];
   for (const l of [...atGoal, ...overBudgetAtGoal]) {
-    if (all.some((d) => dominates(d, l) || (d.time === l.time && d.energy === l.energy))) continue;
-    all = [...all.filter((d) => !dominates(l, d)), l];
+    if (all.some((d) => compare(d, l) || (d.time === l.time && d.energy === l.energy))) continue;
+    all = [...all.filter((d) => !compare(l, d)), l];
   }
   all.sort((a, b) => a.time - b.time || a.energy - b.energy);
   if (feasible.length && status !== "budget") status = "found";

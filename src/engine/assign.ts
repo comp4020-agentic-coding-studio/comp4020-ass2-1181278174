@@ -50,8 +50,14 @@ export interface GreedyStep {
   alternatives: { drone: string; predicted: number | null }[];
 }
 
+export interface AssignOptions {
+  score?: (drone: { id: string; type: string }, order: Order, state: { predicted: number; wait: number; available: number; count: number; trip: number; energy: number }) => number;
+  includeWaits?: boolean;
+  fleetOptions?: FleetOptions;
+}
+
 /** Orders in ready order; each goes to the feasible drone that would deliver it earliest. */
-export function greedyAssign(world: World, orders: Order[] = world.orders, rule: "earliest-completion" | "equal-counts" = "earliest-completion"): { assignment: Assignment; steps: GreedyStep[]; unassignable: string[] } {
+export function greedyAssign(world: World, orders: Order[] = world.orders, rule: "earliest-completion" | "equal-counts" = "earliest-completion", options: AssignOptions = {}): { assignment: Assignment; steps: GreedyStep[]; unassignable: string[] } {
   const matrix = feasibilityMatrix(world, orders);
   const feas = (drone: string, order: string) => matrix.find((f) => f.drone === drone && f.order === order)!;
   const assignment: Assignment = Object.fromEntries(world.fleet.drones.map((d) => [d.id, [] as string[]]));
@@ -63,11 +69,22 @@ export function greedyAssign(world: World, orders: Order[] = world.orders, rule:
   for (const order of sorted) {
     const alternatives = world.fleet.drones.map((d) => {
       const f = feas(d.id, order.id);
-      if (!f.feasible) return { drone: d.id, predicted: null };
+      if (!f.feasible) return { drone: d.id, predicted: null, score: Infinity };
       const start = Math.max(order.ready, available.get(d.id)!);
-      return { drone: d.id, predicted: start + world.rules.loadingTicks + f.d! };
+      const predicted = start + world.rules.loadingTicks + f.d!;
+      let wait = 0;
+      if (options.includeWaits) {
+        const candidate = Object.fromEntries(Object.entries(assignment).map(([id, list]) => [id, id === d.id ? [...list, order.id] : [...list]]));
+        const p = evaluate(world, candidate, options.fleetOptions);
+        const task = p.tasks.find(t => t.order === order.id);
+        if (task?.status !== "flown") return { drone: d.id, predicted: null, score: Infinity };
+        wait = Math.max(0, task.deliver! - predicted);
+      }
+      const score = options.score ? options.score(d, order, { predicted, wait, available: available.get(d.id)!, count: assignment[d.id].length, trip: f.ticks!, energy: f.energy! }) : predicted + wait;
+      if (!Number.isFinite(score)) throw new Error("assignCost must return a finite number for a feasible pair");
+      return { drone: d.id, predicted, score, wait };
     });
-    const feasible = alternatives.filter((a) => a.predicted !== null) as { drone: string; predicted: number }[];
+    const feasible = alternatives.filter((a) => a.predicted !== null) as { drone: string; predicted: number; score: number }[];
     if (!feasible.length) {
       unassignable.push(order.id);
       continue;
@@ -83,7 +100,7 @@ export function greedyAssign(world: World, orders: Order[] = world.orders, rule:
         if (cand) { chosen = cand; rr = (ids.indexOf(cand.drone) + 1) % ids.length; break; }
       }
     } else {
-      chosen = feasible.reduce((best, a) => (a.predicted < best.predicted || (a.predicted === best.predicted && a.drone < best.drone) ? a : best));
+      chosen = feasible.reduce((best, a) => (a.score < best.score || (a.score === best.score && a.drone < best.drone) ? a : best));
     }
     assignment[chosen.drone].push(order.id);
     const f = feas(chosen.drone, order.id);
@@ -108,9 +125,10 @@ export interface ImproveResult {
   moves: ImproveMove[];
   status: "local-optimum" | "budget" | "infeasible";
   candidatesEvaluated: number;
+  candidates?: { description: string; iteration: number; objective?: FleetPlan["objective"]; complete: boolean; accepted: boolean }[];
 }
 
-function neighbours(assignment: Assignment): { kind: "swap" | "migrate"; description: string; assignment: Assignment }[] {
+export function neighbours(assignment: Assignment): { kind: "swap" | "migrate"; description: string; assignment: Assignment }[] {
   const out: { kind: "swap" | "migrate"; description: string; assignment: Assignment }[] = [];
   const clone = (a: Assignment): Assignment => Object.fromEntries(Object.entries(a).map(([k, v]) => [k, [...v]]));
   for (const [drone, list] of Object.entries(assignment)) {
@@ -135,25 +153,32 @@ function neighbours(assignment: Assignment): { kind: "swap" | "migrate"; descrip
 }
 
 /** Best-improvement local search over swaps and migrations; every candidate is a full evaluation. */
-export function improve(world: World, start: Assignment, options: FleetOptions & { maxIterations?: number } = {}): ImproveResult {
+export function improve(world: World, start: Assignment, options: FleetOptions & { maxIterations?: number; maxCandidates?: number; onProgress?: (count: number, plan: FleetPlan) => void } = {}): ImproveResult {
   const maxIterations = options.maxIterations ?? 50;
   let current = start;
   let plan = evaluate(world, current, options);
   const moves: ImproveMove[] = [];
   let evaluated = 1;
+  const candidates: NonNullable<ImproveResult["candidates"]> = [];
   if (!plan.complete) return { assignment: current, plan, moves, status: "infeasible", candidatesEvaluated: evaluated };
   for (let iter = 0; ; iter++) {
-    if (iter >= maxIterations) return { assignment: current, plan, moves, status: "budget", candidatesEvaluated: evaluated };
+    if (iter >= maxIterations) return { assignment: current, plan, moves, candidates, status: "budget", candidatesEvaluated: evaluated };
     let best: { n: ReturnType<typeof neighbours>[number]; p: FleetPlan } | null = null;
+    let exhausted = false;
     for (const n of neighbours(current)) {
+      if (evaluated >= (options.maxCandidates ?? Infinity)) { exhausted = true; break; }
       const p = evaluate(world, n.assignment, options);
       evaluated++;
+      candidates.push({ description: n.description, iteration: iter + 1, objective: p.objective, complete: p.complete, accepted: false });
+      if (evaluated % 10 === 0) options.onProgress?.(evaluated, best?.p ?? plan);
       if (!p.complete) continue;
       if (compareObjective(p.objective, plan.objective) < 0 && (!best || compareObjective(p.objective, best.p.objective) < 0)) best = { n, p };
     }
-    if (!best) return { assignment: current, plan, moves, status: "local-optimum", candidatesEvaluated: evaluated };
+    if (!best) return { assignment: current, plan, moves, candidates, status: exhausted ? "budget" : "local-optimum", candidatesEvaluated: evaluated };
+    candidates.find(c => c.iteration === iter + 1 && c.description === best!.n.description)!.accepted = true;
     moves.push({ kind: best.n.kind, description: best.n.description, before: plan.objective, after: best.p.objective, assignment: best.n.assignment });
     current = best.n.assignment;
     plan = best.p;
+    if (exhausted) return { assignment: current, plan, moves, candidates, status: "budget", candidatesEvaluated: evaluated };
   }
 }

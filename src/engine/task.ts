@@ -5,7 +5,7 @@
 
 import type { DroneType, MapData, Order, RulesData } from "../data/schema.ts";
 import { fromMapTimeEnergy, hoverEnergy } from "./graph.ts";
-import { dominates, labelSearch, pathOf, type Label } from "./labels.ts";
+import { dominates, labelSearch, pathOf, type Label, type LabelEvent, type LabelSearchOptions } from "./labels.ts";
 
 export interface Leg {
   kind: "load" | "out" | "service" | "back";
@@ -45,6 +45,8 @@ export interface TaskPlan {
   /** Non-dominated (time, energy) arrivals at the customer on the outbound leg. */
   outAtGoal: { time: number; energy: number }[];
   pruned: { dominated: number; overBudget: number; notFastest: number };
+  trace?: { out: LabelEvent[]; back: LabelEvent[] };
+  expansions?: number;
 }
 
 export interface TaskInput {
@@ -56,15 +58,23 @@ export interface TaskInput {
   loadFrom: number;
   /** "fastest" is the wrong single-label version the week-4 tutorial runs first. */
   keepOnly?: "pareto" | "fastest";
+  dominates?: LabelSearchOptions["dominates"];
+  withinBudget?: LabelSearchOptions["withinBudget"];
+  maxExpansions?: number;
+  /** Index in the non-dominated complete-candidate list, for manual planning. */
+  candidate?: number;
 }
 
-export function planTask({ map, rules, type, order, loadFrom, keepOnly }: TaskInput): TaskPlan {
+export function planTask({ map, rules, type, order, loadFrom, keepOnly, dominates: labelDominates, withinBudget: fits, maxExpansions, candidate }: TaskInput): TaskPlan {
   const budget = Math.floor(type.batteryJ * (1 - rules.reserveFraction));
   const base: TaskPlan = { status: "none-in-domain", order: order.id, drone: type.id, budget, candidates: [], legs: [], outAtGoal: [], pruned: { dominated: 0, overBudget: 0, notFastest: 0 } };
   if (order.weight > type.payloadKg) return { ...base, status: "infeasible-payload" };
 
-  const outSearch = labelSearch(fromMapTimeEnergy(map, type, order.weight), map.kitchen, order.node, { keepOnly });
-  const backSearch = labelSearch(fromMapTimeEnergy(map, type, 0), order.node, map.kitchen, { keepOnly });
+  const options = { keepOnly, dominates: labelDominates, maxExpansions };
+  const outSearch = labelSearch(fromMapTimeEnergy(map, type, order.weight), map.kitchen, order.node, options);
+  const backSearch = labelSearch(fromMapTimeEnergy(map, type, 0), order.node, map.kitchen, options);
+  base.trace = { out: outSearch.events, back: backSearch.events };
+  base.expansions = outSearch.expansions + backSearch.expansions;
   base.outAtGoal = outSearch.all.map((l) => ({ time: l.time, energy: l.energy }));
   base.pruned = {
     dominated: outSearch.pruned.dominated + backSearch.pruned.dominated,
@@ -84,7 +94,7 @@ export function planTask({ map, rules, type, order, loadFrom, keepOnly }: TaskIn
   }
   candidates.sort((a, b) => a.time - b.time || a.energy - b.energy);
   const fastest = candidates[0];
-  const chosen = candidates.find((c) => c.energy <= budget);
+  const chosen = candidate !== undefined ? candidates[candidate] : candidates.find((c) => fits ? fits(c, budget) : c.energy <= budget);
   if (!chosen) return { ...base, candidates, fastest };
 
   const depart = loadFrom + rules.loadingTicks;

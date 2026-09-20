@@ -44,6 +44,8 @@ export interface SearchOptions {
   heuristic?: (id: string) => number;
   reopenClosed?: boolean;
   maxExpansions?: number;
+  /** Deliberately wrong teaching variant; callers must label its result diagnostic. */
+  stopOnDiscovery?: boolean;
 }
 
 export type SearchStatus = "found" | "no-solution" | "budget";
@@ -62,6 +64,7 @@ export class Searcher {
   private readonly h: (id: string) => number;
   private readonly reopen: boolean;
   private readonly budget: number;
+  private readonly stopOnDiscovery: boolean;
   private open: OpenEntry[] = [];
   private readonly best = new Map<string, number>();
   private readonly parent = new Map<string, string>();
@@ -80,6 +83,7 @@ export class Searcher {
     this.h = options.heuristic ?? (() => 0);
     this.reopen = options.reopenClosed ?? true;
     this.budget = options.maxExpansions ?? Infinity;
+    this.stopOnDiscovery = options.stopOnDiscovery ?? false;
     this.push(start, 0, undefined);
   }
 
@@ -158,6 +162,11 @@ export class Searcher {
           if (wasClosed) this.closed.delete(nb.to);
           this.push(nb.to, newG, entry.node);
           relaxed.push({ to: nb.to, newG, oldG, improved: true, reopened: wasClosed, skippedClosed: false });
+          if (this.stopOnDiscovery && nb.to === this.goal) {
+            this.record(entry, stale, relaxed);
+            this.finish("found", newG);
+            return this.steps[this.steps.length - 1];
+          }
         } else {
           relaxed.push({ to: nb.to, newG, oldG, improved: false, reopened: false, skippedClosed: false });
         }
