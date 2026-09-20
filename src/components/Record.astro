@@ -3,10 +3,20 @@
 // already reaches. Computed at build time; nothing here is a stored result.
 import { withBase } from "astro-theme-university/url";
 import { record } from "../workbench/record";
+interface Props { compact?: boolean }
+const { compact = false } = Astro.props;
 const entries = record();
+const summaries = [
+  { stage: "Find a route", changed: "Streets become weighted edges.", broke: "A straight line can cross a building.", survived: "The same map and addresses." },
+  { stage: "Get home too", changed: "Count energy for the whole trip.", broke: "The fastest route can exhaust the battery.", survived: "Search, keeping time–energy labels." },
+  { stage: "Plan six orders", changed: "Add ready times and deadlines.", broke: "Six feasible trips can still run late.", survived: "Each trip’s checked time and energy." },
+  { stage: "Share the fleet", changed: "Assign drones and queue for pads.", broke: "One drone’s delay can hold up another.", survived: "The timetable, with shared availability." },
+  { stage: "Share the air", changed: "Reserve the ridge passage in time.", broke: "Two legal routes can conflict.", survived: "Routes as proposals; joint checks decide." },
+];
+const cards = entries.map((entry, i) => compact ? { ...entry, ...summaries[i], computed: undefined } : entry);
 ---
 
-<section class="record" aria-labelledby="record-title">
+<section class:list={["record", { compact }]} aria-labelledby="record-title" data-course-upgrades>
   <h2 id="record-title">Five upgrades, one instance</h2>
   <p>
     The same kitchen, the same twenty orders, the same hill. Each stage changes the model, breaks
@@ -14,7 +24,7 @@ const entries = record();
     model is not wrong in hindsight; it is labelled with its model.
   </p>
   <ol class="record-list">
-    {entries.map((e) => (
+    {cards.map((e) => (
       <li class="record-card">
         <h3>{e.stage} <small>{e.weeks}</small></h3>
         <dl>
@@ -23,7 +33,7 @@ const entries = record();
           <dt>What survived</dt><dd>{e.survived}</dd>
         </dl>
         {e.computed && <p class="record-computed">{e.computed}</p>}
-        <p><a href={withBase(e.href)}>See this stage's workbench</a></p>
+        <p><a href={withBase(e.href)}>{compact ? "Try this stage →" : "See this stage's workbench"}</a></p>
       </li>
     ))}
   </ol>
@@ -39,4 +49,11 @@ const entries = record();
   .record-card dt { font-weight: 600; margin-top: 0.4rem; }
   .record-card dd { margin: 0.1rem 0 0; }
   .record-computed { font-variant-numeric: tabular-nums; border-top: 1px solid var(--at-border, #d9d2c3); padding-top: 0.5rem; margin-top: 0.7rem; }
+  .compact .record-card { display: flex; flex-direction: column; padding: 1rem; }
+  .compact .record-card > p:last-child { margin-top: auto; padding-top: 1rem; margin-bottom: 0; }
+  .compact .record-card dl { font-size: .86rem; }
+  .compact .record-card dt { margin-top: .8rem; }
+  .compact .record-card h3 { margin-bottom: 0; }
+  @media (min-width: 1100px) { .compact .record-list { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .7rem; } }
+  @media (max-width: 600px) { .compact .record-list { grid-template-columns: minmax(0, 1fr); } }
 </style>
