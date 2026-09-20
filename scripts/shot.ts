@@ -38,6 +38,7 @@ const PAGES = [
   { name: "tutorials", path: "/sessions/" },
   { name: "assessments", path: "/assessments/" },
   { name: "lecture-w04", path: "/lectures/w04-back-with-battery/" },
+  { name: "tutorial-w01", path: "/sessions/w01-one-order/" },
   { name: "tutorial-w02", path: "/sessions/w02-dijkstra/" },
   { name: "tutorial-w03", path: "/sessions/w03-a-star/" },
   // the same page with the reopen switch on, set through the deep link: proves the browser recomputed
