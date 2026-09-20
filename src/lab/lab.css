@@ -48,3 +48,5 @@
 @media(max-width:900px){.lab-semester-control output{text-align:left}.lab-semester-stops{gap:8px}.lab-semester-stops span{flex:1;min-width:0}}
 
 .lab-toolbar [data-corridor-custom]{display:grid;grid-template-columns:minmax(130px,180px) minmax(240px,1fr);flex:1 1 650px;min-width:0}.lab-toolbar [data-corridor-custom]>label{max-width:none}.lab-toolbar [data-corridor-custom]>p{grid-column:1/-1;margin:.3rem 0 0}@media(max-width:900px){.lab-toolbar [data-corridor-custom]{grid-template-columns:minmax(0,1fr);flex-basis:auto;width:100%}}
+
+.lab-sequence{display:grid;grid-template-columns:minmax(0,1fr);max-width:720px}.lab-sequence li{display:flex;align-items:center;gap:10px;text-align:left;padding:8px 12px;border-top-width:1px}.lab-sequence strong{margin:0 auto 0 0;font-size:.95rem}.lab-sequence-position{font-size:.7rem;color:#64725e;width:18px}.lab-sequence button{min-height:36px}[data-fleet-count]{font-weight:700;color:#284e3f}@media(max-width:600px){.lab-sequence li{gap:5px;padding:7px}.lab-sequence button{font-size:.68rem;padding:5px}.lab-sequence-position{width:12px}}

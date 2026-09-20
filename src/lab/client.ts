@@ -643,12 +643,17 @@ export function mountWorkspace(root: HTMLElement) {
                     config.scenario.pads = Number(el.value);
                 else {
                     const id = el.dataset.scenarioDrone!;
+                    if (el.value === 'off' && config.scenario.drones.length === 1 && config.scenario.drones[0].id === id) {
+                        el.value = config.scenario.drones[0].type;
+                        throw new Error('Keep at least one active drone. Add another before removing this one.');
+                    }
                     config.scenario.drones = config.scenario.drones.filter(d => d.id !== id);
                     if (el.value !== 'off')
                         config.scenario.drones.push({ id, type: el.value as 'L' | 'H' });
                     config.scenario.drones.sort((a, b) => a.id.localeCompare(b.id));
                 }
                 q<HTMLTextAreaElement>('[data-json="scenario"]').value = JSON.stringify(config.scenario, null, 2);
+                q('[data-fleet-count]').textContent = `${config.scenario.drones.filter(d => d.type === 'L').length} light + ${config.scenario.drones.filter(d => d.type === 'H').length} heavy · ${config.scenario.drones.length} active drones`;
                 config.assignment = undefined;
                 config.method = 'greedy';
                 q<HTMLSelectElement>('[data-field="method"]').value = 'greedy';
@@ -688,6 +693,10 @@ export function mountWorkspace(root: HTMLElement) {
                 if (el.value !== 'manual') {
                     config.assignment = undefined;
                     config.sequence = [];
+                }
+                else {
+                    const board = q<HTMLDetailsElement>('[data-manual-board]');
+                    if (board) board.open = true;
                 }
                 dirty();
             }
