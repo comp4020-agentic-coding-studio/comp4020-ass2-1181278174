@@ -1,10 +1,15 @@
 import type { CaseDef } from "./case.ts";
+import { corridorCase } from "./corridor-case.ts";
 import { edgesCase } from "./edges-case.ts";
 import { labelsCase } from "./labels-case.ts";
 import { searchCase } from "./search-case.ts";
 import { timetableCase } from "./timetable-case.ts";
 
-const all: CaseDef<any>[] = [edgesCase, searchCase, labelsCase, timetableCase];
+const all: CaseDef<any>[] = [edgesCase, searchCase, labelsCase, timetableCase, corridorCase];
+
+export function caseByKey(key: string): CaseDef<any> | undefined {
+  return all.find((c) => c.key === key);
+}
 
 export function caseFor(week: number): CaseDef<any> | undefined {
   return all.find((c) => c.weeks.includes(week));
@@ -14,6 +19,10 @@ export function renderControls(def: CaseDef<any>, state: unknown, week: number, 
   return def
     .controls(state, week)
     .map((c) => {
+      if (c.kind === "radio") {
+        const opts = (c.options ?? []).map((o) => `<label class="wb-radio"><input type="radio" name="${id}-${c.id}" data-control="${c.id}" value="${o.value}"${o.value === c.value ? " checked" : ""}> ${o.label}</label>`).join("");
+        return `<fieldset class="wb-control wb-radios${c.primary ? " wb-primary-group" : ""}"><legend>${c.label}</legend>${opts}</fieldset>`;
+      }
       if (c.kind === "select") {
         const opts = (c.options ?? []).map((o) => `<option value="${o.value}"${o.value === c.value ? " selected" : ""}>${o.label}</option>`).join("");
         return `<label class="wb-control"><span>${c.label}</span> <select data-control="${c.id}" name="${id}-${c.id}">${opts}</select></label>`;

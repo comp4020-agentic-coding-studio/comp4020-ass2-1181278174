@@ -5,6 +5,7 @@ import ContentLayout from "astro-theme-university/layouts/ContentLayout.astro";
 import heroImage from "../assets/images/hero-home.avif";
 import { courseMeta } from "../course-config";
 import { sessionLabels, siteConfig } from "../site-config";
+import Workbench from "../components/Workbench.astro";
 ---
 
 <ContentLayout
@@ -17,6 +18,8 @@ import { sessionLabels, siteConfig } from "../site-config";
   <ul class="course-tags" aria-label="Course tags">
     {courseMeta.tags.map((tag) => <li>{tag}</li>)}
   </ul>
+
+  <Workbench case="corridor" week={9} title="Two shortest routes — can they fly together?" />
 
   <p>
     The first order has a shortest route, and it may not have the battery to come back: #07

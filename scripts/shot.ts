@@ -34,6 +34,7 @@ const VIEWPORTS = [
 // The pages a marker is likely to open, one of each kind.
 const PAGES = [
   { name: "home", path: "/" },
+  { name: "home-wait", path: "/?wb=" + encodeURIComponent('{"arrangement":"wait"}') },
   { name: "lectures", path: "/lectures/" },
   { name: "tutorials", path: "/sessions/" },
   { name: "assessments", path: "/assessments/" },

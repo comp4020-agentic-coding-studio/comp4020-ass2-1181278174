@@ -1,0 +1,7 @@
+{
+  "id": "corridor-two-drones",
+  "title": "Two shortest routes, one corridor",
+  "a": { "drone": "A", "type": "L", "order": "#13", "takeOff": 0 },
+  "b": { "drone": "B", "type": "L", "from": "#13", "to": "kitchen", "leadTicks": 20 },
+  "note": "A flies the kitchen's shortest route to #13; B, unloaded, flies the shortest route back from #13's street and enters the corridor leadTicks before A would."
+}

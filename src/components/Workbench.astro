@@ -2,22 +2,24 @@
 // One week's workbench instance. Rendered with its result at build time; the
 // script below recomputes in the browser when a control changes, using the
 // same case module.
-import { caseFor, renderControls } from "../workbench/cases";
+import { caseByKey, caseFor, renderControls } from "../workbench/cases";
 
 interface Props {
-  week: number;
+  week?: number;
+  case?: string;
+  title?: string;
 }
-const { week } = Astro.props;
-const def = caseFor(week);
-if (!def) throw new Error(`no workbench case for week ${week}`);
+const { week = 0, case: key, title = "This week's workbench" } = Astro.props;
+const def = key ? caseByKey(key) : caseFor(week);
+if (!def) throw new Error(`no workbench case for ${key ?? `week ${week}`}`);
 const state = def.initial(week);
 const caption = def.caption(week);
 const view = def.render(state, week);
-const id = `wb-w${week}`;
+const id = `wb-${key ?? `w${week}`}`;
 ---
 
-<section class="workbench" data-week={week} data-state={JSON.stringify(state)} aria-labelledby={`${id}-title`}>
-  <h2 id={`${id}-title`}>This week's workbench</h2>
+<section class="workbench" data-week={week} data-case={def.key} data-state={JSON.stringify(state)} aria-labelledby={`${id}-title`}>
+  <h2 id={`${id}-title`}>{title}</h2>
   <p class="wb-caption"><strong>This week's decision:</strong> {caption.decision} <strong>What it breaks:</strong> {caption.breaks}</p>
   <div class="wb-controls" set:html={renderControls(def, state, week, id)} />
   <div class="wb-view" set:html={view.html} />
@@ -25,11 +27,11 @@ const id = `wb-w${week}`;
 </section>
 
 <script>
-  import { caseFor, renderControls } from "../workbench/cases";
+  import { caseByKey, renderControls } from "../workbench/cases";
 
   function wire(root: HTMLElement, signal: AbortSignal) {
     const week = Number(root.dataset.week);
-    const def = caseFor(week);
+    const def = caseByKey(root.dataset.case ?? "");
     if (!def) return;
     let state = JSON.parse(root.dataset.state ?? "null") ?? def.initial(week);
     // A deep link carries the state: ?wb=<json>. Every change writes it back,
@@ -41,7 +43,7 @@ const id = `wb-w${week}`;
     const controls = root.querySelector<HTMLElement>(".wb-controls")!;
     const view = root.querySelector<HTMLElement>(".wb-view")!;
     const status = root.querySelector<HTMLElement>(".wb-status")!;
-    const id = `wb-w${week}`;
+    const id = `wb-${root.dataset.case}`;
 
     const update = (action: { id: string; value?: string }, focusId?: string) => {
       state = def.apply(state, action);
@@ -62,7 +64,7 @@ const id = `wb-w${week}`;
       if (b) update({ id: b.dataset.control! }, b.dataset.control);
     }, { signal });
     controls.addEventListener("change", (ev) => {
-      const s = (ev.target as HTMLElement).closest<HTMLSelectElement>("select[data-control]");
+      const s = (ev.target as HTMLElement).closest<HTMLSelectElement | HTMLInputElement>("select[data-control], input[data-control]");
       if (s) update({ id: s.dataset.control!, value: s.value }, s.dataset.control);
     }, { signal });
   }
@@ -71,7 +73,7 @@ const id = `wb-w${week}`;
   document.addEventListener("astro:page-load", () => {
     aborter?.abort();
     aborter = new AbortController();
-    for (const root of document.querySelectorAll<HTMLElement>(".workbench[data-week]")) wire(root, aborter.signal);
+    for (const root of document.querySelectorAll<HTMLElement>(".workbench[data-case]")) wire(root, aborter.signal);
   });
   document.addEventListener("astro:before-swap", () => aborter?.abort());
 </script>
@@ -85,6 +87,16 @@ const id = `wb-w${week}`;
   button.wb-control { padding: 0.45rem 0.9rem; border: 1px solid var(--at-primary, #b97d1c); border-radius: 0.35rem; background: transparent; color: inherit; cursor: pointer; }
   button.wb-primary { background: var(--at-primary, #b97d1c); color: #fff; }
   .wb-control select { font: inherit; padding: 0.3rem 0.4rem; }
+  fieldset.wb-radios { border: 1px solid var(--at-border, #d9d2c3); border-radius: 0.35rem; padding: 0.4rem 0.8rem; display: flex; flex-wrap: wrap; gap: 0.4rem 1rem; }
+  fieldset.wb-primary-group { border-color: var(--at-primary, #b97d1c); }
+  .wb-radios legend { font-weight: 600; padding-inline: 0.25rem; }
+  .wb-radio { white-space: nowrap; }
+  .timeline { display: block; width: 100%; max-width: 640px; margin-block: 0.5rem; }
+  .tl-b { fill: #b93c1e; opacity: 0.6; }
+  .tl-a { fill: #2f7d32; opacity: 0.7; }
+  .tl-a.tl-bad { fill: #b93c1e; }
+  .tl-conflict { fill: #b93c1e; opacity: 0.18; }
+  .tl-axis { stroke: #6b6154; stroke-width: 1; }
   .wb-summary { font-size: 1.05rem; }
   .wb-table { overflow-x: auto; margin-block: 0.75rem; }
   .wb-table table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
