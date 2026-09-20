@@ -1,56 +1,55 @@
 # Process overview
 
-This record describes the repository and the owner's directions. The implementation and
-verification in the September 2026 revision were assisted by Codex; it does not present
-agent actions as independent student work.
+This is an agent-assisted record of the repository and the owner's directions. Codex
+implemented and checked the September 2026 revisions; this account does not present those
+actions as independent student work.
 
-The site is for SLOP3969, a fictional third-year course called Twenty Dinners, One Hill.
-One kitchen, twenty orders and a fixed hill connect twelve weeks of graph search,
-resource labels, scheduling and shared-airspace planning. The course uses the existing
-university template and preserves its branding, content collections and build hooks.
-The original hilltop track and spiral are recorded in
-[`63f9938`](https://github.com/comp4020-agentic-coding-studio/comp4020-ass2-1181278174/commit/63f9938).
-That shared geometry matters because a visual comparison should use the same costs as
-the planner, rather than a separately invented picture.
+SLOP3969, Twenty Dinners, One Hill, connects twelve weeks through one kitchen, twenty
+orders, five drones and a fixed map. Early route finding develops into resource labels,
+scheduling and shared-airspace planning. The university template, branding, content
+collections and build hooks remain in place. Keeping one computational world makes the
+weekly comparisons meaningful: a different drawing must not silently change the problem.
 
-The owner first questioned whether the weekly tutorial labs matched the plan, then asked
-for a complete project review and explained that the map was difficult to understand.
-The review connected those reactions to concrete problems: unclear map symbols, cropped
-endpoints, hidden elevation, overlapping routes and experiments dominated by preset
-results. It also found cases where the explanation overstated what the computation
-showed. The owner then requested a written improvement plan followed by implementation.
-The plan is preserved in
-[`fa29728`](https://github.com/comp4020-agentic-coding-studio/comp4020-ass2-1181278174/commit/fa29728).
-
-Correctness came first. A regression on the existing greedy assignment reproduced a
-charging queue inversion: drone D started at 6299 although the earlier request from A
-waited until 6628. Charging reservations had been allocated while planning future flights.
-Moving allocation to actual request events fixed the regression. The complete reference
-assignment still delivered twenty orders on time, while the greedy baseline's lateness
-changed. Intermediate migration results therefore needed live re-evaluation rather than
-historic stored metrics. This change is traceable in
+The owner first questioned whether the tutorial Labs matched the design and said the map
+was difficult to understand. An initial revision improved 2D maps, explanations, saved
+experiments and navigation. It also fixed a genuine charging-order defect: a later request
+could reserve a pad before an earlier arrival. The regression and correction are recorded in
 [`201016f`](https://github.com/comp4020-agentic-coding-studio/comp4020-ass2-1181278174/commit/201016f).
+That work improved the existing demonstrations but did not deliver the continuing workspace
+in the original plan.
 
-The next change made maps and experiments usable together. Routes now have endpoint
-labels, direction arrows and a legend, with a responsive screen-space layout. Week 4
-compares complete-trip time and energy and plots actual waypoint heights against route
-distance. Every tutorial has its own prediction, procedure and explanation prompts,
-plus a saved baseline and exportable record. Weekly URL settings are isolated; a browser
-check caught an additional page-router race during Lab week changes. Custom heuristic
-code runs in a terminable Worker, and only checked numeric values reach the renderer.
-Those changes are in
-[`ebf7593`](https://github.com/comp4020-agentic-coding-studio/comp4020-ass2-1181278174/commit/ebf7593).
+The owner then requested larger changes that followed that plan, followed by an explicit
+instruction to implement them autonomously. The rebuild proposal
+([`0e15b80`](https://github.com/comp4020-agentic-coding-studio/comp4020-ass2-1181278174/commit/0e15b80))
+reversed the earlier 3D deferral and defined acceptance gates around student actions:
+change a rule, run it, locate its consequence, compare and preserve the evidence.
+This was a change in the teaching interaction, not just the map's appearance.
 
-The course revision then grouped weeks by the five learning stages, added worked lecture
-checkpoints and connected assignments to canonical inputs, reference output and a practice
-guide. It labelled symbolic examples separately and removed unavailable interface promises
-([`1bbd7b9`](https://github.com/comp4020-agentic-coding-studio/comp4020-ass2-1181278174/commit/1bbd7b9)).
+The engine revision exposed seven strategy functions and recorded complete movement and
+search traces. Four new regression tests first failed against the old behaviour.
+An independent checker now reconstructs legality, time, payload, energy, charging and
+completion from actions. Disabling its energy comparison made a tampering test fail;
+restoring the check made it pass. These changes are in
+[`01055fe`](https://github.com/comp4020-agentic-coding-studio/comp4020-ass2-1181278174/commit/01055fe),
+with the checker regression delivered alongside the Lab.
 
-Verification combined the repository checks with browser interaction. The final build
-produced 37 pages with no reported link, accessibility or deck-structure violations;
-96 tests passed. The browser audit covered 36 regular pages at both marking sizes and
-18 targeted checks, including state restoration, exports, invalid input and code timeouts.
-Screenshots and exact scope are in [the verification record](docs/improvement-verification.md).
-The canonical inputs, assessment weights and dates were unchanged. Full WebGL, arbitrary
-plan import and online deployment were outside this revision; the result is a locally
-verified teaching site, not evidence of a live submission or real drone operation.
+The shared workspace
+([`7f99ab0`](https://github.com/comp4020-agentic-coding-studio/comp4020-ass2-1181278174/commit/7f99ab0))
+now opens distinct weekly activities within three cumulative modes. Week 4 links labels
+to a complete flight; week 6 enumerates all 720 sequences; week 8 follows ten orders
+through charging; week 11 evaluates live improvement candidates. The procedural map,
+tables and replay share selection. Records carry inputs, source, actions, checks and notes,
+with local import and an offline practice pack. Browser checks caught duplicate
+initialisation that dropped a baseline from export; an idempotent controller fixed it.
+
+Verification passed 142 tests, the build's checks on 37 pages, 55 browser interaction
+assertions and all 37 pages at both marking sizes. Five Astro navigations released their
+old WebGL contexts; unavailable WebGL retained readable alternatives. A reachable-server
+test confirmed that custom code could not fetch external data. A measured 427 ms feedback
+run justified terminable workers under the original performance rule.
+
+The [verification record](docs/lab-rebuild-verification.md) distinguishes measured results
+from guarantees. The bounded search claims no global optimum. Canonical hashes, assessment
+dates and weights remain unchanged. The work is committed locally on `codex/ass2`;
+deployment and public submission have not been performed. Teaching quality still needs
+the owner's judgement beyond these automated checks.

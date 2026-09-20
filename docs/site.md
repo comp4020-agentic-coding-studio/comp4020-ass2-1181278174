@@ -419,3 +419,37 @@ responsive 2D teaching view, with direction arrows, named landmarks, a route leg
 endpoint framing; W4 pairs it with an elevation profile. Full WebGL scenes remain a later
 extension. The Lab selects one week at a time. Weekly prediction and explanation records
 can be saved locally and exported alongside the computed result and configuration.
+
+## 8. Lab rebuild — 21 September 2026
+
+The owner requested larger changes because the weekly Labs still did not match the
+original design, then authorised implementation of `lab-redesign-plan.md`. This revision
+supersedes the 3D deferral and separate weekly demonstrations in §7. The implementation
+and measured acceptance results are recorded in `lab-rebuild-verification.md`.
+
+`LabWorkspace.astro` now provides the shared home, tutorial and semester workspace. The
+Lab mounts one active experiment, with three modes, cumulative capabilities and saved
+weekly inputs. Computation returns structured results and events; the board, table,
+inspector, map and replay present the same run. Search expansions and flight execution
+have separate cursors. A changed input marks the previous result stale until Run.
+
+The dominant activity changes through the semester: graph and OPEN, resource labels and
+full-trip energy, order board and timetable, then reservations and replay. W6 runs the
+documented symbolic counterexample and all 720 permutations; W8 keeps ten orders for its
+main case; W11 evaluates live candidates within an explicit budget. The five-entry worked
+record remains below the semester workspace.
+
+The procedural Three.js scene loads on home, W1, W4, W9, W10, W12 and Lab only. It uses
+the canonical terrain, streets and addresses, with named landmarks, distinct drone types,
+camera presets and linked selection. Visual elevation is multiplied by three and labelled;
+numeric heights remain real metres. The phone and reduced-motion view start with SVG and
+tables; WebGL failure keeps those alternatives available. Page changes dispose the old
+scene and worker. Optional imported 3D assets are unnecessary for the implemented scenes.
+
+The five strategy groups expose seven real engine callbacks, with presets, composition,
+source and error reporting. Scenario copies support existing addresses and drone types,
+extra orders, charging-pad count and temporary corridor closures. Manual queues, requested
+departures and route candidates are evaluated under the same rules. Versioned records
+include inputs, source, events, checks and notes; imported code is visible for review and
+only runs after an explicit Run. Assignment pages link to the offline practice archive
+and computed examples. Export is local evidence, not a submission service.

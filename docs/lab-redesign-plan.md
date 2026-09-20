@@ -1,7 +1,9 @@
 # Lab rebuild proposal — 20 September 2026
 
-Status: implementation authorised by the owner and in progress. Completion is recorded
-against the gates below, not inferred from the existence of a page or a control.
+Status: implemented and locally verified on 21 September 2026. The completion record is
+[`lab-rebuild-verification.md`](lab-rebuild-verification.md), with measured results against
+the gates below. The proposal and its original findings remain here as design history;
+§2 describes the site before this rebuild. Publishing was outside this implementation.
 The owner has asked for larger changes that bring the Lab back to the original plan.
 The current branch is `codex/ass2`. This proposal follows `course.md` §§1, 6, 7 and 9,
 and the original `site.md` §§3–6. It proposes replacing the presentation decisions in
@@ -197,7 +199,7 @@ stale results, code errors/cancellation, invalid imports and export/recompute co
 Run `pnpm check` and `pnpm check:evidence` at the relevant completion gates. Publishing is a
 separate delivery step and is not part of this proposal.
 
-This planning turn creates a design document and an illustrative, interactive interface
+The original planning turn created a design document and an illustrative, interactive interface
 sketch. The sketch switches between W4, W6 and W9 and previews linked selection/strategy
 states. It does not implement the production scene, connect to the project engine or claim
 new experiment results. Its layouts and sample states are for reviewing the proposal.
