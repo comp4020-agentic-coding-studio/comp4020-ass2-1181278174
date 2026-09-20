@@ -130,7 +130,7 @@ try {
         check('W' + n + ' has one computed workspace', await js(`document.querySelectorAll('[data-lab-workspace]').length===1 && document.querySelectorAll('[data-workspace-content] .lab-heading').length===1 && document.querySelector('[data-lab-heading]').textContent.length>10`));
     }
     await week(6);
-    check('symbolic 720 comparison is live', await js(`document.querySelector('.lab-built-comparisons').textContent.includes('46, 51, 0') && document.querySelector('.lab-metrics').textContent.includes('48')`));
+    check('swap result does not silently run the exact enumerator', await js(`!document.querySelector('.lab-built-comparisons').textContent.includes('Exact optimum') && document.querySelector('.lab-metrics').textContent.includes('48') && document.querySelector('.lab-metrics').textContent.includes('Not run')`));
     const before = await js(`document.querySelector('.lab-sequence').textContent`);
     await click('[data-action="sequence-down"]');
     await run();

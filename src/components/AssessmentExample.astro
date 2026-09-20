@@ -1,0 +1,60 @@
+---
+import { defaultConfig, type LabRun } from '../lab/model';
+import { runExperiment } from '../lab/compute';
+const { assignment } = Astro.props;
+const single = assignment === 'assignment-1';
+const run = (method: string) => {
+  const c = defaultConfig(single ? 6 : 11);
+  c.method = method;
+  if (single) c.caseId = 'canonical-six';
+  return runExperiment(c);
+};
+const methods = single
+  ? [['fifo', 'Ready-time order'], ['greedy', 'Earliest deadline'], ['swaps', 'Pair-swap improvement'], ['exact', 'All 720 permutations']]
+  : [['independent', 'Independent routes'], ['reserved', 'Same assignment, coordinated'], ['feedback', 'Feedback · 120-candidate limit']];
+const rows = methods.map(([id, label]) => ({ label, result: run(id) }));
+const value = (r: LabRun) => r.objective ? `${r.objective.lateness}, ${r.objective.allReturned}, ${r.objective.energy}` : 'No comparable objective';
+const changed = rows.find(r => r.label.startsWith('Feedback'))?.result;
+const move = changed?.tables.find(t => t.id === 'feedback')?.rows.find(row => String(row.values[3]).startsWith('accepted'));
+---
+<section id="worked-example" class="assessment-example" aria-labelledby="example-title">
+  <h2 id="example-title">A worked evidence example</h2>
+  <p><strong>Teacher example, computed when this site builds.</strong> Use the structure to explain your own run. The numbers below do not earn a grade on their own.</p>
+  <p>{single ? 'Fixed model: canonical orders #01–#06, one light drone, service and unloaded return, loading and turnaround; no shared charging or corridor reservations.' : 'Fixed model: all twenty canonical orders, five drones, two FCFS charging pads, full return reserve and a capacity-one corridor. Even the independent plan receives the joint checker.'}</p>
+  <p class="example-scroll-hint">Scroll the table sideways to read every column.</p>
+  <div class="example-table" tabindex="0" role="region" aria-label="Scrollable worked comparison">
+    <table>
+      <caption>J = (total lateness in seconds, final return in seconds, energy in joules)</caption>
+      <thead><tr><th scope="col">Method</th><th scope="col">Computed J</th><th scope="col">What the check establishes</th></tr></thead>
+      <tbody>{rows.map(({ label, result }) => <tr><th scope="row">{label}</th><td>{value(result)}</td><td>{single ? result.input.method === 'exact' ? 'Exact for these six orders' : result.input.method === 'swaps' ? 'Local optimum under pair swaps' : 'Evaluated order; no optimality claim' : `${result.check?.onTime}/20 on time; ${result.check?.issues.length} check issues; ${result.status === 'budget' ? 'search budget reached' : 'method completed'}`}</td></tr>)}</tbody>
+    </table>
+  </div>
+  {single ? <>
+    <h3>Example explanation</h3>
+    <p>FIFO and earliest-deadline ordering both have zero lateness here. That is a tie on the first component, so compare final return next. The swap result must be compared with all 720 permutations before calling it globally optimal for this six-order model. The symbolic A–F example in Week 6 has different data and cannot establish the optimum of this canonical case.</p>
+    <p>Attach the search counterexample separately: the discovery rule returns cost 10 on S→G, while S→A→G costs 2. Include the failing test and the corrected goal-on-pop condition; the timetable table alone says nothing about search correctness.</p>
+  </> : <>
+    <h3>Example explanation</h3>
+    <p>Independent and coordinated planning tie on this default input. That is an experimental result; it does not establish that the shared corridor never matters. The feedback run changes the assignment and recomputes charging, routes and delivery times from the same starting conditions.</p>
+    {move && <p><strong>Accepted change:</strong> {String(move.values[1])}. Its recomputed objective is ({String(move.values[2])}). Inspect the affected tasks to explain the cause before attributing the improvement to a particular wait or detour.</p>}
+    <p>The result is a valid plan found within a bounded search. A 120-candidate stop establishes neither a local nor a global optimum. A separate 20/20 stored assignment is available in the downloadable reference record, so the bounded run is also not the best known plan.</p>
+  </>}
+  <details>
+    <summary>Reproduce this evidence and prepare your files</summary>
+    <p>First use the Lab buttons or import the computed browser sample and press Run. Then unzip the practice pack and run the teacher example:</p>
+    <pre><code>{`node --test strategies.test.mjs wiring.test.mjs\nnode reference.mjs ${single ? 'a1' : 'a2'}`}</code></pre>
+    <p>After completing your own functions, run <code>{`node run.mjs ${single ? 'a1' : 'a2'}`}</code>. Keep the successful command output, your module and tests, the generated student JSON, and the exported browser comparisons. The local and browser record formats are labelled separately in the guide.</p>
+    <p>{single ? 'Your local record includes actual paths, the recurrence, the six-order flight plan, its independent check and the exact comparison.' : 'Your local record includes the state exercise, all three planning levels, two priorities, the accepted moves, full resource records and independent checks. Add your separate designed-order input and output.'}</p>
+  </details>
+</section>
+<style>
+  .assessment-example { border-block: 1px solid var(--at-border); padding-block: 1rem; margin-block: 2rem; scroll-margin-top: 6rem; }
+  .example-scroll-hint { display: none; }
+  @media (max-width: 600px) { .example-scroll-hint { display: block; font-size: .8rem; } }
+  .example-table { overflow-x: auto; max-width: 100%; }
+  .example-table table { font-size: .85rem; min-width: 540px; }
+  .example-table td { font-variant-numeric: tabular-nums; }
+  .example-table caption { text-align: left; padding-block: .5rem; }
+  .assessment-example summary { cursor: pointer; font-weight: 600; }
+  .assessment-example pre { overflow-x: auto; }
+</style>

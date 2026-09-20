@@ -43,7 +43,7 @@ after the week 12 tutorial. It starts with assignment and completes coordination
 1. Generate a feasible assignment and a per-drone order from full-task costs. Implement
    cross-drone migration and explain the feasibility filter.
 2. Bring charging waits into the full evaluation. No constant added per drone.
-3. Complete reservation filtering and the key space-time search extensions. Compare two
+3. Complete `myNeighbours` in the supplied state-search driver: retain node, phase and absolute time, filter full occupancy intervals, and account for wait energy. Use the provided full-flight planner for the canonical fleet experiment. Compare two
    priorities. Validate full round trips, in-air waiting energy and resource occupancy.
 4. Compare three levels: initial assignment on independent costs; fixed assignment with
    coordination; improvement with real cost feedback. An independent plan that fails joint
@@ -56,7 +56,7 @@ after the week 12 tutorial. It starts with assignment and completes coordination
 
 ## What you submit
 
-- Code and tests, with algorithm and configuration versions.
+- Your completed `strategies.mjs`, tests and configuration, plus `student-a2.json` from `node run.mjs a2`. The record carries function sources, versions and input fingerprints.
 - The twenty-order plan, with per-order and resource event records.
 - The comparison tables for the three levels and the two priorities.
 - The designed order and its validation, as a separate input file and checked output.
@@ -74,3 +74,18 @@ Problems in assignment 1 may be fixed and carried forward. If you continue on th
 reference searcher, this assignment marks the new work; an early error is not penalised
 twice. Weeks 8, 10 and 11 give ungraded feedback on the resource plan, the smallest
 cooperative case and the experiment design.
+
+## Evidence for each criterion
+
+| Criterion | Evidence to include | What the reader checks |
+|---|---|---|
+| Assignment and improvement | `myAssign`, `myMigrations`, the feasibility matrix and objective | Every order appears once; payload/range filtering comes before efficiency; migrations include insertion positions. |
+| Space-time correctness | `myNeighbours`, phase and interval tests, two priorities and checked full-flight records | Touching intervals are legal, interior overlaps are rejected, waits use the right energy model, and the full task returns home. |
+| Feedback and validation | `myImprove`, the three-level table and one accepted move with before/after events | The candidate is recomputed from the initial world; the explanation connects changed costs to the decision; search termination is stated. |
+| Experiments and reproduction | Fixed-case outputs, separate designed-order files, commands and explanation | Comparisons keep the same model; the variant is labelled; limitations and reused code are acknowledged. |
+
+The shared charging queue, geometry, full space-time flight planner and physical checker
+are provided. Your local state-search exercise demonstrates the state and reservation
+logic without requiring a second flight engine. Keep its symbolic times separate from
+the canonical fleet's seconds and joules. For failure analysis, identify the violated
+constraint and show how to reproduce it; an incomplete plan has no comparable objective.

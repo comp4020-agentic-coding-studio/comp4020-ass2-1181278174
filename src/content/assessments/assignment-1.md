@@ -51,7 +51,7 @@ covers weeks 1 to 6 only; nothing about several drones is examined here.
 
 ## What you submit
 
-- Runnable code, configuration and tests, using the practice guide linked above.
+- Your completed `strategies.mjs`, configuration and tests, using the practice guide linked above. Run `node run.mjs a1` after implementing the required functions; include its checked `student-a1.json`.
 - A structured six-order plan produced by your program, with run results and exported workbench comparison records.
 - The search and scheduling comparison tables.
 - A personal analysis of at most 1,200 English words. Code, references and tables do not
@@ -68,3 +68,17 @@ their own right; performance is not the only evidence.
 Peer discussion and external code are acknowledged in the analysis. AI assistance does not
 replace your own explanation. Every claim about a result points at code, an input and a run
 record.
+
+## Evidence for each criterion
+
+| Criterion | Evidence to include | What the reader checks |
+|---|---|---|
+| Search and correctness | `mySearch`, a hand trace and a test for discovery or reopening | The returned path exists, its summed cost matches, and the stated guarantee has the right assumptions. |
+| Full task and resources | Your dominance/budget rules, #07 counterexample and a checked flight ledger | Service, unloaded return and reserve are included; a discarded feasible prefix is explained. |
+| Timetable and improvement | `myTimetable`, `mySwaps`, FIFO/deadline/swap/exact table for #01–#06 | Each departure follows availability; all orders remain; the optimum claim matches the neighbourhood or enumeration. |
+| Experiments and explanation | Commands, fixed inputs, your tests, cited sources and a short interpretation | Another person can regenerate the evidence and identify which code you wrote or reused. |
+
+Use the teacher's geometry, full-trip costs, label propagation and independent checker.
+Implement the search, timetable and swap functions yourself; choosing browser presets
+is useful exploration but does not fulfil those implementation criteria. The worked
+example below illustrates evidence structure, not a complete assessed submission.

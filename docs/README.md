@@ -20,3 +20,9 @@ rebuild, twelve weekly activities and staged acceptance gates. Implementation an
 verification are recorded in [`lab-rebuild-verification.md`](lab-rebuild-verification.md);
 the dated revisions in `site.md`, `engine.md` and `delivery.md` describe the resulting
 contracts. Local acceptance does not establish that the hosted site has been updated.
+
+The course-content review and the separate visual-model plan are in
+[`course-review-and-next-plan.md`](course-review-and-next-plan.md). The course revision
+acceptance record is [`course-revision-verification.md`](course-revision-verification.md).
+[`course-process-notes.md`](course-process-notes.md) gives factual evidence and questions
+for the owner's own process account.

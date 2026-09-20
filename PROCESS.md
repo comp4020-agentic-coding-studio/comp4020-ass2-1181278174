@@ -48,6 +48,17 @@ old WebGL contexts; unavailable WebGL retained readable alternatives. A reachabl
 test confirmed that custom code could not fetch external data. A measured 427 ms feedback
 run justified terminable workers under the original performance rule.
 
+A later course review corrected factual promises
+([`1a80be0`](https://github.com/comp4020-agentic-coding-studio/comp4020-ass2-1181278174/commit/1a80be0)),
+replaced lecture outlines with worked lessons
+([`1bdd014`](https://github.com/comp4020-agentic-coding-studio/comp4020-ass2-1181278174/commit/1bdd014)),
+and moved tutorial results ahead of the full tools
+([`23c5036`](https://github.com/comp4020-agentic-coding-studio/comp4020-ass2-1181278174/commit/23c5036)).
+The practice pack now calls actual student implementations and separates teacher references
+([`b6165b4`](https://github.com/comp4020-agentic-coding-studio/comp4020-ass2-1181278174/commit/b6165b4)).
+Fresh-folder tests reject fabricated paths, changed timetable times, missing orders and
+illegal successors. The owner requested a separate commit for each completed step.
+
 The [verification record](docs/lab-rebuild-verification.md) distinguishes measured results
 from guarantees. The bounded search claims no global optimum. Canonical hashes, assessment
 dates and weights remain unchanged. The work is committed locally on `codex/ass2`;

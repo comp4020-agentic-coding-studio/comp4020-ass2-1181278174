@@ -1,0 +1,606 @@
+{
+  "tutorials": [
+    {
+      "slug": "w01-one-order",
+      "width": 1920,
+      "before": {
+        "text": "VERIFIEDSelect a connection to see exactly where it crosses the block. Legal endpoints do not prove that the line between them is a legal edge.",
+        "result": 858,
+        "primary": 1096,
+        "height": 4605,
+        "visibleControls": 41
+      },
+      "after": {
+        "text": "VERIFIEDSelect a connection to see exactly where it crosses the block. Legal endpoints do not prove that the line between them is a legal edge.",
+        "comparison": "Baseline: W1 · block · 3:13:48 AM · Same model; compare the changed decision.Block nodes: 10 → 10 (0)Legal alternatives: 2 → 2 (0)Proposals to inspect: 12 → 12 (0)",
+        "width": 1920,
+        "scroll": 1920,
+        "state": "Computed verified result · 4.1 ms. "
+      },
+      "errors": []
+    },
+    {
+      "slug": "w02-dijkstra",
+      "width": 1920,
+      "before": {
+        "text": "VERIFIEDReturned S → A → G with cost 2. Dijkstra with goal-on-pop returns 2. The costs agree for this input.",
+        "result": 858,
+        "primary": 1096,
+        "height": 4040,
+        "visibleControls": 15
+      },
+      "after": {
+        "text": "DIAGNOSTICReturned S → G with cost 10. Dijkstra with goal-on-pop returns 2. The diagnostic rule returned a worse answer.",
+        "comparison": "Baseline: W2 · discovery · 3:13:50 AM · Same model; compare the changed decision.Returned cost: 2 → 10 (+8)Correct cost: 2 → 2 (0)Expansions: 3 → 1 (-2)h admissible: yes → yesh consistent: yes → yes",
+        "width": 1920,
+        "scroll": 1920,
+        "state": "Computed diagnostic result · 2.2 ms. "
+      },
+      "errors": []
+    },
+    {
+      "slug": "w03-a-star",
+      "width": 1920,
+      "before": {
+        "text": "DIAGNOSTICReturned S → A → G with cost 5. Dijkstra with goal-on-pop returns 4. The diagnostic rule returned a worse answer.",
+        "result": 858,
+        "primary": 1096,
+        "height": 4086,
+        "visibleControls": 16
+      },
+      "after": {
+        "text": "VERIFIEDReturned S → B → A → G with cost 4. Dijkstra with goal-on-pop returns 4. The costs agree for this input.",
+        "comparison": "Baseline: W3 · reopen · 3:13:51 AM · Same model; compare the changed decision.Returned cost: 5 → 4 (-1)Correct cost: 4 → 4 (0)Expansions: 4 → 5 (+1)h admissible: yes → yesh consistent: no → no",
+        "width": 1920,
+        "scroll": 1920,
+        "state": "Computed verified result · 2.1 ms. "
+      },
+      "errors": []
+    },
+    {
+      "slug": "w04-back-with-battery",
+      "width": 1920,
+      "before": {
+        "text": "VERIFIED#07: 472 s from take-off to landing; 80443 J including service and the unloaded return. 14557 J remain on landing.",
+        "result": 887,
+        "primary": 1179,
+        "height": 4140,
+        "visibleControls": 24
+      },
+      "after": {
+        "text": "NO-SOLUTIONThis strategy lost a feasible route. The correct Pareto search still finds a complete trip; inspect where this strategy discarded its prefix.",
+        "comparison": "Baseline: W4 · hilltop · 3:13:53 AM · Same model; compare the changed decision.Trip time (s): 472 → No routeTrip energy (J): 80443 → —Usable budget (J): 80750 → 80750 (0)Return reserve (J): 14250 → 14250 (0)Expansions: 121 → 100 (-21)",
+        "width": 1920,
+        "scroll": 1920,
+        "state": "Computed no-solution result · 5.1 ms. "
+      },
+      "errors": []
+    },
+    {
+      "slug": "w05-many-orders",
+      "width": 1920,
+      "before": {
+        "text": "VERIFIEDSequence #01 → #02 → #03 → #04 → #05 → #06. Course objective (lateness, final return, energy): 0, 2558, 263271.  This sequence is evaluated without an optimality claim.",
+        "result": 858,
+        "primary": 1110,
+        "height": 4257,
+        "visibleControls": 18
+      },
+      "after": {
+        "text": "VERIFIEDSequence #01 → #02 → #04 → #03 → #05 → #06. Course objective (lateness, final return, energy): 0, 2738, 263271.  This sequence is evaluated without an optimality claim.",
+        "comparison": "Baseline: W5 · canonical-six · 3:13:55 AM · Same model; compare the changed decision.Total lateness: 0 → 0 (0)Final return: 2558 → 2738 (+180)Swaps checked: 15 → 30 (+15)Exact sequences: Not run → Not run",
+        "width": 1920,
+        "scroll": 1920,
+        "state": "Computed verified result · 4.5 ms. "
+      },
+      "errors": []
+    },
+    {
+      "slug": "w06-one-swap",
+      "width": 1920,
+      "before": {
+        "text": "VERIFIEDSequence A → B → C → F → E → D. Course objective (lateness, final return, energy): 48, 55, 0.  Every pair swap was checked; this proves only a local optimum.",
+        "result": 950,
+        "primary": 1202,
+        "height": 4404,
+        "visibleControls": 24
+      },
+      "after": {
+        "text": "VERIFIEDSequence E → B → A → F → C → D. Course objective (lateness, final return, energy): 46, 51, 0. 720 sequences enumerated with the selected comparison function. Exact optimum for this six-job model and selected objective; no claim about larger instances.",
+        "comparison": "Baseline: W6 · six-jobs · 3:13:56 AM · Same model; compare the changed decision.Total lateness: 48 → 46 (-2)Final return: 55 → 51 (-4)Swaps checked: 30 → 30 (0)Exact sequences: Not run → 720",
+        "width": 1920,
+        "scroll": 1920,
+        "state": "Computed verified result · 6.8 ms. "
+      },
+      "errors": []
+    },
+    {
+      "slug": "w07-which-drone",
+      "width": 1920,
+      "before": {
+        "text": "VERIFIED10/10 on time. Every order delivered and every drone returned with all checks passing.  ",
+        "result": 858,
+        "primary": 1159,
+        "height": 3994,
+        "visibleControls": 17
+      },
+      "after": {
+        "text": "NO-SOLUTION9/10 on time. 1 unfinished; 0 validation issues.  ",
+        "comparison": "Baseline: W7 · ten-orders · 3:13:58 AM · Same model; compare the changed decision.On time: 10/10 → 9/10Total lateness (s): 0 → —All returned (s): 8579 → —Check issues: 0 → 0 (0)Changed tasks · inspect the cause#20: drone D → A, delivery 8221 → —",
+        "width": 1920,
+        "scroll": 1920,
+        "state": "Computed no-solution result · 11.5 ms. 0 independent-check issues."
+      },
+      "errors": []
+    },
+    {
+      "slug": "w08-charging-pads",
+      "width": 1920,
+      "before": {
+        "text": "VERIFIED8/10 on time. Every order delivered and every drone returned with all checks passing.  ",
+        "result": 887,
+        "primary": 1188,
+        "height": 4044,
+        "visibleControls": 17
+      },
+      "after": {
+        "text": "VERIFIED8/10 on time. Every order delivered and every drone returned with all checks passing.  ",
+        "comparison": "Baseline: W8 · ten-orders · 3:13:59 AM · Different model assumptions; these totals are not an algorithm-only improvement.On time: 8/10 → 8/10Total lateness (s): 761 → 1729 (+968)All returned (s): 8579 → 8579 (0)Check issues: 0 → 0 (0)Changed tasks · inspect the cause#05: drone B → B, delivery 1946 → 2133#04: drone A → A, delivery 1978 → 2462#06: drone A → A, delivery 3459 → 3943#07: drone A → A, delivery 4511 → 4995#09: drone A → A, delivery 6038 → 6522",
+        "width": 1920,
+        "scroll": 1920,
+        "state": "Computed verified result · 13.2 ms. 0 independent-check issues."
+      },
+      "errors": []
+    },
+    {
+      "slug": "w09-same-place",
+      "width": 1920,
+      "before": {
+        "text": "DIAGNOSTICConflict on [107, 112): both drones occupy the corridor.",
+        "result": 887,
+        "primary": 1102,
+        "height": 3895,
+        "visibleControls": 24
+      },
+      "after": {
+        "text": "VERIFIEDA hovers 5 s at s-3-2 and enters when B leaves. Hover energy is charged.",
+        "comparison": "Baseline: W9 · corridor · 3:14:01 AM · Same model; compare the changed decision.A arrival (s): 157 → 162 (+5)A hover (s): 0 → 5 (+5)A energy (J): 33736 → 34236 (+500)Corridor check: conflict → passed",
+        "width": 1920,
+        "scroll": 1920,
+        "state": "Computed verified result · 2.1 ms. "
+      },
+      "errors": []
+    },
+    {
+      "slug": "w10-searching-in-time",
+      "width": 1920,
+      "before": {
+        "text": "VERIFIED2/2 on time. Every order delivered and every drone returned with all checks passing.  ",
+        "result": 921,
+        "primary": 1190,
+        "height": 4065,
+        "visibleControls": 25
+      },
+      "after": {
+        "text": "VERIFIED2/2 on time. Every order delivered and every drone returned with all checks passing.  ",
+        "comparison": "Baseline: W10 · two-tasks · 3:14:02 AM · Same model; compare the changed decision.On time: 2/2 → 2/2Total lateness (s): 0 → 0 (0)All returned (s): 5420 → 5420 (0)Check issues: 0 → 0 (0)",
+        "width": 1920,
+        "scroll": 1920,
+        "state": "Computed verified result · 8.8 ms. 0 independent-check issues."
+      },
+      "errors": []
+    },
+    {
+      "slug": "w11-routes-changed",
+      "width": 1920,
+      "before": {
+        "text": "VERIFIED13/20 on time. Every order delivered and every drone returned with all checks passing.  ",
+        "result": 950,
+        "primary": 1219,
+        "height": 4027,
+        "visibleControls": 18
+      },
+      "after": {
+        "text": "BUDGET17/20 on time. Every order delivered and every drone returned with all checks passing. Candidate budget reached; this is the best feasible plan found so far, not a proven local optimum. ",
+        "comparison": "Baseline: W11 · evening · 3:14:04 AM · Same model; compare the changed decision.Candidates evaluated: — → 120Accepted changes: — → 1Search stopped: — → budgetOn time: 13/20 → 17/20Total lateness (s): 9402 → 615 (-8787)All returned (s): 11470 → 9654 (-1816)Check issues: 0 → 0 (0)Changed tasks · inspect the cause#07: drone A → C, delivery 4511 → 2937#09: drone A → A, delivery 6038 → 4429#10: drone A → A, delivery 7096 → 5487#12: drone A → A, delivery 8461 → 6645#15: drone A → A, delivery 9699 → 7883#18: drone B → B, delivery 8124 → 8171#17: drone A → A, delivery 10480 → 8664#19: drone A → A, delivery 11269 → 9453",
+        "width": 1920,
+        "scroll": 1920,
+        "state": "Computed budget result · 439.8 ms. 0 independent-check issues."
+      },
+      "errors": []
+    },
+    {
+      "slug": "w12-twenty-dinners",
+      "width": 1920,
+      "before": {
+        "text": "VERIFIED20/20 on time. Every order delivered and every drone returned with all checks passing.  The stored assignment was recomputed using this scenario.",
+        "result": 950,
+        "primary": 1242,
+        "height": 4112,
+        "visibleControls": 26
+      },
+      "after": {
+        "text": "VERIFIED13/20 on time. Every order delivered and every drone returned with all checks passing.  ",
+        "comparison": "Baseline: W12 · evening · 3:14:05 AM · Same model; compare the changed decision.On time: 20/20 → 13/20Total lateness (s): 0 → 9402 (+9402)All returned (s): 8579 → 11470 (+2891)Check issues: 0 → 0 (0)Changed tasks · inspect the cause#07: drone C → A, delivery 2937 → 4511#09: drone A → A, delivery 4429 → 6038#10: drone E → A, delivery 4144 → 7096#18: drone B → B, delivery 8291 → 8124#12: drone A → A, delivery 5522 → 8461#15: drone A → A, delivery 6760 → 9699#17: drone A → A, delivery 7541 → 10480#19: drone A → A, delivery 8330 → 11269",
+        "width": 1920,
+        "scroll": 1920,
+        "state": "Computed verified result · 41.3 ms. 0 independent-check issues."
+      },
+      "errors": []
+    },
+    {
+      "slug": "w01-one-order",
+      "width": 390,
+      "before": {
+        "text": "VERIFIEDSelect a connection to see exactly where it crosses the block. Legal endpoints do not prove that the line between them is a legal edge.",
+        "result": 1071,
+        "primary": 1406,
+        "height": 5795,
+        "visibleControls": 35
+      },
+      "after": {
+        "text": "VERIFIEDSelect a connection to see exactly where it crosses the block. Legal endpoints do not prove that the line between them is a legal edge.",
+        "comparison": "Baseline: W1 · block · 3:14:07 AM · Same model; compare the changed decision.Block nodes: 10 → 10 (0)Legal alternatives: 2 → 2 (0)Proposals to inspect: 12 → 12 (0)",
+        "width": 390,
+        "scroll": 390,
+        "state": "Computed verified result · 3.3 ms. "
+      },
+      "errors": []
+    },
+    {
+      "slug": "w02-dijkstra",
+      "width": 390,
+      "before": {
+        "text": "VERIFIEDReturned S → A → G with cost 2. Dijkstra with goal-on-pop returns 2. The costs agree for this input.",
+        "result": 970,
+        "primary": 1348,
+        "height": 5174,
+        "visibleControls": 16
+      },
+      "after": {
+        "text": "DIAGNOSTICReturned S → G with cost 10. Dijkstra with goal-on-pop returns 2. The diagnostic rule returned a worse answer.",
+        "comparison": "Baseline: W2 · discovery · 3:14:08 AM · Same model; compare the changed decision.Returned cost: 2 → 10 (+8)Correct cost: 2 → 2 (0)Expansions: 3 → 1 (-2)h admissible: yes → yesh consistent: yes → yes",
+        "width": 390,
+        "scroll": 390,
+        "state": "Computed diagnostic result · 2.4 ms. "
+      },
+      "errors": []
+    },
+    {
+      "slug": "w03-a-star",
+      "width": 390,
+      "before": {
+        "text": "DIAGNOSTICReturned S → A → G with cost 5. Dijkstra with goal-on-pop returns 4. The diagnostic rule returned a worse answer.",
+        "result": 1055,
+        "primary": 1456,
+        "height": 5397,
+        "visibleControls": 17
+      },
+      "after": {
+        "text": "VERIFIEDReturned S → B → A → G with cost 4. Dijkstra with goal-on-pop returns 4. The costs agree for this input.",
+        "comparison": "Baseline: W3 · reopen · 3:14:10 AM · Same model; compare the changed decision.Returned cost: 5 → 4 (-1)Correct cost: 4 → 4 (0)Expansions: 4 → 5 (+1)h admissible: yes → yesh consistent: no → no",
+        "width": 390,
+        "scroll": 390,
+        "state": "Computed verified result · 2 ms. "
+      },
+      "errors": []
+    },
+    {
+      "slug": "w04-back-with-battery",
+      "width": 390,
+      "before": {
+        "text": "VERIFIED#07: 472 s from take-off to landing; 80443 J including service and the unloaded return. 14557 J remain on landing.",
+        "result": 1035,
+        "primary": 1528,
+        "height": 5403,
+        "visibleControls": 19
+      },
+      "after": {
+        "text": "NO-SOLUTIONThis strategy lost a feasible route. The correct Pareto search still finds a complete trip; inspect where this strategy discarded its prefix.",
+        "comparison": "Baseline: W4 · hilltop · 3:14:12 AM · Same model; compare the changed decision.Trip time (s): 472 → No routeTrip energy (J): 80443 → —Usable budget (J): 80750 → 80750 (0)Return reserve (J): 14250 → 14250 (0)Expansions: 121 → 100 (-21)",
+        "width": 390,
+        "scroll": 390,
+        "state": "Computed no-solution result · 3.7 ms. "
+      },
+      "errors": []
+    },
+    {
+      "slug": "w05-many-orders",
+      "width": 390,
+      "before": {
+        "text": "VERIFIEDSequence #01 → #02 → #03 → #04 → #05 → #06. Course objective (lateness, final return, energy): 0, 2558, 263271.  This sequence is evaluated without an optimality claim.",
+        "result": 1071,
+        "primary": 1508,
+        "height": 5688,
+        "visibleControls": 19
+      },
+      "after": {
+        "text": "VERIFIEDSequence #01 → #02 → #04 → #03 → #05 → #06. Course objective (lateness, final return, energy): 0, 2738, 263271.  This sequence is evaluated without an optimality claim.",
+        "comparison": "Baseline: W5 · canonical-six · 3:14:13 AM · Same model; compare the changed decision.Total lateness: 0 → 0 (0)Final return: 2558 → 2738 (+180)Swaps checked: 15 → 30 (+15)Exact sequences: Not run → Not run",
+        "width": 390,
+        "scroll": 390,
+        "state": "Computed verified result · 6.1 ms. "
+      },
+      "errors": []
+    },
+    {
+      "slug": "w06-one-swap",
+      "width": 390,
+      "before": {
+        "text": "VERIFIEDSequence A → B → C → F → E → D. Course objective (lateness, final return, energy): 48, 55, 0.  Every pair swap was checked; this proves only a local optimum.",
+        "result": 1075,
+        "primary": 1513,
+        "height": 5803,
+        "visibleControls": 25
+      },
+      "after": {
+        "text": "VERIFIEDSequence E → B → A → F → C → D. Course objective (lateness, final return, energy): 46, 51, 0. 720 sequences enumerated with the selected comparison function. Exact optimum for this six-job model and selected objective; no claim about larger instances.",
+        "comparison": "Baseline: W6 · six-jobs · 3:14:15 AM · Same model; compare the changed decision.Total lateness: 48 → 46 (-2)Final return: 55 → 51 (-4)Swaps checked: 30 → 30 (0)Exact sequences: Not run → 720",
+        "width": 390,
+        "scroll": 390,
+        "state": "Computed verified result · 5.3 ms. "
+      },
+      "errors": []
+    },
+    {
+      "slug": "w07-which-drone",
+      "width": 390,
+      "before": {
+        "text": "VERIFIED10/10 on time. Every order delivered and every drone returned with all checks passing.  ",
+        "result": 1035,
+        "primary": 1537,
+        "height": 5343,
+        "visibleControls": 18
+      },
+      "after": {
+        "text": "NO-SOLUTION9/10 on time. 1 unfinished; 0 validation issues.  ",
+        "comparison": "Baseline: W7 · ten-orders · 3:14:16 AM · Same model; compare the changed decision.On time: 10/10 → 9/10Total lateness (s): 0 → —All returned (s): 8579 → —Check issues: 0 → 0 (0)Changed tasks · inspect the cause#20: drone D → A, delivery 8221 → —",
+        "width": 390,
+        "scroll": 390,
+        "state": "Computed no-solution result · 9.9 ms. 0 independent-check issues."
+      },
+      "errors": []
+    },
+    {
+      "slug": "w08-charging-pads",
+      "width": 390,
+      "before": {
+        "text": "VERIFIED8/10 on time. Every order delivered and every drone returned with all checks passing.  ",
+        "result": 1071,
+        "primary": 1573,
+        "height": 5451,
+        "visibleControls": 18
+      },
+      "after": {
+        "text": "VERIFIED8/10 on time. Every order delivered and every drone returned with all checks passing.  ",
+        "comparison": "Baseline: W8 · ten-orders · 3:14:18 AM · Different model assumptions; these totals are not an algorithm-only improvement.On time: 8/10 → 8/10Total lateness (s): 761 → 1729 (+968)All returned (s): 8579 → 8579 (0)Check issues: 0 → 0 (0)Changed tasks · inspect the cause#05: drone B → B, delivery 1946 → 2133#04: drone A → A, delivery 1978 → 2462#06: drone A → A, delivery 3459 → 3943#07: drone A → A, delivery 4511 → 4995#09: drone A → A, delivery 6038 → 6522",
+        "width": 390,
+        "scroll": 390,
+        "state": "Computed verified result · 14.9 ms. 0 independent-check issues."
+      },
+      "errors": []
+    },
+    {
+      "slug": "w09-same-place",
+      "width": 390,
+      "before": {
+        "text": "DIAGNOSTICConflict on [107, 112): both drones occupy the corridor.",
+        "result": 1071,
+        "primary": 1426,
+        "height": 5130,
+        "visibleControls": 19
+      },
+      "after": {
+        "text": "VERIFIEDA hovers 5 s at s-3-2 and enters when B leaves. Hover energy is charged.",
+        "comparison": "Baseline: W9 · corridor · 3:14:19 AM · Same model; compare the changed decision.A arrival (s): 157 → 162 (+5)A hover (s): 0 → 5 (+5)A energy (J): 33736 → 34236 (+500)Corridor check: conflict → passed",
+        "width": 390,
+        "scroll": 390,
+        "state": "Computed verified result · 1.8 ms. "
+      },
+      "errors": []
+    },
+    {
+      "slug": "w10-searching-in-time",
+      "width": 390,
+      "before": {
+        "text": "VERIFIED2/2 on time. Every order delivered and every drone returned with all checks passing.  ",
+        "result": 1075,
+        "primary": 1546,
+        "height": 5341,
+        "visibleControls": 19
+      },
+      "after": {
+        "text": "VERIFIED2/2 on time. Every order delivered and every drone returned with all checks passing.  ",
+        "comparison": "Baseline: W10 · two-tasks · 3:14:21 AM · Same model; compare the changed decision.On time: 2/2 → 2/2Total lateness (s): 0 → 0 (0)All returned (s): 5420 → 5420 (0)Check issues: 0 → 0 (0)",
+        "width": 390,
+        "scroll": 390,
+        "state": "Computed verified result · 10.4 ms. 0 independent-check issues."
+      },
+      "errors": []
+    },
+    {
+      "slug": "w11-routes-changed",
+      "width": 390,
+      "before": {
+        "text": "VERIFIED13/20 on time. Every order delivered and every drone returned with all checks passing.  ",
+        "result": 1107,
+        "primary": 1577,
+        "height": 5427,
+        "visibleControls": 19
+      },
+      "after": {
+        "text": "BUDGET17/20 on time. Every order delivered and every drone returned with all checks passing. Candidate budget reached; this is the best feasible plan found so far, not a proven local optimum. ",
+        "comparison": "Baseline: W11 · evening · 3:14:22 AM · Same model; compare the changed decision.Candidates evaluated: — → 120Accepted changes: — → 1Search stopped: — → budgetOn time: 13/20 → 17/20Total lateness (s): 9402 → 615 (-8787)All returned (s): 11470 → 9654 (-1816)Check issues: 0 → 0 (0)Changed tasks · inspect the cause#07: drone A → C, delivery 4511 → 2937#09: drone A → A, delivery 6038 → 4429#10: drone A → A, delivery 7096 → 5487#12: drone A → A, delivery 8461 → 6645#15: drone A → A, delivery 9699 → 7883#18: drone B → B, delivery 8124 → 8171#17: drone A → A, delivery 10480 → 8664#19: drone A → A, delivery 11269 → 9453",
+        "width": 390,
+        "scroll": 390,
+        "state": "Computed budget result · 418.8 ms. 0 independent-check issues."
+      },
+      "errors": []
+    },
+    {
+      "slug": "w12-twenty-dinners",
+      "width": 390,
+      "before": {
+        "text": "VERIFIED20/20 on time. Every order delivered and every drone returned with all checks passing.  The stored assignment was recomputed using this scenario.",
+        "result": 1063,
+        "primary": 1580,
+        "height": 5438,
+        "visibleControls": 19
+      },
+      "after": {
+        "text": "VERIFIED13/20 on time. Every order delivered and every drone returned with all checks passing.  ",
+        "comparison": "Baseline: W12 · evening · 3:14:24 AM · Same model; compare the changed decision.On time: 20/20 → 13/20Total lateness (s): 0 → 9402 (+9402)All returned (s): 8579 → 11470 (+2891)Check issues: 0 → 0 (0)Changed tasks · inspect the cause#07: drone C → A, delivery 2937 → 4511#09: drone A → A, delivery 4429 → 6038#10: drone E → A, delivery 4144 → 7096#18: drone B → B, delivery 8291 → 8124#12: drone A → A, delivery 5522 → 8461#15: drone A → A, delivery 6760 → 9699#17: drone A → A, delivery 7541 → 10480#19: drone A → A, delivery 8330 → 11269",
+        "width": 390,
+        "scroll": 390,
+        "state": "Computed verified result · 38.5 ms. 0 independent-check issues."
+      },
+      "errors": []
+    }
+  ],
+  "extra": [
+    {
+      "name": "w01-one-order lesson 1920",
+      "ok": true
+    },
+    {
+      "name": "w02-dijkstra lesson 1920",
+      "ok": true
+    },
+    {
+      "name": "w03-a-star lesson 1920",
+      "ok": true
+    },
+    {
+      "name": "w04-back-with-battery lesson 1920",
+      "ok": true
+    },
+    {
+      "name": "w05-many-orders lesson 1920",
+      "ok": true
+    },
+    {
+      "name": "w06-one-swap lesson 1920",
+      "ok": true
+    },
+    {
+      "name": "w07-which-drone lesson 1920",
+      "ok": true
+    },
+    {
+      "name": "w08-charging-pads lesson 1920",
+      "ok": true
+    },
+    {
+      "name": "w09-same-place lesson 1920",
+      "ok": true
+    },
+    {
+      "name": "w10-searching-in-time lesson 1920",
+      "ok": true
+    },
+    {
+      "name": "w11-routes-changed lesson 1920",
+      "ok": true
+    },
+    {
+      "name": "w12-twenty-dinners lesson 1920",
+      "ok": true
+    },
+    {
+      "name": "A1 example 1920",
+      "ok": true
+    },
+    {
+      "name": "A2 example 1920",
+      "ok": true
+    },
+    {
+      "name": "W3 directed graph 1920",
+      "ok": true
+    },
+    {
+      "name": "Keyboard starts real comparison 1920",
+      "ok": true
+    },
+    {
+      "name": "Changed tutorial inputs survive reload 1920",
+      "ok": true
+    },
+    {
+      "name": "A1 link opens canonical six 1920",
+      "ok": true
+    },
+    {
+      "name": "w01-one-order lesson 390",
+      "ok": true
+    },
+    {
+      "name": "w02-dijkstra lesson 390",
+      "ok": true
+    },
+    {
+      "name": "w03-a-star lesson 390",
+      "ok": true
+    },
+    {
+      "name": "w04-back-with-battery lesson 390",
+      "ok": true
+    },
+    {
+      "name": "w05-many-orders lesson 390",
+      "ok": true
+    },
+    {
+      "name": "w06-one-swap lesson 390",
+      "ok": true
+    },
+    {
+      "name": "w07-which-drone lesson 390",
+      "ok": true
+    },
+    {
+      "name": "w08-charging-pads lesson 390",
+      "ok": true
+    },
+    {
+      "name": "w09-same-place lesson 390",
+      "ok": true
+    },
+    {
+      "name": "w10-searching-in-time lesson 390",
+      "ok": true
+    },
+    {
+      "name": "w11-routes-changed lesson 390",
+      "ok": true
+    },
+    {
+      "name": "w12-twenty-dinners lesson 390",
+      "ok": true
+    },
+    {
+      "name": "A1 example 390",
+      "ok": true
+    },
+    {
+      "name": "A2 example 390",
+      "ok": true
+    },
+    {
+      "name": "W3 directed graph 390",
+      "ok": true
+    },
+    {
+      "name": "Keyboard starts real comparison 390",
+      "ok": true
+    },
+    {
+      "name": "Changed tutorial inputs survive reload 390",
+      "ok": true
+    },
+    {
+      "name": "A1 link opens canonical six 390",
+      "ok": true
+    }
+  ]
+}

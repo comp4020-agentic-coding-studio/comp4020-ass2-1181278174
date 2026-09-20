@@ -6,6 +6,7 @@ import RelatedContent from "astro-course-university/components/RelatedContent.as
 import SpecList from "astro-course-university/components/SpecList.astro";
 import Callout from "astro-theme-university/components/Callout.astro";
 import ContentLayout from "astro-theme-university/layouts/ContentLayout.astro";
+import AssessmentExample from "../../components/AssessmentExample.astro";
 import MarkingModel from "../../components/MarkingModel.astro";
 import { formatCourseDate } from "../../lib/dates";
 import { graphCollections, siteConfig } from "../../site-config";
@@ -41,6 +42,8 @@ const { Content } = await render(assessment);
     <h2>Start with a reproducible experiment</h2>
     <p>{assessment.id === "assignment-1" ? "Use W3 for the search counterexample, W4 for the return budget, and W5–W6 for your six-order plan." : "Use W8 for charging, W9–W10 for reservations, and W11–W12 for joint evaluation."}</p>
     <p><a href={withBase(assessment.id === "assignment-1" ? "/lab/?assignment=1#lab-w6" : "/lab/#lab-w11")}>Open the relevant Lab →</a></p>
+    <p><a href="#worked-example">Read a worked evidence example ↓</a></p>
+    <details><summary>Download the scenario, practice pack and sample records</summary>
     <ul>
       <li><a href={withBase("/practice/scenario.json")} download>Download canonical scenario (JSON)</a></li>
       <li><a href={withBase("/practice/lab-practice.zip")} download>Download runnable practice pack: functions, skeletons and tests</a></li>
@@ -48,9 +51,11 @@ const { Content } = await render(assessment);
       <li><a href={withBase("/practice/reference-output.json")} download>Download complete fleet reference output (JSON)</a></li>
       <li><a href={withBase("/practice/README.md")} download>Download practice and output guide</a></li>
     </ul>
+    </details>
     <p>Use “My experiment record” in the Lab to save a baseline, explain a change and export the run. Import the sample record and press Run to recompute it. Submit your own code, checked output and analysis through the course submission process; this demonstration site does not receive submissions.</p>
   </aside>
   <Content />
+  <AssessmentExample assignment={assessment.id} />
   <SpecList spec={assessment.data.spec}>
     The brief poses the problem and leaves room for a response. The spec is the
     fixed part: what a marker checks. Some lines can be checked mechanically;
