@@ -27,7 +27,7 @@ Plan B before A. Inspect both tasks and their resource intervals, then compare g
 
 Complete myNeighbours and use it in the supplied state-search driver. Test legal move/wait successors and blocked crossings. Use the full reference evaluator to check the fleet comparison separately.
 
-The practice pack is linked under “My experiment record”. Browser presets demonstrate the teacher's framework; your local student runner must call the functions you complete.
+Use **Open full Lab** for editable inputs, strategy code, exports and the practice pack. The example on this page compares this week's published cases; your local student runner must call the functions you complete.
 
 ## Check and explain · 25 minutes
 

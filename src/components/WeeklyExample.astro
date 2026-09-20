@@ -1,0 +1,17 @@
+---
+import { runExperiment } from '../lab/compute';
+import { demonstrationInput } from '../lab/teaching';
+import { exampleHtml } from '../lab/example-render';
+import '../lab/lab.css';
+import '../lab/example.css';
+interface Props { week: number }
+const run=runExperiment(demonstrationInput(Astro.props.week));
+---
+<div class="lab-workspace lab-example" data-weekly-example>
+  <script is:inline type="application/json" data-example-initial set:html={JSON.stringify(run).replace(/</g,'\\u003c')} />
+  <div data-example-content set:html={exampleHtml(run,run)} />
+  <noscript><p>This is the computed starting case. Enable JavaScript to compare the alternative or play the recorded flight.</p></noscript>
+</div>
+<script>
+  import '../lab/example-client';
+</script>

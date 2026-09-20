@@ -27,7 +27,7 @@ Try stopping at discovery, then restore the starting example. Step through the s
 
 Complete mySearch in the practice pack. Keep best costs, parent pointers and a priority queue; stop on the non-stale goal pop. Run the provided early-discovery test.
 
-The practice pack is linked under “My experiment record”. Browser presets demonstrate the teacher's framework; your local student runner must call the functions you complete.
+Use **Open full Lab** for editable inputs, strategy code, exports and the practice pack. The example on this page compares this week's published cases; your local student runner must call the functions you complete.
 
 ## Check and explain · 25 minutes
 

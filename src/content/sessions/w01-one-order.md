@@ -27,7 +27,7 @@ Inspect a blocked connection. Name both endpoints and the highlighted building, 
 
 Add the edge times for each available route on paper. Use the published graph to check every directed edge. Reject the blocked proposal; the browser does not edit the canonical graph.
 
-The practice pack is linked under “My experiment record”. Browser presets demonstrate the teacher's framework; your local student runner must call the functions you complete.
+Use **Open full Lab** for editable inputs, strategy code, exports and the practice pack. The example on this page compares this week's published cases; your local student runner must call the functions you complete.
 
 ## Check and explain · 25 minutes
 

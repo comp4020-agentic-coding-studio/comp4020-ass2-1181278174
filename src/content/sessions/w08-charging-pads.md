@@ -27,7 +27,7 @@ Compare one pad with two in the main case. This changes resource capacity: inspe
 
 Select the two-drone case in the controls and compute its queue by hand. Return to the main case, save a baseline and use myMigrations with the provided shared evaluator. Inspect the next task after a charge.
 
-The practice pack is linked under “My experiment record”. Browser presets demonstrate the teacher's framework; your local student runner must call the functions you complete.
+Use **Open full Lab** for editable inputs, strategy code, exports and the practice pack. The example on this page compares this week's published cases; your local student runner must call the functions you complete.
 
 ## Check and explain · 25 minutes
 

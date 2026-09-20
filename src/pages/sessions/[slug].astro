@@ -6,7 +6,7 @@ import RelatedContent from "astro-course-university/components/RelatedContent.as
 import SpecList from "astro-course-university/components/SpecList.astro";
 import ContentLayout from "astro-theme-university/layouts/ContentLayout.astro";
 import TeachingTeam from "../../components/TeachingTeam.astro";
-import LabWorkspace from "../../components/LabWorkspace.astro";
+import WeeklyExample from "../../components/WeeklyExample.astro";
 import { formatCourseDate } from "../../lib/dates";
 import { graphCollections, sessionLabels, siteConfig } from "../../site-config";
 
@@ -30,7 +30,7 @@ const { Content } = await render(session);
     <summary>Two-hour tutorial: preparation, coding and checks</summary>
     <Content />
   </details>
-  <LabWorkspace week={session.data.week} guided />
+  <WeeklyExample week={session.data.week} />
   <SpecList spec={session.data.spec}>
     What you bring to the session. Written so a reader can tell whether it has
     been met without asking you.

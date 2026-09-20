@@ -27,7 +27,7 @@ Compare FIFO with earliest deadline. Both canonical runs have zero lateness; loc
 
 Complete myTimetable using the supplied trip-cost function. Calculate the first three rows by hand, including ready time, loading, delivery, return and next availability.
 
-The practice pack is linked under “My experiment record”. Browser presets demonstrate the teacher's framework; your local student runner must call the functions you complete.
+Use **Open full Lab** for editable inputs, strategy code, exports and the practice pack. The example on this page compares this week's published cases; your local student runner must call the functions you complete.
 
 ## Check and explain · 25 minutes
 

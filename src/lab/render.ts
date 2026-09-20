@@ -125,7 +125,7 @@ function replayHtml(r: LabRun): string {
     const events = [...(r.scene?.events ?? []),...(r.scene?.closures??[])], {min,max}=replayBounds(r);
     return `<div class="lab-playback"><label>Flight time <output data-time-output>${min} s</output><input type="range" data-time-slider min="${min}" max="${max}" value="${min}" step="1" ${events.length ? '' : 'disabled'} aria-label="Flight time in seconds"></label><div>${button('play', 'Play replay', events.length ? '' : 'disabled')}${button('time-start', 'Start')}${button('event-prev', 'Previous event')}${button('event-next', 'Next event')}${button('time-end', 'End')}<label>Speed<select data-speed>${[1,5,15,30,120,600].map(n=>`<option value="${n}" ${n===(r.input.week===9?1:30)?'selected':''}>${n}×</option>`).join('')}</select></label></div><div>${button('first-issue','Go to first issue',replayIssues(r).length?'':'disabled')}${button('next-wait','Next wait',r.scene&&waits(r.scene).length?'':'disabled')}<label><input type="checkbox" data-skip-idle checked> Skip idle time</label><label><input type="checkbox" data-pause-issue> Pause at issues</label></div><p class="lab-replay-state" data-replay-state>${events.length ? 'Press Play or step through the computed events.' : 'No recorded flight. Inspect the result and evidence above.'}</p><p class="lab-resource-state" data-resource-state></p><p class="lab-hint">Take-off, landing and pad transfers use short visual transitions. Read the recorded intervals for exact timing.</p><p class="lab-replay-note" role="status" data-replay-note>${r.status==='diagnostic'?'Diagnostic replay: this proposal fails a check. It is not a successful delivery.':''}</p></div>`;
 }
-function timelineHtml(r: LabRun): string {
+export function timelineHtml(r: LabRun): string {
     if (!r.timeline.length)
         return '';
     const {min,max}=replayBounds(r), lanes = [...new Set(r.timeline.map(e => e.lane))], unit=r.input.caseId==='six-jobs'||r.input.caseId==='waiting'?'units':'s';
@@ -137,7 +137,7 @@ function timelineHtml(r: LabRun): string {
         });
         return `<div class="lab-lane"><strong>${esc(lane)}</strong><div style="height:${free.length*34}px">${rows.map(e => `<button type="button" data-action="timeline" data-event="${esc(e.id)}" data-start="${e.start}" data-end="${e.end}" style="top:${3+e.row*34}px;left:${(e.start - min) / (max - min) * 100}%;width:${Math.max(.35, (e.end - e.start) / (max - min) * 100)}%" class="${esc(e.kind)}" aria-label="${esc(e.label)} [${e.start}, ${e.end})" title="${esc(e.label)} [${e.start}, ${e.end})"><span>${esc(r.input.caseId==='corridor'?e.label.split(' ')[0]:e.label)}</span></button>`).join('')}<i data-time-cursor aria-hidden="true"></i></div></div>`;}).join('')}<p class="lab-time-axis">${min} ${unit} <span>${max} ${unit}</span></p></section>`;
 }
-function symbolicSvg(r: LabRun): string {
+export function symbolicSvg(r: LabRun): string {
     if (r.input.caseId === 'six-jobs')
         return `<div class="lab-symbolic-sequence">${(r.tables.find(t => t.id === 'schedule')?.rows ?? []).map(x => `<button type="button" data-action="inspect" data-row-id="${esc(x.id)}">${esc(x.id)}<small>deliver ${esc(x.values[4])}</small></button>`).join('')}</div>`;
     const edges = r.tables.find(t => t.id === 'graph')?.rows;
@@ -150,13 +150,13 @@ function symbolicSvg(r: LabRun): string {
         }));
         return `<svg class="lab-search-graph" viewBox="0 0 600 320" role="img" aria-label="Directed graph used by this search; arrows show direction and numbers show edge cost."><defs><marker id="search-arrow-${r.input.week}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="currentColor"/></marker></defs>${edges.map(e => {
             const [x, y] = positions.get(String(e.values[0]))!, [tx, ty] = positions.get(String(e.values[1]))!, dx = tx - x, dy = ty - y, length = Math.hypot(dx, dy) || 1;
-            return `<g><title>${esc(e.values[0])} to ${esc(e.values[1])}: cost ${esc(e.values[2])}</title><line x1="${x + dx / length * 27}" y1="${y + dy / length * 27}" x2="${tx - dx / length * 30}" y2="${ty - dy / length * 30}" stroke="currentColor" stroke-width="2" marker-end="url(#search-arrow-${r.input.week})"/><text x="${(x + tx) / 2 + 12}" y="${(y + ty) / 2 - 10}" class="lab-edge-cost">${esc(e.values[2])}</text></g>`;
-        }).join('')}${ids.map(id => { const [x, y] = positions.get(id)!; return `<g><circle cx="${x}" cy="${y}" r="25"/><text x="${x}" y="${y + 6}" text-anchor="middle">${esc(id)}</text></g>`; }).join('')}</svg><p class="lab-hint">Arrows are directed edges; numbers are costs. Follow the OPEN trace to see which edge improves each distance. The graph redraws from this run's edge table.</p>`;
+            return `<g data-search-from="${esc(e.values[0])}" data-search-to="${esc(e.values[1])}"><title>${esc(e.values[0])} to ${esc(e.values[1])}: cost ${esc(e.values[2])}</title><line x1="${x + dx / length * 27}" y1="${y + dy / length * 27}" x2="${tx - dx / length * 30}" y2="${ty - dy / length * 30}" stroke="currentColor" stroke-width="2" marker-end="url(#search-arrow-${r.input.week})"/><text x="${(x + tx) / 2 + 12}" y="${(y + ty) / 2 - 10}" class="lab-edge-cost">${esc(e.values[2])}</text></g>`;
+        }).join('')}${ids.map(id => { const [x, y] = positions.get(id)!; return `<g data-search-node="${esc(id)}"><circle cx="${x}" cy="${y}" r="25"/><text x="${x}" y="${y + 6}" text-anchor="middle">${esc(id)}</text></g>`; }).join('')}</svg><p class="lab-hint">Arrows are directed edges; numbers are costs. Follow the OPEN trace to see which edge improves each distance. The graph redraws from this run's edge table.</p>`;
     }
     const ids = r.input.caseId === 'labels' ? ['S', 'A', 'B', 'Q', 'G'] : r.input.caseId === 'waiting' ? ['P@3', 'P@4', 'P@5', 'P@6', 'G@8'] : ['S', 'A', 'B', 'G'];
     return `<div class="lab-symbolic-nodes">${ids.map(x => `<span>${esc(x)}</span>`).join('<i>→</i>')}</div><p class="lab-hint">Node list; the evidence table gives the actual directed connections and state transitions.</p>`;
 }
-function profileHtml(r: LabRun): string {
+export function profileHtml(r: LabRun): string {
     if (!r.scene)
         return '';
     const routes = r.scene.routes.filter(x => x.id !== 'return').filter((_, i, a) => i === 0 || i === a.length - 1);

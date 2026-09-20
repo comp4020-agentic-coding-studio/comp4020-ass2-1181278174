@@ -27,7 +27,7 @@ Let A wait for B and check that A enters at 112. Compare arrival and hover energ
 
 Complete the half-open interval query in myNeighbours. Switch to the symbolic waiting case and trace P@3→P@4→P@5→P@6→G@8. Show what a place-only visited key would discard.
 
-The practice pack is linked under “My experiment record”. Browser presets demonstrate the teacher's framework; your local student runner must call the functions you complete.
+Use **Open full Lab** for editable inputs, strategy code, exports and the practice pack. The example on this page compares this week's published cases; your local student runner must call the functions you complete.
 
 ## Check and explain · 25 minutes
 

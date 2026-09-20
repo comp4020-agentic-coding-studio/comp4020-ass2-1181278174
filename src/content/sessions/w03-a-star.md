@@ -27,7 +27,7 @@ Allow reopening and compare cost 5 with 4. Inspect the step where B reaches A mo
 
 Extend mySearch so a better g can reopen an expanded node. Keep the old counterexample as a regression test and compare h=0 on exactly the same graph.
 
-The practice pack is linked under “My experiment record”. Browser presets demonstrate the teacher's framework; your local student runner must call the functions you complete.
+Use **Open full Lab** for editable inputs, strategy code, exports and the practice pack. The example on this page compares this week's published cases; your local student runner must call the functions you complete.
 
 ## Check and explain · 25 minutes
 
