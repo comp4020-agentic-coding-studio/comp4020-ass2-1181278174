@@ -29,7 +29,7 @@ computation, a correctness explanation, tests and a new example with a different
 | Home | After the course claim, the small shared-corridor experience: depart independently, wait, detour; results from the same validator. Shares one case file, `cases/corridor-two-drones.json`, with the W9 tutorial and the deck. |
 | Lecture | A static concept example next to the derivation: one figure, one question, the answer folded. No live experiment. |
 | Tutorial | After the materials and the prediction question, the workbench opened to this week's layers with this week's case loaded; then comparison, explanation and export. |
-| Lab | All modes and cases; continue personal experiments; returning to the tutorial keeps context. Holds the worked-example record. |
+| Lab | Every week's instance under the semester slider; three of them take a plan made by hand. Underneath, the scenario panel: add orders, close the corridor, choose pads and drones, and read what the planner does. Holds the worked-example record. |
 | Assignment 1 / 2 | Task, dates, deliverables and rubric, then one button "open the assignment case", the plan pre-check and result export; the practice pack linked as the submission format. |
 | People | Convenor and tutor, one line each. |
 | Resources and policies | Model rules, parameter table (value, range, source), references, practice-pack notes, simulation boundary, the static-site honesty note, AI and collaboration rules, accessibility. |
@@ -218,23 +218,25 @@ default state of the page is what it looks like after the prediction.
 
 | Week | Shape | Primary control | What it breaks |
 |---|---|---|---|
-| W1 | Block graph and three-route cost table | "check this edge" → through a building | legal endpoints ≠ legal edge |
-| W2/W3 | Graph and OPEN table, step by step | preset h: 0 / straight-line ÷ v_max / re-expansion off | expansions 84→23; re-expansion off → cost 5 not 4 |
-| W4 | Two labels and the complete-candidate table | keep only the fastest label | "no solution" is wrong |
-| W5/W6 | Six-order timetable and one-click 720 permutations | FIFO / EDF / swap / enumerate | swaps stop at (48,55), optimum (46,51) |
-| W7/W8 | Cost matrix and pad timeline | move #20 to another drone | the third drone's availability changes too |
-| W9 | Reservation intervals and timeline (home page case) | `visited[node]` only | the wait is pruned away |
-| W10 | Space-time replay with timeline scrub | swap the priority | the next drone's wait or detour |
-| W11 | Three-method comparison table | allow cost feedback | one cell of W7's assignment changes hands |
-| W12 | Twenty-order replay | click one late order | stops at the failure point and lists the cause chain |
+| W1 | The kitchen's block, three routes costed edge by edge | "check this connection" → through a building | legal endpoints ≠ legal edge |
+| W2/W3 | The map and the OPEN table, one pop at a time; the four-edge counterexample | h = 0 / straight line / compose one / write one; the reopen switch | a composed h × 2 is not admissible and finds the wrong cost; reopen off → cost 5 not 4 |
+| W4 | Two routes to #07 and the non-dominated round trips | keep only the fastest label | "no feasible route" is wrong; the 472 s trip fits |
+| W5/W6 | Six-order timetable; the swaps; all 720; a sequence made by hand | FIFO / EDF / swaps / 720 / by hand | on these six the swaps reach the optimum and the page says so; a hand sequence is measured against all 720 |
+| W7 | Feasibility matrix, the assignment, an assignment made by hand | equal counts / earliest completion / by hand | counts level, finish times not; #20 on a light drone is diagnostic, not a plan |
+| W8 | Every task with its charge; pad occupancy | charging off → on; move one order | back by 20:22 becomes 21:14; a third drone's plan moves through the queue |
+| W9 | The corridor, occupancy lanes, the validator on each arrangement (home page case) | both depart / B first / A detours / by hand: delay and route | the validator names the tick of the conflict; 5 s on the ground clears it |
+| W10 | Two space-time plans and the reservation table | planned first: A or B | the other drone waits 25 s on the ground; on this data the same either way |
+| W11 | Three levels on twenty orders | level 1 / 2 / 3 | 13 of 20 → coordinated → 20 of 20 after two migrations, re-evaluated live |
+| W12 | Twenty-order replay, one order's chain | pick an order | why it started when it did: readiness, the previous task, the charge |
 
 The W5/W6 "run 720 permutations" is worth its own mention: one button, the page enumerates
 all 720 sequences on the spot and shows the gap between the optimum and the local optimum.
 Ten seconds, plain JS, and it looks like real work. The best value on the site.
 
-**Lab.** The semester slider on top; below it the full workbench, case picker, the full
-worked-example record, personal records (kept in this browser, and the page says so), export.
-A marker drags the slider and leaves; students stay.
+**Lab.** The semester slider on top; below it every week's instance, opened in order; then
+the scenario panel (§5, level 2); then the full worked-example record. Every state is in the
+page's link, so a scenario or a hand-made plan is handed in as a URL. A marker drags the
+slider and leaves; students stay.
 
 **Assignment pages.** Task, dates, weights, a four-row rubric, one button "open the assignment
 case" (the lab pinned to that scenario), and a rendered sample submission: one page with the
@@ -296,6 +298,19 @@ an edge but not adding one; fleet and pads move within small ranges. The engine 
 and results stay comparable, and students can still build a scenario that makes the baseline
 late.
 
+**As built, 2026-09-21.** Level 1 is live on three weeks: week 5 moves the six orders one at
+a time (measured against FIFO, earliest deadline and all 720), week 7 gives each order a
+drone and a place in its sequence, week 9 chooses A's take-off delay and route. Level 2 is
+the lab's scenario panel: up to three orders at street corners, a closed corridor window,
+one to three pads, up to five drones; the week-7 greedy assignment is evaluated under the
+week-11 model, validated, and set next to the same method and the reference plan on the
+canonical scenario; assignment 2's item 6 points there. The improvement pass is not run in
+the page (about two minutes for the canonical scenario in the reference script). Level 3 has
+the heuristic slot only: the composer and the code hatch on week 2. Runs are not stored and
+there is no export; every state is in the page's link. Every hand-made plan and every
+scenario goes through the same engine and the same validator; a plan that cannot fly is
+labelled diagnostic.
+
 ### The rule composer
 
 The heuristic slot, for example:
@@ -347,6 +362,15 @@ deck, assessment, `spec/`, evidence, deployment and both viewports. 3D earns mar
 it carries a decision; otherwise it is load time, an axe risk, a WebGL lifecycle risk and a
 phone risk. 3D is a design goal of this course, so it is built — in a way that can never block
 anything else.
+
+**As built, 2026-09-21: no WebGL yet.** Every page carries the 2D map, redrawn as a place:
+contour lines every 10 m from the terrain function the generator wrote the heights with
+(`src/data/terrain.ts`, checked by the spec), blocks and streets, the ridge as a hatched band
+with the corridor through its gap, houses at the orders, a street-directory grid (columns
+A–G, rows 1–7 from the north, so the corridor is C4 → D4 and a route reads Kitchen → A6 →
+B6), an overview in the corner when a week zooms in, and the same drawing again at the
+column's width on a phone. The data is unchanged; only the drawing and the names are new.
+The 3D order below stands for when there is time.
 
 **WebGL on seven pages only:** home, W1, W4, W9, W10, W12 and the lab. Other weeks use a 2D
 SVG minimap: fewer contexts, faster, no risk.
