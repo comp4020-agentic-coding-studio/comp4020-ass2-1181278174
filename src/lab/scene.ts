@@ -3,6 +3,8 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import type { SceneData } from './model.ts';
 import { fleetAt, routePoints } from './replay.ts';
 import { terrainHeight } from './terrain.ts';
+import { toScene, visualLayout } from './visual-layout';
+import { loadAssets, release, roadSurface } from './scene-assets';
 export function mountScene(host: HTMLElement, data: SceneData, onSelect: (node: string) => void) {
     const scene = new THREE.Scene();
     scene.background = new THREE.Color('#edf1e6');
@@ -17,7 +19,7 @@ export function mountScene(host: HTMLElement, data: SceneData, onSelect: (node: 
     controls.minDistance = 170;
     controls.maxDistance = 4400;
     controls.maxPolarAngle = Math.PI * .49;
-    const to3 = (x: number, y: number, z: number) => new THREE.Vector3(x - 1000, z * 3, 1000 - y);
+    const to3 = (x: number, y: number, z: number) => new THREE.Vector3(...toScene(x, y, z));
     scene.add(new THREE.HemisphereLight(0xffffff, 0x637557, 2.5));
     const sun = new THREE.DirectionalLight(0xfff5dd, 2.5);
     sun.position.set(-500, 1700, 800);
@@ -31,34 +33,43 @@ export function mountScene(host: HTMLElement, data: SceneData, onSelect: (node: 
     scene.add(new THREE.Mesh(surface, new THREE.MeshStandardMaterial({ color: '#c0cca3', roughness: 1, flatShading: false })));
     const nodes = new Map(data.map.nodes.map(n => [n.id, n]));
     const drawLine = (pts: THREE.Vector3[], color: string, width = 1) => { const geometry = new THREE.BufferGeometry().setFromPoints(pts); const line = new THREE.Line(geometry, new THREE.LineBasicMaterial({ color, linewidth: width })); scene.add(line); return line; };
+    const graph = new THREE.Group(); scene.add(graph); graph.visible = !!data.focusNodes;
+    scene.add(roadSurface(data));
     for (const e of data.map.edges) {
         const a = nodes.get(e.from)!, b = nodes.get(e.to)!;
-        drawLine(e.polyline.map(([x, y], i) => to3(x, y, a.z + (b.z - a.z) * i / Math.max(1, e.polyline.length - 1) + 3)), e.resource ? '#c0780b' : '#879c85');
+        graph.add(drawLine(e.polyline.map(([x, y], i) => to3(x, y, a.z + (b.z - a.z) * i / Math.max(1, e.polyline.length - 1) + 3)), e.resource ? '#c0780b' : '#879c85'));
     }
     const boxes: {
         id: string;
         mesh: THREE.Mesh<THREE.BoxGeometry, THREE.MeshStandardMaterial>;
         color: THREE.Color;
     }[] = [];
+    const fallback = new THREE.Group(); scene.add(fallback);
     for (const b of data.map.buildings) {
         const box = new THREE.Mesh(new THREE.BoxGeometry(b.w, b.h * 3, b.d), new THREE.MeshStandardMaterial({ color: b.kind === 'tower' ? '#617260' : b.kind === 'kitchen' ? '#b78731' : '#d9decd', roughness: .9 }));
         box.position.copy(to3(b.x + b.w / 2, b.y + b.d / 2, terrainHeight(b.x + b.w / 2, b.y + b.d / 2) + b.h / 2));
-        scene.add(box);
+        fallback.add(box);
         boxes.push({ id: b.id, mesh: box, color: box.material.color.clone() });
     }
-    for (const r of data.routes.slice(0, 30)) {
-        const points = r.path.flatMap((id, i) => { const n = nodes.get(id); if (!n)
-            return []; if (!i)
-            return [to3(n.x, n.y, n.z + 12)]; const edge = data.map.edges.find(e => e.from === r.path[i - 1] && e.to === id), prev = nodes.get(r.path[i - 1])!; return edge ? edge.polyline.slice(1).map(([x, y], j) => to3(x, y, prev.z + (n.z - prev.z) * (j + 1) / (edge.polyline.length - 1) + 12)) : [to3(n.x, n.y, n.z + 12)]; });
-        if (points.length > 1) {
-            const curve = new THREE.CurvePath<THREE.Vector3>();
-            for (let i = 1; i < points.length; i++)
-                curve.add(new THREE.LineCurve3(points[i - 1], points[i]));
-            const tube = new THREE.Mesh(new THREE.TubeGeometry(curve, Math.max(2, points.length * 4), 5, 5, false), new THREE.MeshBasicMaterial({ color: r.color, transparent: true, opacity: .9, depthTest: false }));
-            tube.renderOrder = 3;
-            scene.add(tube);
-        }
+    for (const b of visualLayout(data.map).houses) {
+        const box = new THREE.Mesh(new THREE.BoxGeometry(b.w, b.h * 3, b.d), new THREE.MeshStandardMaterial({color:'#d9decd', roughness:1}));
+        box.position.copy(to3(b.x,b.y,b.z+b.h/2)); fallback.add(box);
     }
+    const routeObjects: {order?: string; object: THREE.Object3D}[] = [];
+    for (const r of data.routes) {
+        const points = routePoints(data,r.path).map(p=>to3(p.x,p.y,p.z+12));
+        if (points.length < 2) continue;
+        const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(points), r.dashed
+            ? new THREE.LineDashedMaterial({color:r.color,dashSize:18,gapSize:14,depthTest:false})
+            : new THREE.LineBasicMaterial({color:r.color,depthTest:false}));
+        line.computeLineDistances(); line.renderOrder=3; scene.add(line); routeObjects.push({order:r.order,object:line});
+        const i=Math.max(1,Math.floor(points.length/2)), delta=points[i].clone().sub(points[i-1]);
+        const arrow=new THREE.ArrowHelper(delta.clone().normalize(),points[i-1].clone().lerp(points[i],.5),Math.min(50,delta.length()),r.color,20,12);
+        scene.add(arrow); routeObjects.push({order:r.order,object:arrow});
+    }
+    let focusedOrder=data.routes.find(r=>r.order)?.order, showAll=false;
+    function layers(network: boolean, all: boolean, order=focusedOrder) { graph.visible=network; showAll=all; focusedOrder=order;
+        routeObjects.forEach(r=>r.object.visible=showAll||!r.order||r.order===focusedOrder); render(); }
     const clickable: THREE.Object3D[] = [], textures: THREE.Texture[] = [], labels: {
         el: HTMLElement;
         point: THREE.Vector3;
@@ -76,6 +87,10 @@ export function mountScene(host: HTMLElement, data: SceneData, onSelect: (node: 
     label(data.orders.some(o => o.id === '#07') ? 'SUMMIT · #07 · 165m' : 'SUMMIT · 165m', 1240, 1460, 195, data.orders.find(o => o.id === '#07')?.node);
     const corridor = data.map.edges.find(e => e.resource === 'corridor')!;
     const ca = nodes.get(corridor.from)!, cb = nodes.get(corridor.to)!;
+    if (data.orders.length === 1 && data.orders[0].id === '#07') {
+        label('RIDGE · short, steep', 1260, 1315, terrainHeight(1260,1315)+30);
+        label('CONTOUR · longer, gentler', 1490, 1610, terrainHeight(1490,1610)+30);
+    }
     label('CORRIDOR · 1', (ca.x + cb.x) / 2, (ca.y + cb.y) / 2, (ca.z + cb.z) / 2 + 55);
     for (const o of data.orders) {
         const n = nodes.get(o.node)!;
@@ -109,8 +124,10 @@ export function mountScene(host: HTMLElement, data: SceneData, onSelect: (node: 
         scene.add(group);
         drones.set(id, group);
     }
-    let selected: THREE.Line | undefined;
-    const render = () => { renderer.render(scene, camera); const placed: {
+    let selected: THREE.Line | undefined, disposed=false, currentTime=0;
+    const highlights = new THREE.Group(); scene.add(highlights);
+    let assetSource: THREE.Object3D | undefined;
+    const render = () => { if (disposed) return; renderer.render(scene, camera); host.dataset.drawCalls=String(renderer.info.render.calls); host.dataset.triangles=String(renderer.info.render.triangles); const placed: {
         x: number;
         y: number;
         w: number;
@@ -118,7 +135,7 @@ export function mountScene(host: HTMLElement, data: SceneData, onSelect: (node: 
     }[] = []; for (const item of labels) {
         const p = item.point.clone().project(camera);
         item.el.hidden = p.z > 1 || p.z < -1 || Math.abs(p.x) > 1 || Math.abs(p.y) > 1;
-        const x = (p.x + 1) / 2 * host.clientWidth, w = item.el.offsetWidth, h = item.el.offsetHeight;
+        const w = item.el.offsetWidth, h = item.el.offsetHeight, x = Math.max(w/2+6, Math.min(host.clientWidth-w/2-6, (p.x+1)/2*host.clientWidth));
         let y = (1 - p.y) / 2 * renderer.domElement.clientHeight;
         for (let pass = 0; pass < 6; pass++)
             if (placed.some(a => Math.abs(a.x - x) < (a.w + w) / 2 + 4 && Math.abs(a.y - y) < Math.max(a.h, h) + 4))
@@ -144,23 +161,33 @@ export function mountScene(host: HTMLElement, data: SceneData, onSelect: (node: 
         number,
         number,
         number
-    ]> = { overview: [1000, 1000, 70, 2500], kitchen: [kitchen.x, kitchen.y, kitchen.z, 900], hilltop: [1240, 1460, 165, 1050], corridor: [(ca.x + cb.x) / 2, (ca.y + cb.y) / 2, (ca.z + cb.z) / 2, 900] }; const [x, y, z, d] = targets[name] ?? targets.overview; controls.target.copy(to3(x, y, z)); camera.position.copy(controls.target).add(new THREE.Vector3(d * .65, d * .75, d * .8)); controls.update(); render(); }
-    function select(path: string[], blocked: string[] = []) { for (const box of boxes)
-        box.mesh.material.color.copy(blocked.includes(box.id) ? new THREE.Color('#d44b44') : box.color); if (selected) {
-        scene.remove(selected);
-        selected.geometry.dispose();
-        (selected.material as THREE.Material).dispose();
-    } const pts = routePoints(data, path).map(n => to3(n.x, n.y, n.z + 23)); if (pts.length === 1)
-        pts.push(pts[0].clone().add(new THREE.Vector3(0, 100, 0))); selected = pts.length ? drawLine(pts, '#f02d95', 5) : undefined; render(); }
-    function time(t: number) { for (const state of fleetAt(data, t)) {
+    ]> = { overview: [1000, 1000, 70, 2500], mission: [850, 1130, 85, 1750], kitchen: [kitchen.x, kitchen.y, kitchen.z, 900], hilltop: [1240, 1460, 165, 1050], corridor: [(ca.x + cb.x) / 2, (ca.y + cb.y) / 2, (ca.z + cb.z) / 2, 900] }; const [x, y, z, d] = targets[name] ?? targets.overview; controls.target.copy(to3(x, y, z)); camera.position.copy(controls.target).add(new THREE.Vector3(d * .65, d * .75, d * .8)); controls.update(); render(); }
+    function select(path: string[], blocked: string[] = []) {
+        release(highlights); highlights.clear();
+        for (const box of boxes) if (blocked.includes(box.id)) {
+            const outline = new THREE.Mesh(box.mesh.geometry.clone(), new THREE.MeshBasicMaterial({color:'#d44b44',wireframe:true,depthTest:false}));
+            outline.position.copy(box.mesh.position); outline.scale.setScalar(1.06); highlights.add(outline);
+        }
+        if (selected) { scene.remove(selected); release(selected); }
+        const pts=routePoints(data,path).map(n=>to3(n.x,n.y,n.z+23));
+        if (pts.length===1) pts.push(pts[0].clone().add(new THREE.Vector3(0,100,0)));
+        selected=pts.length?drawLine(pts,'#f02d95',5):undefined; render();
+    }
+    function time(t: number) { currentTime=t; for (const state of fleetAt(data, t)) {
         const p = state.position;
         drones.get(state.drone)?.position.copy(to3(p.x, p.y, p.z + 22));
     } render(); }
+    host.dataset.models='loading';
+    void loadAssets(data).then(assets=>{
+        if (disposed) { release(assets.source); return; }
+        assetSource=assets.source; fallback.visible=false; scene.add(assets.scenery);
+        pads.children.forEach(pad=>{ pad.visible=false; const model=assets.clone('charging_pad'); model.scale.set(40,40,40); model.position.copy(pad.position); scene.add(model); });
+        for (const [id,group] of drones) { release(group); group.clear(); const model=assets.clone(data.droneTypes?.[id]==='H'?'drone_H':'drone_L'); model.scale.setScalar(22); group.add(model); }
+        host.dataset.models='loaded'; host.dataset.buildings=String(data.map.buildings.length+visualLayout(data.map).houses.length); time(currentTime);
+    }).catch(()=>{ if (!disposed) host.dataset.models='fallback'; });
     size();
-    view(data.focusNodes ? 'kitchen' : 'overview');
+    layers(!!data.focusNodes,false);
+    view(data.focusNodes ? 'kitchen' : data.orders.length === 1 && data.orders[0].id === '#07' ? 'mission' : 'overview');
     time(0);
-    return { view, select, time, dispose() { resize.disconnect(); controls.dispose(); renderer.domElement.removeEventListener('pointerdown', onDown); renderer.domElement.removeEventListener('pointerup', onClick); scene.traverse(o => { const mesh = o as THREE.Mesh; if (mesh.geometry)
-            mesh.geometry.dispose(); if (mesh.material)
-            for (const material of Array.isArray(mesh.material) ? mesh.material : [mesh.material])
-                material.dispose(); }); textures.forEach(t => t.dispose()); renderer.dispose(); renderer.forceContextLoss(); renderer.domElement.remove(); overlay.remove(); } };
+    return { view, select, time, layers, dispose() { disposed=true; resize.disconnect(); controls.dispose(); renderer.domElement.removeEventListener('pointerdown', onDown); renderer.domElement.removeEventListener('pointerup', onClick); release(scene); if (assetSource) release(assetSource); textures.forEach(t => t.dispose()); renderer.dispose(); renderer.forceContextLoss(); renderer.domElement.remove(); overlay.remove(); } };
 }

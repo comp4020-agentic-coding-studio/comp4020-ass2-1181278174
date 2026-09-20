@@ -36,6 +36,7 @@ export function mountWorkspace(root: HTMLElement) {
     let run = JSON.parse(root.querySelector<HTMLScriptElement>('[data-initial-run]')!.textContent!) as LabRun;
     let config = structuredClone(run.input), draft = false, request = 0, active: ReturnType<typeof startRun> | undefined, scene: ReturnType<typeof import('./scene.ts')['mountScene']> | undefined, sceneLoading = false, sceneGeneration = 0;
     let storage: StorageData = { version: 2, weeks: {}, notes: {}, archive: [] }, tableId = '', page = 0, filter = '', selected: Selection | undefined, traceIndex = -1, time = 0, prefer2D = false, playing = false, raf = 0, lastFrame = 0;
+    let network=!!run.scene?.focusNodes, allRoutes=false, focusedOrder=run.scene?.routes.find(r=>r.order)?.order;
     const content = root.querySelector<HTMLElement>('[data-workspace-content]')!;
     const q = <T extends HTMLElement = HTMLElement>(selector: string) => content.querySelector<T>(selector)!;
     try {
@@ -59,7 +60,7 @@ export function mountWorkspace(root: HTMLElement) {
     const disposeScene = () => { sceneGeneration++; sceneLoading = false; scene?.dispose(); scene = undefined; };
     function draw() { const opened = new Set([...content.querySelectorAll('details[open]')].map(d => d.querySelector('summary')?.textContent)); stopPlayback(); disposeScene(); content.innerHTML = workspaceHtml({ ...run, input: config }, semester, compact, guided); content.querySelectorAll('details').forEach(d => { if (opened.has(d.querySelector('summary')?.textContent))
         d.open = true; }); tableId = (run.tables.find(t => t.primary) ?? run.tables[0]).id; page = 0; filter = ''; selected = undefined; traceIndex = -1; time = 0; for (const el of content.querySelectorAll<HTMLTextAreaElement>('[data-note]'))
-        el.value = storage.notes[`${config.week}:${el.dataset.note}`] ?? ''; recordUi(); updateTime(0); if (wants3D())
+        el.value = storage.notes[`${config.week}:${el.dataset.note}`] ?? ''; network=!!run.scene?.focusNodes; allRoutes=false; focusedOrder=run.scene?.routes.find(r=>r.order)?.order; recordUi(); updateLayers(); updateTime(0); if (wants3D())
         void enable3D(); }
     function wants3D() { return !prefer2D && !!run.scene && [1, 4, 9, 10, 12].includes(config.week) && matchMedia('(min-width: 900px)').matches && !matchMedia('(prefers-reduced-motion: reduce)').matches; }
     async function enable3D() {
@@ -88,7 +89,7 @@ export function mountWorkspace(root: HTMLElement) {
             q('[data-action="map-3d"]').textContent = '3D scene';
             q('[data-action="map-3d"]').setAttribute('aria-pressed', 'true');
             q('[data-action="map-2d"]').setAttribute('aria-pressed', 'false');
-            scene.time(time);
+            updateLayers(); scene.time(time);
         }
         catch (e) {
             host.hidden = true;
@@ -234,6 +235,14 @@ export function mountWorkspace(root: HTMLElement) {
     function snapshot(): Archive { return { name: `W${run.input.week} · ${run.input.caseId} · ${new Date().toLocaleTimeString()}`, input: run.input, inputHash: run.inputHash, modelHash: run.modelHash, metrics: run.metrics, notes: { ...storage.notes }, facts: run.plan?.tasks.map(t => ({ id: t.order, drone: t.drone, deliver: t.deliver, land: t.land })) }; }
     function download(name: string, value: unknown) { const url = URL.createObjectURL(new Blob([JSON.stringify(value, null, 2)], { type: 'application/json' })); const a = document.createElement('a'); a.href = url; a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000); }
     function evidenceTable() { const t = run.tables.find(t => t.id === tableId) ?? run.tables[0]; q('[data-table-host]').innerHTML = tableHtml(t, filter, page); const n = t.rows.filter(x => x.values.join(' ').toLowerCase().includes(filter.toLowerCase())).length; q('[data-table-count]').textContent = `${n} rows · ${n ? Math.min(page * 80 + 1, n) : 0}–${Math.min((page + 1) * 80, n)}`; (q('[data-action="rows-prev"]') as HTMLButtonElement).disabled = page === 0; (q('[data-action="rows-next"]') as HTMLButtonElement).disabled = (page + 1) * 80 >= n; }
+    function updateLayers() {
+        content.querySelector<SVGElement>('[data-flight-network]')?.style.setProperty('display',network?'':'none');
+        content.querySelectorAll<SVGElement>('[data-route],[data-route-key]').forEach(el=>el.style.display=allRoutes||!el.dataset.order||el.dataset.order===focusedOrder?'':'none');
+        q('[data-action="layer-network"]')?.setAttribute('aria-pressed',String(network));
+        q('[data-action="layer-routes"]')?.setAttribute('aria-pressed',String(allRoutes));
+        const label=q('[data-route-focus]'); if(label) label.textContent=allRoutes?'All computed routes':focusedOrder?`Route: ${focusedOrder}`:'Routes for this example';
+        scene?.layers(network,allRoutes,focusedOrder);
+    }
     function select(selection: Selection) {
         selected = selection;
         const row = run.tables.flatMap(t => t.rows).find(x => x.id === selection.id), trace = run.trace.find(t => t.id === selection.id), event = run.scene?.events.find(e => e.id === selection.id), interval = run.timeline.find(t => t.id === selection.id);
@@ -253,6 +262,8 @@ export function mountWorkspace(root: HTMLElement) {
             detail = `Node ${n.id}: ${n.x} m east, ${n.y} m north, ${Math.round(n.z * 10) / 10} m elevation. ${o ? `Payload ${o.weight} kg; ready ${o.ready}; promised ${o.promised}.` : ''} ${n.wait ? 'Waiting is allowed here.' : ''}`;
             path = [n.id];
         }
+        const order = run.scene?.orders.find(o=>o.id===selection.id || o.node===selection.id)?.id ?? event?.order;
+        if (order) { focusedOrder=order; updateLayers(); }
         if (selection.kind === 'task' && run.scene)
             path = run.scene.routes.find(r => r.order === selection.id)?.path;
         if (event) {
@@ -414,6 +425,10 @@ export function mountWorkspace(root: HTMLElement) {
                 q('[data-camera-tools]').hidden = true;
                 target.setAttribute('aria-pressed', 'true');
                 q('[data-action="map-3d"]')?.setAttribute('aria-pressed', 'false');
+            }
+            else if (action === 'layer-network' || action === 'layer-routes') {
+                if (action === 'layer-network') network=!network; else allRoutes=!allRoutes;
+                updateLayers();
             }
             else if (action === 'camera')
                 scene?.view(target.dataset.camera!);
