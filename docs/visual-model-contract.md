@@ -17,6 +17,14 @@ places them and animates the computed events. Keep the current render resolution
   the source, and `public/models/slop-hill.glb` is the web asset. No external asset service,
   high-resolution textures or prerecorded successful flights are needed.
 
+## Terrain
+
+Both maps use elevation bands and contour lines from the unchanged height field. The
+3D cut edge and oblique camera expose the slope. A rocky ridge ribbon follows the
+existing blocked crossing belt; its central pass and both end crossings stay open.
+The ribbon is a landscape cue, not an extra collision rule. Route text uses place
+names; raw graph identifiers remain in exported data.
+
 ## Layout
 
 Canonical obstacle footprints are retained. A separate deterministic visual layout adds

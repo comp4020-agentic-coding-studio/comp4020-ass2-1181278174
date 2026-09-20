@@ -1,6 +1,7 @@
 import { canonical, type SceneData } from './model';
 import type { MapData } from '../data/schema';
 import { terrainHeight } from './terrain';
+import { ridgeSections } from './landscape';
 
 export const VISUAL_ELEVATION = 3;
 export const toScene = (x: number, y: number, z: number): [number, number, number] => [x - 1000, z * VISUAL_ELEVATION, 1000 - y];
@@ -44,9 +45,10 @@ export function displayArea(data:SceneData) {
 export function sceneScenery(data:SceneData) {
   const area=displayArea(data),layout=visualLayout(data.map),focus=data.focusNodes?new Set(data.focusNodes):undefined;
   const homes=customerHomes(data.map);
+  const offRidge=(x:number,y:number)=>ridgeSections(data.map).every(section=>section.slice(1).every((b,i)=>distanceToSegment(x,y,section[i],b)>55));
   const visible=(x:number,y:number,w:number,d:number)=>x+w>=area.left&&x<=area.right&&y+d>=area.bottom&&y<=area.top;
   const localEdges=new Set(data.map.edges.filter(e=>!focus||focus.has(e.from)&&focus.has(e.to)).map(e=>'street-'+e.id));
-  return {buildings:data.map.buildings.filter(b=>visible(b.x,b.y,b.w,b.d)),houses:layout.houses.filter(b=>visible(b.x-b.w/2,b.y-b.d/2,b.w,b.d)&&homes.every(h=>Math.hypot(h.x-b.x,h.y-b.y)>Math.hypot(h.w+b.w,h.d+b.d)/2+12)),homes:homes.filter(h=>visible(h.x-h.w/2,h.y-h.d/2,h.w,h.d)),roads:layout.roads.filter(r=>localEdges.has(r.id))};
+  return {buildings:data.map.buildings.filter(b=>!b.id.startsWith('ridge-')&&visible(b.x,b.y,b.w,b.d)),houses:layout.houses.filter(b=>offRidge(b.x,b.y)&&visible(b.x-b.w/2,b.y-b.d/2,b.w,b.d)&&homes.every(h=>Math.hypot(h.x-b.x,h.y-b.y)>Math.hypot(h.w+b.w,h.d+b.d)/2+12)),homes:homes.filter(h=>visible(h.x-h.w/2,h.y-h.d/2,h.w,h.d)),roads:layout.roads.filter(r=>localEdges.has(r.id))};
 }
 
 /** A home sits beside its existing delivery point; its path is a visual doorstep link. */

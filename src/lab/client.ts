@@ -289,7 +289,7 @@ export function mountWorkspace(root: HTMLElement) {
         q('[data-selection-title]').textContent = placeText(title);
         q('[data-selection-detail]').textContent = placeText(detail);
         q('[data-selection-facts]').innerHTML = path ? `<p><strong>Path</strong> ${esc(path.map(placeName).join(' → '))}</p>` : '';
-        const technical=q('[data-node-details]');if(technical)technical.textContent=path?.join(' → ')??'No graph path for this selection.';
+        const technical=q('[data-node-details]');if(technical)technical.textContent=path?.map(placeName).join(' → ')??'No graph path for this selection.';
         content.querySelectorAll('[data-row]').forEach(el => el.classList.toggle('lab-selected', (el as HTMLElement).dataset.row === selection.id));
         if (run.scene && path) {
             const pts = routePoints(run.scene, path).map(n => mapPoint(run.scene!, n.x, n.y).join(',')).join(' ');

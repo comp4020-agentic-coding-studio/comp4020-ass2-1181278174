@@ -40,7 +40,7 @@ function mount(root:HTMLElement) {
     const target=path.at(-1)==='kitchen'?run.scene?.orders.find(o=>path.includes(o.node))?.node:path.at(-1);
     content.querySelectorAll<HTMLElement>('[data-customer-homes] [data-node],[data-map-markers] [data-node]').forEach(el=>el.classList.toggle('is-destination',el.dataset.node===target));
     content.querySelectorAll<SVGElement>('[data-building]').forEach(e=>e.setAttribute('fill',obstacles.includes(e.dataset.building!)?'#dc6a54':'#adb3a2'));
-    q('[data-example-technical]')!.innerHTML=`<p>${esc(path.map(placeName).join(' → '))}</p><code>${esc(path.join(' → '))}</code>`;
+    q('[data-example-technical]')!.innerHTML=`<p>${esc(path.map(placeName).join(' → '))}</p>`;
     scene?.select(path,obstacles);
   }
   function inspect(id:string) {

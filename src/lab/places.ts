@@ -5,10 +5,18 @@ export function placeName(id:string):string {
     if(id==='kitchen')return 'Kitchen';
     const order=canonical.orders.find(o=>o.node===id);
     if(order)return `Home ${order.id.slice(1)}${id==='summit'?' · Hilltop':''}`;
+    const landmarks:Record<string,string>={
+      's-2-0':'Kitchen Lane','s-3-2':'West Pass Gate','s-3-3':'East Pass Gate',
+      's-1-2':'South Ridge Approach','s-1-3':'South Ridge Crossing',
+      's-5-2':'North Ridge Approach','s-5-3':'North Ridge Crossing',
+      'tower-n':'North Pass Tower','tower-s':'South Pass Tower',
+      'ridge-s-2-2':'South Ridge','ridge-s-4-2':'North Ridge',
+    };
+    if(landmarks[id])return landmarks[id];
     const street=/^s-(\d+)-(\d+)$/.exec(id);
-    if(street)return `Junction ${String.fromCharCode(65+Number(street[1]))}${Number(street[2])+1}`;
+    if(street){const roads=['Meadow','Orchard','Lower Hill','Pass','Upper Hill','Pine','North Hill'],crossings=['West Lane','Garden Lane','Ridge Lane','East Lane','Summit Lane','Hilltop Lane','Boundary Lane'];return `${roads[Number(street[1])]??'Hill'} / ${crossings[Number(street[2])]??'Boundary Lane'}`;}
     return id.replace(/^block-(\d+)$/,'Building $1');
 }
 export function placeText(value:unknown):string {
-    return String(value??'').replace(/\bs-\d+-\d+\b|\bsummit\b|\bblock-\d+\b|\bkitchen\b/g,placeName);
+    return String(value??'').replace(/\bridge-s-\d+-\d+\b|\bs-\d+-\d+\b|\bsummit\b|\bblock-\d+\b|\btower-[ns]\b|\bkitchen\b/g,placeName);
 }

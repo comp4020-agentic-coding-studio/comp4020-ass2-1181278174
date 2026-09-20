@@ -6,6 +6,7 @@ import { displayPose } from './replay-pose';
 import type { SceneData } from './model.ts';
 import { fleetAt, padSchedule, routePoints } from './replay.ts';
 import { terrainHeight } from './terrain.ts';
+import { terrainScene } from './scene-terrain';
 import { displayArea, sceneScenery, toScene } from './visual-layout';
 import { blockInspection, fitInspection, readableLine } from './scene-inspection';
 import { flightNetwork, loadAssets, release, roadSurface } from './scene-assets';
@@ -25,18 +26,11 @@ export function mountScene(host: HTMLElement, data: SceneData, onSelect: (node: 
     controls.maxDistance = 4400;
     controls.maxPolarAngle = Math.PI * .49;
     const to3 = (x: number, y: number, z: number) => new THREE.Vector3(...toScene(x, y, z));
-    scene.add(new THREE.HemisphereLight(0xffffff, 0x637557, 2.5));
-    const sun = new THREE.DirectionalLight(0xfff5dd, 2.5);
+    scene.add(new THREE.HemisphereLight(0xffffff, 0x4d5840, 1.7));
+    const sun = new THREE.DirectionalLight(0xfff5dd, 2.1);
     sun.position.set(-500, 1700, 800);
     scene.add(sun);
-    const surface = new THREE.PlaneGeometry(area.right-area.left,area.top-area.bottom,64,64);
-    surface.rotateX(-Math.PI / 2);
-    surface.translate((area.left+area.right)/2-1000,0,1000-(area.bottom+area.top)/2);
-    const pos = surface.attributes.position;
-    for (let i = 0; i < pos.count; i++)
-        pos.setY(i, terrainHeight(pos.getX(i) + 1000, 1000 - pos.getZ(i)) * 3);
-    surface.computeVertexNormals();
-    scene.add(new THREE.Mesh(surface, new THREE.MeshStandardMaterial({ color: '#c0cca3', roughness: 1, flatShading: false })));
+    scene.add(terrainScene(data));
     const nodes = new Map(data.map.nodes.map(n => [n.id, n]));
     const graph=flightNetwork(data); scene.add(graph); graph.visible=!!data.focusNodes;
     scene.add(roadSurface(data));
@@ -94,7 +88,8 @@ export function mountScene(host: HTMLElement, data: SceneData, onSelect: (node: 
         label('RIDGE · short, steep', 1260, 1315, terrainHeight(1260,1315)+30);
         label('CONTOUR · longer, gentler', 1490, 1610, terrainHeight(1490,1610)+30);
     }
-    const corridorLabel=isBlock?undefined:label('CORRIDOR · 1', (ca.x + cb.x) / 2, (ca.y + cb.y) / 2, (ca.z + cb.z) / 2 + 55);
+    const corridorLabel=isBlock?undefined:label('RIDGE PASS · one drone', (ca.x + cb.x) / 2, (ca.y + cb.y) / 2, (ca.z + cb.z) / 2 + 55);
+    if(!isBlock){label('RIDGE · north end',835,1310,terrainHeight(835,1310)+48);label('RIDGE · south end',822,650,terrainHeight(822,650)+48);}
     const passage=new THREE.Mesh(new THREE.BoxGeometry(Math.hypot(cb.x-ca.x,cb.y-ca.y),75,55),new THREE.MeshBasicMaterial({color:'#c79726',transparent:true,opacity:.15,depthWrite:false}));
     passage.position.copy(to3((ca.x+cb.x)/2,(ca.y+cb.y)/2,(ca.z+cb.z)/2+20)); passage.rotation.y=Math.atan2(cb.y-ca.y,cb.x-ca.x); passage.visible=!isBlock;scene.add(passage);
     for (const o of data.orders) {
@@ -218,7 +213,7 @@ export function mountScene(host: HTMLElement, data: SceneData, onSelect: (node: 
         number,
         number,
         number
-    ]> = { overview: [1000, 1000, 70, 2500], mission: [850, 1130, 85, 1750], kitchen: [kitchen.x, kitchen.y, kitchen.z, 900], hilltop: [1240, 1460, 165, 1050], corridor: [(ca.x + cb.x) / 2, (ca.y + cb.y) / 2, (ca.z + cb.z) / 2, 900] }; const [x, y, z, d] = targets[name] ?? targets.overview; controls.target.copy(to3(x, y, z)); camera.position.copy(controls.target).add(new THREE.Vector3(d * .65, d * .75, d * .8)); controls.update(); render(); }
+    ]> = { overview: [1000, 1000, 70, 2500], mission: [850, 1130, 85, 1750], kitchen: [kitchen.x, kitchen.y, kitchen.z, 900], hilltop: [1240, 1460, 165, 1050], corridor: [(ca.x + cb.x) / 2, (ca.y + cb.y) / 2, (ca.z + cb.z) / 2, 900] }; const [x, y, z, d] = targets[name] ?? targets.overview; controls.target.copy(to3(x, y, z)); camera.position.copy(controls.target).add(new THREE.Vector3(d * .65, d * .42, d * .85)); controls.update(); render(); }
     function select(path: string[], blocked: string[] = []) {
         release(highlights);highlights.clear();
         if(selected){scene.remove(selected);release(selected);selected=undefined;}
@@ -278,7 +273,7 @@ export function mountScene(host: HTMLElement, data: SceneData, onSelect: (node: 
         }
         const corridor=corridorAt(data,t);
         passage.material.color.set(corridor.color); passage.material.opacity=['closed','conflict'].includes(corridor.state)?.4:.15;
-        if(corridorLabel)corridorLabel.textContent=`CORRIDOR · ${corridor.state==='closed'?'CLOSED':corridor.state==='conflict'?'CONFLICT':corridor.occupants.map(e=>e.drone).join(', ')||'free'}`;
+        if(corridorLabel)corridorLabel.textContent=`RIDGE PASS · ${corridor.state==='closed'?'CLOSED':corridor.state==='conflict'?'CONFLICT':corridor.occupants.map(e=>e.drone).join(', ')||'free'}`;
         host.dataset.corridorState=corridor.state;
         const charging=padSchedule(data).filter(p=>p.event.start<=t&&t<p.event.end);
         padLabels.forEach((el,i)=>{ const owner=charging.find(p=>p.pad===i)?.event.drone; el.textContent=`PAD ${i+1} · ${owner?'charging '+owner:'free'}`; });
