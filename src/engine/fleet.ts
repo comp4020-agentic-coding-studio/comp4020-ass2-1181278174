@@ -30,6 +30,8 @@ export interface FleetOptions {
   /** Which task starts first when two could start at the same tick. */
   tieBreak?: "drone" | "promised";
   maxExpansions?: number;
+  /** Windows in which a resource is closed to every drone: reserved before any leg is planned. */
+  closures?: { resource: string; start: number; end: number; label?: string }[];
 }
 
 export interface TaskRecord {
@@ -103,6 +105,7 @@ export function evaluate(world: World, assignment: Assignment, options: FleetOpt
   const corridor = options.corridor ?? false;
   const orders = new Map(world.orders.map((o) => [o.id, o]));
   const table = new ReservationTable(Object.fromEntries(Object.entries(rules.resources).map(([k, v]) => [k, v.capacity])));
+  for (const c of options.closures ?? []) table.reserve({ resource: c.resource, owner: "closed", task: c.label, start: c.start, end: c.end });
   const tasks: TaskRecord[] = [];
   const activities: Activity[] = [];
   const deliveries: Delivery[] = [];

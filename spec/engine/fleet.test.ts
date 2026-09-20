@@ -133,6 +133,23 @@ describe("space-time planning", () => {
   });
 });
 
+describe("a closed resource", () => {
+  const order13 = world.orders[12];
+  it("keeps a drone out of the corridor for the whole closed window", () => {
+    const one: World = { ...world, orders: [order13] };
+    const free = evaluate(one, { A: [order13.id] }, { corridor: true });
+    const held = free.occupancies.find((o) => o.resource === "corridor" && o.owner === "A")!;
+    const window = { resource: "corridor", start: held.start - 10, end: held.end + 300, label: "closed" };
+    const closed = evaluate(one, { A: [order13.id] }, { corridor: true, closures: [window] });
+    expect(closed.tasks[0].status).toBe("flown");
+    expect(closed.validation.ok).toBe(true);
+    const mine = closed.occupancies.filter((o) => o.resource === "corridor" && o.owner === "A");
+    for (const o of mine) expect(o.end <= window.start || o.start >= window.end, `A holds [${o.start}, ${o.end}) inside the closure`).toBe(true);
+    expect(closed.occupancies.some((o) => o.owner === "closed")).toBe(true);
+    expect(closed.tasks[0].deliver!).toBeGreaterThan(free.tasks[0].deliver!);
+  });
+});
+
 describe("full re-evaluation", () => {
   it("evaluates the same assignment with the corridor on: waits appear, the plan stays valid", () => {
     const g = greedyAssign(tenWorld);
