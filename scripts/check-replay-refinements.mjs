@@ -75,6 +75,21 @@ try {
         const end=await js(`Math.max(...JSON.parse(document.querySelector('[data-initial-run]').textContent).scene.events.filter(e=>e.drone==='A').map(e=>e.end))`);
         await seek(end);
         check(width+' a completed leg keeps its undelivered parcel',await js(`document.querySelector('[data-drone="A"]').dataset.parcel==='true'&&document.querySelector('[data-replay-state]').textContent.includes('leg complete')`));
+        await js(`document.querySelector('.lab-timeline').closest('details').open=true`);
+        await seek(107);
+        check(width+' both overlapping intervals remain visible',await js(`(()=>{const bars=[...document.querySelectorAll('.lab-timeline [aria-current="time"]')];return bars.length===2&&bars[0].getBoundingClientRect().top!==bars[1].getBoundingClientRect().top;})()`));
+        check(width+' cursor shares the flight clock and is visible',await js(`(()=>{const run=JSON.parse(document.querySelector('[data-initial-run]').textContent),end=Math.max(...run.scene.events.map(e=>e.end)),cursor=document.querySelector('[data-time-cursor]');return document.querySelector('[data-timeline-time]')?.textContent==='107 s'&&Math.abs(parseFloat(document.querySelector('.lab-timeline').style.getPropertyValue('--replay-progress'))-107/end*100)<.01&&getComputedStyle(cursor).backgroundColor!=='rgba(0, 0, 0, 0)';})()`));
+        await shot('timeline-'+width,'.lab-timeline');
+        await seek(112);
+        check(width+' active intervals exclude their end',await js(`document.querySelectorAll('.lab-timeline [aria-current="time"]').length===1`));
+        await js(`document.querySelector('.lab-timeline button').focus()`);
+        await call('Input.dispatchKeyEvent',{type:'keyDown',key:'Enter',code:'Enter',windowsVirtualKeyCode:13,text:'\r'});
+        await call('Input.dispatchKeyEvent',{type:'keyUp',key:'Enter',code:'Enter',windowsVirtualKeyCode:13});
+        check(width+' keyboard interval selection seeks the clock',await js(`Number(document.querySelector('[data-time-slider]').value)===Number(document.activeElement.dataset.start)`));
+        await seek(107);await js(`document.querySelector('[data-speed]').value='5'`);await click('play');await until(`Number(document.querySelector('[data-time-slider]').value)>107`);await click('play');
+        const paused=await js(`document.querySelector('.lab-timeline').style.getPropertyValue('--replay-progress')`);
+        await sleep(150);
+        check(width+' cursor follows playback and stays put on pause',await js(`document.querySelector('.lab-timeline').style.getPropertyValue('--replay-progress')===${JSON.stringify(paused)}&&Number(document.querySelector('[data-time-slider]').value)>107`));
         check(width+' no document overflow',await js(`document.documentElement.scrollWidth<=innerWidth`));
     }
     check('no unhandled exceptions',!events.some(e=>e.method==='Runtime.exceptionThrown'));

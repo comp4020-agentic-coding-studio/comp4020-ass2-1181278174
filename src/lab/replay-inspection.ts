@@ -49,6 +49,11 @@ export function resourceReadout(scene: SceneData, tick: number) {
     const queue=scene.events.filter(e=>e.phase==='pad-queue'&&e.start<=tick&&tick<e.end).sort((a,b)=>a.start-b.start);
     return [`Corridor: ${contents.join(' + ')||'free'}${corridor.state==='conflict'?' · CONFLICT':''}`,scene.events.some(e=>e.phase==='charge')?`Pads: ${charging.length}/${scene.pads??2} occupied${charging.length?'; '+charging.map(p=>`${p.event.drone} on pad ${p.pad+1} until ${p.event.end}`).join(', '):''}. Queue: ${queue.map(e=>e.drone).join(' → ')||'empty'}.`:undefined].filter(Boolean).join(' | ');
 }
+export function replayBounds(run: LabRun) {
+    const intervals=[...run.timeline,...(run.scene?.events??[]),...(run.scene?.closures??[])];
+    return {min:Math.min(0,...intervals.map(e=>e.start)),max:Math.max(1,...intervals.map(e=>e.end))};
+}
 export function skipIdle(scene: SceneData,tick:number) {
-    return scene.events.some(e=>e.start<=tick&&tick<e.end)?tick:scene.events.filter(e=>e.start>tick).sort((a,b)=>a.start-b.start)[0]?.start??tick;
+    const intervals=[...scene.events,...(scene.closures??[])];
+    return intervals.some(e=>e.start<=tick&&tick<e.end)?tick:intervals.filter(e=>e.start>tick).sort((a,b)=>a.start-b.start)[0]?.start??tick;
 }

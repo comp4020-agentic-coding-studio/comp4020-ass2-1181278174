@@ -5,7 +5,7 @@ import { startRun } from './runner.ts';
 import { basePath, esc, mapPoint, tableHtml, workspaceHtml } from './render.ts';
 import { sourceFor } from './strategies.ts';
 import { demonstrationInput } from './teaching';
-import { corridorAt, replayIssues, resourceReadout, skipIdle, waitReason, waits, type ReplayIssue } from './replay-inspection';
+import { corridorAt, replayBounds, replayIssues, resourceReadout, skipIdle, waitReason, waits, type ReplayIssue } from './replay-inspection';
 import { fleetAt, routePoints } from './replay.ts';
 type Archive = {
     name: string;
@@ -299,6 +299,16 @@ export function mountWorkspace(root: HTMLElement) {
         if (slider) {
             slider.value = String(t);
             q('[data-time-output]').textContent = `${Math.round(t)} s`;
+        }
+        const timeline=q<HTMLElement>('.lab-timeline'), clock=q('[data-timeline-time]');
+        if(timeline) {
+            const {min,max}=replayBounds(run);
+            timeline.style.setProperty('--replay-progress',`${Math.max(0,Math.min(100,(t-min)/(max-min)*100))}%`);
+            if(clock) clock.textContent=`${Math.round(t)} ${['six-jobs','waiting'].includes(run.input.caseId)?'units':'s'}`;
+            timeline.querySelectorAll<HTMLButtonElement>('[data-event]').forEach(bar=>{
+                const active=Number(bar.dataset.start)<=t&&t<Number(bar.dataset.end);
+                if(active) bar.setAttribute('aria-current','time'); else bar.removeAttribute('aria-current');
+            });
         }
         if (!run.scene) return;
         scene?.time(t);

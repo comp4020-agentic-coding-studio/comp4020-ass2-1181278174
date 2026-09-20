@@ -5,7 +5,7 @@ import { learning } from '../workbench/learning.ts';
 import { teachingActions } from './teaching';
 import { contourRadius } from './terrain.ts';
 import { visualLayout } from './visual-layout';
-import { replayIssues, waits } from './replay-inspection';
+import { replayBounds, replayIssues, waits } from './replay-inspection';
 const round = (n: number) => Math.round(n * 100) / 100;
 export const esc = (v: unknown) => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
 const option = (id: string, label: string, value: string) => `<option value="${esc(id)}" ${id === value ? 'selected' : ''}>${esc(label)}</option>`;
@@ -121,14 +121,20 @@ export function mapPoint(scene: SceneData, x: number, y: number): [
     return [35 + (x - left) / (right - left) * 650, 475 - (y - bottom) / (top - bottom) * 430];
 }
 function replayHtml(r: LabRun): string {
-    const events = r.scene?.events ?? [], min = Math.min(0, ...events.map(e => e.start)), max = Math.max(1, ...events.map(e => e.end));
+    const events = [...(r.scene?.events ?? []),...(r.scene?.closures??[])], {min,max}=replayBounds(r);
     return `<div class="lab-playback"><label>Flight time <output data-time-output>${min} s</output><input type="range" data-time-slider min="${min}" max="${max}" value="${min}" step="1" ${events.length ? '' : 'disabled'} aria-label="Flight time in seconds"></label><div>${button('play', 'Play replay', events.length ? '' : 'disabled')}${button('time-start', 'Start')}${button('event-prev', 'Previous event')}${button('event-next', 'Next event')}${button('time-end', 'End')}<label>Speed<select data-speed>${[1,5,15,30,120,600].map(n=>`<option value="${n}" ${n===(r.input.week===9?1:30)?'selected':''}>${n}×</option>`).join('')}</select></label></div><div>${button('first-issue','Go to first issue',replayIssues(r).length?'':'disabled')}${button('next-wait','Next wait',r.scene&&waits(r.scene).length?'':'disabled')}<label><input type="checkbox" data-skip-idle checked> Skip idle time</label><label><input type="checkbox" data-pause-issue> Pause at issues</label></div><p class="lab-replay-state" data-replay-state>${events.length ? 'Press Play or step through the computed events.' : 'No recorded flight. Inspect the result and evidence above.'}</p><p class="lab-resource-state" data-resource-state></p><p class="lab-replay-note" role="status" data-replay-note>${r.status==='diagnostic'?'Diagnostic replay: this proposal fails a check. It is not a successful delivery.':''}</p></div>`;
 }
 function timelineHtml(r: LabRun): string {
     if (!r.timeline.length)
         return '';
-    const min = Math.min(0, ...r.timeline.map(e => e.start)), max = Math.max(1, ...r.timeline.map(e => e.end)), lanes = [...new Set(r.timeline.map(e => e.lane))];
-    return `<section class="lab-timeline"><h3>Time and shared resources</h3><p>Select an interval to jump to its start. Intervals include their start and exclude their end.</p>${lanes.map(lane => `<div class="lab-lane"><strong>${esc(lane)}</strong><div>${r.timeline.filter(e => e.lane === lane).map(e => `<button type="button" data-action="timeline" data-event="${esc(e.id)}" style="left:${(e.start - min) / (max - min) * 100}%;width:${Math.max(.35, (e.end - e.start) / (max - min) * 100)}%" class="${esc(e.kind)}" aria-label="${esc(e.label)} [${e.start}, ${e.end})" title="${esc(e.label)} [${e.start}, ${e.end})"><span>${esc(e.label)}</span></button>`).join('')}</div></div>`).join('')}<p class="lab-time-axis">${min} s <span>${max} s</span></p></section>`;
+    const {min,max}=replayBounds(r), lanes = [...new Set(r.timeline.map(e => e.lane))], unit=r.input.caseId==='six-jobs'||r.input.caseId==='waiting'?'units':'s';
+    return `<section class="lab-timeline" style="--replay-progress:0%"><div class="lab-timeline-heading"><h3>Time and shared resources</h3><span>Now <output data-timeline-time>${min} ${unit}</output></span></div><p>The vertical line marks the current time; outlined intervals are active. Select an interval to jump to its start. Intervals include their start and exclude their end.</p>${lanes.map(lane => {
+        const free:number[]=[];
+        const rows=r.timeline.filter(e=>e.lane===lane).sort((a,b)=>a.start-b.start).map(e=>{
+            let row=free.findIndex(end=>end<=e.start);if(row<0) row=free.length;free[row]=e.end;
+            return {...e,row};
+        });
+        return `<div class="lab-lane"><strong>${esc(lane)}</strong><div style="height:${free.length*34}px">${rows.map(e => `<button type="button" data-action="timeline" data-event="${esc(e.id)}" data-start="${e.start}" data-end="${e.end}" style="top:${3+e.row*34}px;left:${(e.start - min) / (max - min) * 100}%;width:${Math.max(.35, (e.end - e.start) / (max - min) * 100)}%" class="${esc(e.kind)}" aria-label="${esc(e.label)} [${e.start}, ${e.end})" title="${esc(e.label)} [${e.start}, ${e.end})"><span>${esc(r.input.caseId==='corridor'?e.label.split(' ')[0]:e.label)}</span></button>`).join('')}<i data-time-cursor aria-hidden="true"></i></div></div>`;}).join('')}<p class="lab-time-axis">${min} ${unit} <span>${max} ${unit}</span></p></section>`;
 }
 function symbolicSvg(r: LabRun): string {
     if (r.input.caseId === 'six-jobs')
