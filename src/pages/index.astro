@@ -1,85 +1,59 @@
 ---
-import Card from "astro-theme-university/components/Card.astro";
-import CardGrid from "astro-theme-university/components/CardGrid.astro";
-import ContentLayout from "astro-theme-university/layouts/ContentLayout.astro";
-import heroImage from "../assets/images/hero-home.avif";
-import { courseMeta } from "../course-config";
-import { sessionLabels, siteConfig } from "../site-config";
-import Record from "../components/Record.astro";
-import { withBase } from "astro-theme-university/url";
-import HomeCorridor from "../components/HomeCorridor.astro";
+import BaseLayout from 'astro-theme-university/layouts/BaseLayout.astro';
+import hero from '../assets/images/hero-home.avif';
+import { courseMeta } from '../course-config';
+import { siteConfig } from '../site-config';
+import { withBase } from 'astro-theme-university/url';
+import HillWalk from '../components/HillWalk.astro';
+import HomeCorridor from '../components/HomeCorridor.astro';
+import Record from '../components/Record.astro';
+const opening = courseMeta.description.match(/^.*?[.!?](?:\s|$)/)?.[0].trim() ?? courseMeta.description;
 ---
-
-<ContentLayout
-  title={`${courseMeta.code}: ${courseMeta.title}`}
-  description={courseMeta.description}
-  heroImage={heroImage}
-  heroImageAlt="Slop Hill as flat gold and black shapes: a kitchen at the foot, two towers on the slope with a gap between them, small houses, a solid line straight up the ridge and a dashed line around the contour to the house at the top, two drones in the air"
-  {...siteConfig}
->
-  <ul class="course-tags" aria-label="Course tags">
-    {courseMeta.tags.map((tag) => <li>{tag}</li>)}
-  </ul>
-
-  <p class="home-lead">Build a planner that can deliver twenty dinners and bring every drone home. Start with one route, then add energy, deadlines, charging and shared airspace over twelve weeks.</p>
-  <p><strong>For:</strong> third-year students with programming and data structures. <strong>Each week:</strong> one lecture and a two-hour tutorial. <strong>Assessment:</strong> two individual assignments, 40% and 60%.</p>
-  <nav class="home-actions" aria-label="Start exploring the course">
-    <a href={withBase("/sessions/")}>Explore the 12 weeks →</a>
-    <a href={withBase("/lab/#lab-w4")}>Try the route experiment →</a>
-    <a href={withBase("/assessments/")}>View the assignments →</a>
-  </nav>
-  <h2>One decision to try now</h2>
-  <p>Two drones want the same narrow corridor. Change the arrangement and watch the conflict, wait and arrival time change.</p>
-  <HomeCorridor />
+<BaseLayout title={`${courseMeta.code}: ${courseMeta.title}`} description={courseMeta.description} {...siteConfig} mainAttrs={{ class: 'home-main' }}>
+  <section slot="hero" class="home-hero" aria-labelledby="home-title">
+    <img src={hero.src} width={hero.width} height={hero.height} fetchpriority="high" alt="Slop Hill in the evening, rendered from the course's delivery map." />
+    <div class="hero-copy">
+      <p class="hero-course">{courseMeta.code} · {courseMeta.title}</p>
+      <h1 id="home-title">Twenty Dinners,<br />One Hill</h1>
+      <p class="hero-description">{opening}</p>
+      <div class="hero-actions">
+        <a class="at-button at-button--large" href={withBase('/#hill')}>Walk the hill</a>
+        <a class="at-button at-button--outline at-button--large" href={withBase('/lab/')}>Open the lab</a>
+      </div>
+      <a class="hero-weeks" href={withBase('/sessions/')}>Twelve weeks →</a>
+    </div>
+  </section>
+  <HillWalk />
+  <section aria-labelledby="home-corridor-title">
+    <h2 id="home-corridor-title">One passage, two drones</h2>
+    <HomeCorridor />
+  </section>
   <Record compact />
-  <h2>Three orders you will keep meeting</h2>
-  <ul>
-    <li><strong>#07, mapo tofu for the house on the hilltop.</strong> Far and urgent. The
-      ridge route is fastest and burns the return energy; the contour route is slower and
-      gets back.</li>
-    <li><strong>#13, the house across the corridor.</strong> Its shortest route passes the
-      one gap on the hill that only one drone can use at a time.</li>
-    <li><strong>#20, hotpot for four.</strong> Only the heavy drone type can carry it, which
-      decides who takes it before anything about efficiency is discussed.</li>
-  </ul>
-
-  <h2>Where to go next</h2>
-  <CardGrid columns={2}>
-    <Card title="Lab" href="/lab/">
-      <p>Choose a week, keep a baseline and export your experiment record.</p>
-    </Card>
-    <Card title="Lectures" href="/lectures/">
-      <p>Twelve Monday lectures, one question each, from a graph to a plan that flies.</p>
-    </Card>
-    <Card title={sessionLabels.plural} href="/sessions/">
-      <p>Twelve Wednesday tutorials: predict, derive, implement, test, explain.</p>
-    </Card>
-    <Card title="Assessment" href="/assessments/">
-      <p>The two assignments, their dates, weights and marking criteria.</p>
-    </Card>
-    <Card title="People" href="/people/">
-      <p>The convenor and the tutor, and who to ask about what.</p>
-    </Card>
-  </CardGrid>
-</ContentLayout>
-
+</BaseLayout>
 <style>
-  .home-lead { font-size: 1.2rem; }
-  .home-actions { display: flex; flex-wrap: wrap; gap: 0.65rem 1.4rem; margin-block: 1.2rem 2rem; }
-  .course-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    margin-block: 0 2rem;
-    padding: 0;
-    list-style: none;
-  }
-
-  .course-tags li {
-    padding: 0.25rem 0.65rem;
-    border-radius: 999px;
-    color: var(--at-text-secondary);
-    background: var(--at-bg-alt);
-    font-size: 0.9rem;
+  .home-hero { grid-column: full; position: relative; isolation: isolate; display: flex; align-items: flex-end; justify-content: center; min-height: 38rem; height: calc(100dvh - var(--at-nav-height)); box-sizing: border-box; background: #353e48; color: #fffaf0; padding: 2rem 1.2rem 3.5rem; text-align: center; }
+  .home-hero > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 43%; z-index: -2; }
+  .home-hero::before { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, #111820f5 0%, #111820c9 24%, #11182020 76%); z-index: -1; }
+  .hero-copy { max-width: 52rem; }
+  .hero-course { font-size: .8rem; margin: 0 0 1rem; color: #f1d5a0; }
+  .home-hero h1 { color: inherit; font-family: var(--at-font-body); font-size: clamp(2.5rem,5vw,4.7rem); line-height: 1.05; letter-spacing: -.045em; margin: 0; font-weight: 600; }
+  .hero-description { margin: 1.1rem auto 1.4rem; font-size: 1.12rem; max-width: 34rem; }
+  .hero-actions { display: flex; justify-content: center; gap: .75rem; }
+  .hero-actions a { color: #fffaf0; border-color: #e1b761; background: #78500e; }
+  .hero-actions .at-button--outline { background: #18212ad9; }
+  .hero-actions a:hover { background: #936619; }
+  .hero-weeks { display: inline-block; color: #f1d5a0; padding: .75rem; margin-top: .45rem; font-size: .9rem; }
+  :global(body:has(.home-hero)::after) { display: none; }
+  :global(.at-main.home-main) { grid-column: full; color-scheme: light; background: var(--at-bg); color: var(--at-text); display: block; padding: 2.5rem max(1rem,calc((100vw - 76rem)/2)) 4rem; }
+  :global(.at-main.home-main::before) { display: none; }
+  :global(.home-main > section), :global(.home-main > .record) { margin-block: 0 3rem; }
+  @media(max-width:700px) {
+    .home-hero { min-height: 36rem; padding: 1.5rem 1rem 1.7rem; }
+    .home-hero > img { object-position: 66% 50%; }
+    .hero-course { font-size: .68rem; }
+    .hero-description { font-size: 1rem; }
+    .hero-actions { flex-direction: column; }
+    .hero-actions a { width: 100%; }
+    .hero-copy { width: min(100%,26rem); }
   }
 </style>

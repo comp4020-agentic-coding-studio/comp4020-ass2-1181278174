@@ -1,0 +1,30 @@
+---
+import hero from '../assets/images/hero-home.avif';
+import { hillStops, hillSections } from '../data/hill-stops';
+import { withBase } from 'astro-theme-university/url';
+---
+<section id="hill" class="hill-walk" aria-labelledby="hill-title">
+  <h2 id="hill-title">Walk the hill</h2>
+  <p>Twelve weeks, one evening: each stop is where that week's case happens.</p>
+  <div class="hill-picture">
+    <img src={hero.src} width={hero.width} height={hero.height} loading="lazy" alt="Slop Hill at dusk: the kitchen at the foot, two towers on the slope, and Home 07 at the summit." />
+  </div>
+  <h3 id="hill-list-title">The hill as a list</h3>
+  <ol class="hill-list" aria-labelledby="hill-list-title">
+    {hillStops.map(stop => <li data-stage={stop.stage}><a href={withBase(stop.href)}><span class="hill-week">W{stop.week}</span> {stop.title}</a></li>)}
+    {hillSections.map(stop => <li class="hill-section"><a href={withBase(stop.href)}>{stop.section} →</a></li>)}
+  </ol>
+</section>
+<style>
+  .hill-walk { scroll-margin-top: calc(var(--at-nav-height) + 1rem); }
+  .hill-walk h2 { margin-bottom: .4rem; }
+  .hill-picture { position: relative; background: #353e48; border-radius: .3rem; overflow: hidden; }
+  .hill-picture img { display: block; width: 100%; height: auto; }
+  .hill-list { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: .5rem 1.3rem; list-style: none; padding: 0; }
+  .hill-list li { margin: 0; }
+  .hill-list a { display: block; padding: .55rem .7rem; border-left: 3px solid var(--stage-color,var(--at-border)); color: var(--stage-color,var(--at-text)); text-decoration: none; font-size: .9rem; }
+  .hill-list a:hover { text-decoration: underline; background: var(--at-bg-alt); }
+  .hill-week { font-weight: 700; }
+  .hill-section a { border-top: 1px solid var(--at-border); margin-top: .4rem; }
+  @media(max-width:700px) { .hill-list { grid-template-columns: 1fr; gap: .15rem; } .hill-picture img { aspect-ratio: 4 / 3; object-fit: cover; object-position: 65% 50%; } }
+</style>
