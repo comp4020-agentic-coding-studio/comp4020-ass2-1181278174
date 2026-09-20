@@ -38,7 +38,7 @@ export function mountWorkspace(root: HTMLElement) {
     let config = structuredClone(run.input), draft = false, request = 0, active: ReturnType<typeof startRun> | undefined, scene: ReturnType<typeof import('./scene.ts')['mountScene']> | undefined, sceneLoading = false, sceneGeneration = 0;
     let storage: StorageData = { version: 2, weeks: {}, notes: {}, archive: [] }, tableId = '', page = 0, filter = '', selected: Selection | undefined, traceIndex = -1, time = 0, prefer2D = false, playing = false, raf = 0, lastFrame = 0;
     let network=!!run.scene?.focusNodes, allRoutes=false, focusedOrder=run.scene?.routes.find(r=>r.order)?.order;
-    let issues=replayIssues(run);
+    let issues=replayIssues(run), sceneSelection:{path:string[];blocked:string[]}|undefined;
     const content = root.querySelector<HTMLElement>('[data-workspace-content]')!;
     const q = <T extends HTMLElement = HTMLElement>(selector: string) => content.querySelector<T>(selector)!;
     try {
@@ -61,7 +61,7 @@ export function mountWorkspace(root: HTMLElement) {
         b.textContent = 'Play replay'; };
     const disposeScene = () => { sceneGeneration++; sceneLoading = false; scene?.dispose(); scene = undefined; };
     function draw() { const opened = new Set([...content.querySelectorAll('details[open]')].map(d => d.querySelector('summary')?.textContent)); stopPlayback(); disposeScene(); content.innerHTML = workspaceHtml({ ...run, input: config }, semester, compact, guided); content.querySelectorAll('details').forEach(d => { if (opened.has(d.querySelector('summary')?.textContent))
-        d.open = true; }); tableId = (run.tables.find(t => t.primary) ?? run.tables[0]).id; page = 0; filter = ''; selected = undefined; traceIndex = -1; time = 0; for (const el of content.querySelectorAll<HTMLTextAreaElement>('[data-note]'))
+        d.open = true; }); tableId = (run.tables.find(t => t.primary) ?? run.tables[0]).id; page = 0; filter = ''; selected = undefined; sceneSelection=undefined; traceIndex = -1; time = 0; for (const el of content.querySelectorAll<HTMLTextAreaElement>('[data-note]'))
         el.value = storage.notes[`${config.week}:${el.dataset.note}`] ?? ''; issues=replayIssues(run); network=!!run.scene?.focusNodes; allRoutes=false; focusedOrder=run.scene?.routes.find(r=>r.order)?.order; recordUi(); updateLayers(); updateTime(0); if (wants3D())
         void enable3D(); }
     function wants3D() { return !prefer2D && !!run.scene && [1, 4, 9, 10, 12].includes(config.week) && matchMedia('(min-width: 900px)').matches && !matchMedia('(prefers-reduced-motion: reduce)').matches; }
@@ -92,7 +92,9 @@ export function mountWorkspace(root: HTMLElement) {
             q('[data-action="map-3d"]').setAttribute('aria-pressed', 'true');
             q('[data-action="map-2d"]').setAttribute('aria-pressed', 'false');
             updateLayers(); scene.time(time);
-            q<HTMLButtonElement>('[data-action="follow"]').disabled=matchMedia('(prefers-reduced-motion: reduce)').matches || !run.scene.events.length;
+            if(sceneSelection)scene.select(sceneSelection.path,sceneSelection.blocked);
+            const follow=q<HTMLButtonElement>('[data-action="follow"]');
+            if(follow)follow.disabled=matchMedia('(prefers-reduced-motion: reduce)').matches || !run.scene.events.length;
         }
         catch (e) {
             host.hidden = true;
@@ -288,6 +290,7 @@ export function mountWorkspace(root: HTMLElement) {
             content.querySelector('[data-map-selection]')?.setAttribute('points', pts);
             const blocked = run.input.week === 1 && selection.kind === 'route' ? String(row?.values[2] ?? '').split(',').map(s => s.trim()) : [];
             content.querySelectorAll<SVGElement>('[data-building]').forEach(el => el.setAttribute('fill', blocked.includes(el.dataset.building!) ? '#df7161' : '#adb3a2'));
+            sceneSelection={path,blocked};
             scene?.select(path, blocked);
         }
     }

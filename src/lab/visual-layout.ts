@@ -1,3 +1,4 @@
+import type { SceneData } from './model';
 import type { MapData } from '../data/schema';
 import { terrainHeight } from './terrain';
 
@@ -33,4 +34,16 @@ export function visualLayout(map: MapData) {
     if (seen.has(key)) return false; seen.add(key); return true;
   }).map(e => ({ id:`street-${e.id}`, points:e.polyline, width:12 }));
   return { houses, roads };
+}
+
+/** The W1 drawing is a local crop of the unchanged canonical map. */
+export function displayArea(data:SceneData) {
+  const points=data.focusNodes?.map(id=>data.map.nodes.find(n=>n.id===id)!).filter(Boolean);
+  return points?.length ? {left:Math.max(0,Math.min(...points.map(n=>n.x))-80),right:Math.min(data.map.world.width,Math.max(...points.map(n=>n.x))+80),bottom:Math.max(0,Math.min(...points.map(n=>n.y))-80),top:Math.min(data.map.world.height,Math.max(...points.map(n=>n.y))+80)} : {left:0,right:data.map.world.width,bottom:0,top:data.map.world.height};
+}
+export function sceneScenery(data:SceneData) {
+  const area=displayArea(data),layout=visualLayout(data.map),focus=data.focusNodes?new Set(data.focusNodes):undefined;
+  const visible=(x:number,y:number,w:number,d:number)=>x+w>=area.left&&x<=area.right&&y+d>=area.bottom&&y<=area.top;
+  const localEdges=new Set(data.map.edges.filter(e=>!focus||focus.has(e.from)&&focus.has(e.to)).map(e=>'street-'+e.id));
+  return {buildings:data.map.buildings.filter(b=>visible(b.x,b.y,b.w,b.d)),houses:layout.houses.filter(b=>visible(b.x-b.w/2,b.y-b.d/2,b.w,b.d)),roads:layout.roads.filter(r=>localEdges.has(r.id))};
 }

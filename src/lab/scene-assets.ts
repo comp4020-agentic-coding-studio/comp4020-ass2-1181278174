@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import type { SceneData } from './model';
-import { houseModels, toScene, visualLayout } from './visual-layout';
+import { houseModels, toScene, sceneScenery } from './visual-layout';
 import { terrainHeight } from './terrain';
 import { routePoints } from './replay';
 
@@ -25,8 +25,9 @@ export async function loadAssets(data: SceneData) {
             bucket.matrices.push(transform.clone().multiply(mesh.matrixWorld)); buckets.set(key, bucket);
         });
     }
-    data.map.buildings.forEach((b, i) => { const x = b.x + b.w / 2, y = b.y + b.d / 2; instance(b.kind === 'kitchen' || b.kind === 'tower' ? b.kind : houseModels[i % 4], x, y, terrainHeight(x, y), b.w, b.h * 3, b.d); });
-    visualLayout(data.map).houses.forEach(b => instance(b.model, b.x, b.y, b.z, b.w, b.h * 3, b.d));
+    const layout=sceneScenery(data);
+    layout.buildings.forEach(b => { const x = b.x + b.w / 2, y = b.y + b.d / 2, i=data.map.buildings.indexOf(b); instance(b.kind === 'kitchen' || b.kind === 'tower' ? b.kind : houseModels[i % 4], x, y, terrainHeight(x, y), b.w, b.h * 3, b.d); });
+    layout.houses.forEach(b => instance(b.model, b.x, b.y, b.z, b.w, b.h * 3, b.d));
     const scenery = new THREE.Group();
     for (const bucket of buckets.values()) { const m = new THREE.InstancedMesh(bucket.geometry, bucket.material, bucket.matrices.length); bucket.matrices.forEach((matrix, i) => m.setMatrixAt(i, matrix)); scenery.add(m); }
     const clone = (name: string) => { const obj = prototypes.get(name)!.clone(true); obj.position.set(0, 0, 0); return obj; };
@@ -35,7 +36,7 @@ export async function loadAssets(data: SceneData) {
 
 export function roadSurface(data: SceneData) {
     const vertices: number[] = [];
-    for (const road of visualLayout(data.map).roads) for (let i = 1; i < road.points.length; i++) {
+    for (const road of sceneScenery(data).roads) for (let i = 1; i < road.points.length; i++) {
         const a = road.points[i-1], b = road.points[i], dx = b[0]-a[0], dy = b[1]-a[1], length = Math.hypot(dx,dy), steps = Math.ceil(length/12);
         const nx = -dy / length * road.width/2, ny = dx / length * road.width/2;
         const point = (t: number, side: number) => { const x=a[0]+dx*t+nx*side, y=a[1]+dy*t+ny*side; const p=toScene(x,y,terrainHeight(x,y)); p[1]+=2; return p; };
@@ -47,7 +48,9 @@ export function roadSurface(data: SceneData) {
 
 export function flightNetwork(data: SceneData) {
     const graph=new THREE.Group();
+    const focus=data.focusNodes?new Set(data.focusNodes):undefined;
     for(const edge of data.map.edges) {
+        if(focus&&(!focus.has(edge.from)||!focus.has(edge.to)))continue;
         const points=routePoints(data,[edge.from,edge.to]).map(p=>new THREE.Vector3(...toScene(p.x,p.y,p.z+3)));
         const line=new THREE.Line(new THREE.BufferGeometry().setFromPoints(points),new THREE.LineBasicMaterial({color:edge.resource?'#c0780b':'#879c85'}));
         line.userData.edge=edge.id;graph.add(line);

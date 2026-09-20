@@ -27,6 +27,15 @@ follow an explicitly labelled visual subset of street connections at terrain hei
 they neither create nor certify a flight connection. Flight routes and optional graph
 lines use separate layers. W4 identifies ridge/contour approaches, outbound and return.
 
+W1 crops this same map to its ten-node teaching block. Its camera fits the whole block or
+the selected connection and obstacle at either viewport size; a top view exposes the
+footprint intersection. Selected connections use a screen-space stroke and ground
+projection, because W1 tests building footprints, not roof clearance. Endpoint labels and
+the blocked building stay visible when models finish loading or the view changes between
+2D and 3D. The procedural fallback supports the same inspection. W1 has no flight replay
+or search trace, so those controls are omitted. Canonical addresses and building models
+keep their identities across the local crop and the full hill.
+
 ## Replay
 
 The clock reads actual movements and task intervals. Ground states are idle/not ready,
