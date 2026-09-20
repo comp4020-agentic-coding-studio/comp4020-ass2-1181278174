@@ -42,6 +42,8 @@ const PAGES = [
   { name: "tutorial-w03", path: "/sessions/w03-a-star/" },
   // the same page with the reopen switch on, set through the deep link: proves the browser recomputed
   { name: "tutorial-w03-reopened", path: "/sessions/w03-a-star/?wb=" + encodeURIComponent('{"graph":"four","heuristic":"example","reopen":true,"shown":-1}') },
+  { name: "tutorial-w04", path: "/sessions/w04-back-with-battery/" },
+  { name: "tutorial-w04-wrong", path: "/sessions/w04-back-with-battery/?wb=" + encodeURIComponent('{"drone":"L","fastestOnly":true}') },
   { name: "tutorial-w09", path: "/sessions/w09-same-place/" },
   { name: "assignment-2", path: "/assessments/assignment-2/" },
   { name: "people", path: "/people/" },

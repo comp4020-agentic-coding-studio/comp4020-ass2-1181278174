@@ -42,6 +42,9 @@ export interface TaskPlan {
   energyUsed?: number;
   energyLeft?: number;
   legs: Leg[];
+  /** Non-dominated (time, energy) arrivals at the customer on the outbound leg. */
+  outAtGoal: { time: number; energy: number }[];
+  pruned: { dominated: number; overBudget: number; notFastest: number };
 }
 
 export interface TaskInput {
@@ -51,15 +54,23 @@ export interface TaskInput {
   order: Order;
   /** Tick when loading may begin (the drone is at the kitchen, charged). */
   loadFrom: number;
+  /** "fastest" is the wrong single-label version the week-4 tutorial runs first. */
+  keepOnly?: "pareto" | "fastest";
 }
 
-export function planTask({ map, rules, type, order, loadFrom }: TaskInput): TaskPlan {
+export function planTask({ map, rules, type, order, loadFrom, keepOnly }: TaskInput): TaskPlan {
   const budget = Math.floor(type.batteryJ * (1 - rules.reserveFraction));
-  const base: TaskPlan = { status: "none-in-domain", order: order.id, drone: type.id, budget, candidates: [], legs: [] };
+  const base: TaskPlan = { status: "none-in-domain", order: order.id, drone: type.id, budget, candidates: [], legs: [], outAtGoal: [], pruned: { dominated: 0, overBudget: 0, notFastest: 0 } };
   if (order.weight > type.payloadKg) return { ...base, status: "infeasible-payload" };
 
-  const outSearch = labelSearch(fromMapTimeEnergy(map, type, order.weight), map.kitchen, order.node);
-  const backSearch = labelSearch(fromMapTimeEnergy(map, type, 0), order.node, map.kitchen);
+  const outSearch = labelSearch(fromMapTimeEnergy(map, type, order.weight), map.kitchen, order.node, { keepOnly });
+  const backSearch = labelSearch(fromMapTimeEnergy(map, type, 0), order.node, map.kitchen, { keepOnly });
+  base.outAtGoal = outSearch.all.map((l) => ({ time: l.time, energy: l.energy }));
+  base.pruned = {
+    dominated: outSearch.pruned.dominated + backSearch.pruned.dominated,
+    overBudget: outSearch.pruned.overBudget + backSearch.pruned.overBudget,
+    notFastest: outSearch.pruned.notFastest + backSearch.pruned.notFastest,
+  };
   if (outSearch.status === "budget" || backSearch.status === "budget") return { ...base, status: "budget" };
   const service = { time: rules.serviceTicks, energy: hoverEnergy(type, rules.serviceTicks) };
 
