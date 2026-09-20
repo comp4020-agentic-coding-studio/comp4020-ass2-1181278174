@@ -24,6 +24,9 @@ export function renderControls(def: CaseDef<any>, state: unknown, week: number, 
   return def
     .controls(state, week)
     .map((c) => {
+      if (c.kind === "code") {
+        return `<details class="wb-code" open><summary>Edit as code</summary><label class="wb-control"><span>${c.label}</span><textarea data-code-for="${c.id}" name="${id}-${c.id}" rows="4" spellcheck="false">${(c.value ?? "").replace(/[&<>]/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[ch]!)}</textarea></label> <button type="button" class="wb-control" data-control="${c.id}" data-code-from="${c.id}">Run this function</button></details>`;
+      }
       if (c.kind === "radio") {
         const opts = (c.options ?? []).map((o) => `<label class="wb-radio"><input type="radio" name="${id}-${c.id}" data-control="${c.id}" value="${o.value}"${o.value === c.value ? " checked" : ""}> ${o.label}</label>`).join("");
         return `<fieldset class="wb-control wb-radios${c.primary ? " wb-primary-group" : ""}"><legend>${c.label}</legend>${opts}</fieldset>`;

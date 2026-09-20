@@ -11,7 +11,7 @@ export interface ControlOption {
 export interface Control {
   id: string;
   label: string;
-  kind: "select" | "button" | "radio";
+  kind: "select" | "button" | "radio" | "code";
   options?: ControlOption[];
   value?: string;
   /** The one control the page leads with. */

@@ -64,7 +64,11 @@ const id = `wb-${key ?? `w${week}`}`;
 
     controls.addEventListener("click", (ev) => {
       const b = (ev.target as HTMLElement).closest<HTMLElement>("button[data-control]");
-      if (b) update({ id: b.dataset.control! }, b.dataset.control);
+      if (!b) return;
+      if (b.dataset.codeFrom) {
+        const ta = controls.querySelector<HTMLTextAreaElement>(`textarea[data-code-for="${b.dataset.codeFrom}"]`);
+        update({ id: b.dataset.control!, value: ta?.value ?? "" }, b.dataset.control);
+      } else update({ id: b.dataset.control! }, b.dataset.control);
     }, { signal });
     controls.addEventListener("change", (ev) => {
       const s = (ev.target as HTMLElement).closest<HTMLSelectElement | HTMLInputElement>("select[data-control], input[data-control]");
@@ -110,6 +114,9 @@ const id = `wb-${key ?? `w${week}`}`;
   .wb-table tr.wb-good td { background: rgba(60, 140, 60, 0.12); }
   .wb-status { font-size: 0.85rem; color: var(--at-text-secondary, #6b6154); margin-block: 0.5rem 0; }
   .wb-lab { margin-block: 0.5rem 0; font-size: 0.95rem; }
+  .wb-code { flex-basis: 100%; }
+  .wb-code textarea { display: block; width: 100%; max-width: 40rem; font-family: var(--font-roboto-mono, monospace); font-size: 0.9rem; padding: 0.4rem; margin-block: 0.3rem; }
+  .wb-error { color: #b93c1e; }
   .minimap { display: block; width: 100%; max-height: 380px; background: var(--at-bg, #fffdf8); border: 1px solid var(--at-border, #d9d2c3); border-radius: 0.35rem; }
   .minimap-small { max-height: 220px; }
   .mm-bg { fill: transparent; }

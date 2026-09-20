@@ -41,6 +41,7 @@ const PAGES = [
   { name: "lecture-w04", path: "/lectures/w04-back-with-battery/" },
   { name: "tutorial-w01", path: "/sessions/w01-one-order/" },
   { name: "tutorial-w02", path: "/sessions/w02-dijkstra/" },
+  { name: "tutorial-w02-composed-x2", path: "/sessions/w02-dijkstra/?wb-search=" + encodeURIComponent('{"graph":"map","heuristic":"composed","reopen":true,"shown":-1,"compose":{"dist":"3d","factor":"2"}}') },
   { name: "tutorial-w03", path: "/sessions/w03-a-star/" },
   // the same page with the reopen switch on, set through the deep link: proves the browser recomputed
   { name: "tutorial-w03-reopened", path: "/sessions/w03-a-star/?wb-search=" + encodeURIComponent('{"graph":"four","heuristic":"example","reopen":true,"shown":-1}') },

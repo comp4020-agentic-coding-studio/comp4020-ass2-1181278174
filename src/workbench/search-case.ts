@@ -20,10 +20,43 @@ const L = fleet.types.find((t) => t.id === "L")!;
 
 export interface SearchState {
   graph: "four" | "map";
-  heuristic: "zero" | "example" | "straight";
+  heuristic: "zero" | "example" | "straight" | "composed" | "custom";
   reopen: boolean;
   /** Pops shown so far; -1 means run to the end. */
   shown: number;
+  /** The rule composer: h = factor × distance ÷ speed. */
+  compose?: { dist: "3d" | "2d"; factor: "0.5" | "1" | "2" };
+  /** The escape hatch: the body of a function (node, goal, dist2d, dist3d, speed) → ticks. */
+  custom?: string;
+}
+
+const DEFAULT_CUSTOM = "// a lower bound on the ticks from node to goal\nreturn Math.floor(dist3d(node, goal) / speed);";
+const nodeOf = new Map(map.nodes.map((n) => [n.id, n]));
+const dist2d = (a: string, b: string) => { const p = nodeOf.get(a)!, q = nodeOf.get(b)!; return Math.hypot(p.x - q.x, p.y - q.y); };
+const dist3d = (a: string, b: string) => { const p = nodeOf.get(a)!, q = nodeOf.get(b)!; return Math.hypot(p.x - q.x, p.y - q.y, p.z - q.z); };
+
+function composedH(c: NonNullable<SearchState["compose"]>, goal: string): (id: string) => number {
+  const f = Number(c.factor);
+  return (id) => Math.floor((f * (c.dist === "3d" ? dist3d(id, goal) : dist2d(id, goal))) / L.speed);
+}
+
+/** Compiles the escape-hatch body. Runs in the page, so a body that never returns would hang
+ *  it; the call budget catches a function that is merely expensive. */
+function customH(body: string, goal: string): { h: (id: string) => number; error?: string } {
+  let calls = 0;
+  try {
+    const fn = new Function("node", "goal", "dist2d", "dist3d", "speed", body) as (n: string, g: string, d2: typeof dist2d, d3: typeof dist3d, s: number) => unknown;
+    const h = (id: string) => {
+      if (++calls > 200000) throw new Error("call budget of 200 000 exceeded");
+      const v = Number(fn(id, goal, dist2d, dist3d, L.speed));
+      if (!Number.isFinite(v)) throw new Error(`h(${id}) is not a finite number`);
+      return v;
+    };
+    h(goal);
+    return { h };
+  } catch (e) {
+    return { h: () => 0, error: e instanceof Error ? e.message : String(e) };
+  }
 }
 
 const FOUR = [
@@ -36,12 +69,17 @@ const FOUR_H: Record<string, number> = { S: 0, A: 0, B: 3, G: 0 };
 const FOUR_POS: Record<string, [number, number]> = { S: [50, 100], B: [180, 40], A: [180, 160], G: [310, 100] };
 const MAP_GOAL = orders[2].node; // #03, the house nearest the kitchen
 
-function problem(state: SearchState): { graph: WeightedGraph; start: string; goal: string; h: (id: string) => number } {
+function problem(state: SearchState): { graph: WeightedGraph; start: string; goal: string; h: (id: string) => number; error?: string } {
   if (state.graph === "four") {
     return { graph: fromEdges(FOUR), start: "S", goal: "G", h: state.heuristic === "example" ? (id) => FOUR_H[id] ?? 0 : () => 0 };
   }
   const graph = fromMap(map, L, "time");
-  return { graph, start: map.kitchen, goal: MAP_GOAL, h: state.heuristic === "straight" ? straightLineTicks(graph, L, MAP_GOAL) : () => 0 };
+  let h: (id: string) => number = () => 0;
+  let error: string | undefined;
+  if (state.heuristic === "straight") h = straightLineTicks(graph, L, MAP_GOAL);
+  else if (state.heuristic === "composed") h = composedH(state.compose ?? { dist: "3d", factor: "1" }, MAP_GOAL);
+  else if (state.heuristic === "custom") ({ h, error } = customH(state.custom ?? DEFAULT_CUSTOM, MAP_GOAL));
+  return { graph, start: map.kitchen, goal: MAP_GOAL, h, error };
 }
 
 function run(state: SearchState): { result: SearchResult | null; steps: Step[]; finished: boolean; searcher: Searcher } {
@@ -92,7 +130,18 @@ export const searchCase: CaseDef<SearchState> = {
       controls.push({ id: "reopen", label: `Reopen closed nodes: ${state.reopen ? "on" : "off"} — switch ${state.reopen ? "off" : "on"}`, kind: "button", primary: week === 3 });
       controls.push({ id: "heuristic", label: "Heuristic", kind: "select", value: state.heuristic, options: [{ value: "example", label: "the example h (admissible, not consistent)" }, { value: "zero", label: "h = 0 (Dijkstra)" }] });
     } else {
-      controls.push({ id: "heuristic", label: "Heuristic", kind: "select", value: state.heuristic, options: [{ value: "zero", label: "h = 0 (Dijkstra)" }, { value: "straight", label: "straight line ÷ speed (A*)" }] });
+      controls.push({ id: "heuristic", label: "Heuristic", kind: "select", value: state.heuristic, options: [
+        { value: "zero", label: "h = 0 (Dijkstra)" },
+        { value: "straight", label: "straight line ÷ speed (A*)" },
+        { value: "composed", label: "compose one: factor × distance ÷ speed" },
+        { value: "custom", label: "write one as code" },
+      ] });
+      if (state.heuristic === "composed") {
+        const c = state.compose ?? { dist: "3d", factor: "1" };
+        controls.push({ id: "dist", label: "Distance", kind: "select", value: c.dist, options: [{ value: "3d", label: "straight line in 3D" }, { value: "2d", label: "straight line on the map (2D)" }] });
+        controls.push({ id: "factor", label: "Factor", kind: "select", value: c.factor, options: [{ value: "0.5", label: "× 0.5" }, { value: "1", label: "× 1" }, { value: "2", label: "× 2" }] });
+      }
+      if (state.heuristic === "custom") controls.push({ id: "code", label: "h(node, goal) body — dist2d, dist3d and speed are in scope; runs in this page", kind: "code", value: state.custom ?? DEFAULT_CUSTOM });
     }
     controls.push({ id: "step", label: state.shown < 0 ? "Step through from the start" : "Next expansion", kind: "button", primary: week === 2 });
     if (state.shown >= 0) controls.push({ id: "run", label: "Run to the end", kind: "button" });
@@ -102,6 +151,9 @@ export const searchCase: CaseDef<SearchState> = {
     switch (action.id) {
       case "reopen": return { ...state, reopen: !state.reopen, shown: -1 };
       case "heuristic": return { ...state, heuristic: (action.value as SearchState["heuristic"]) ?? state.heuristic, shown: -1 };
+      case "dist": return { ...state, compose: { ...(state.compose ?? { dist: "3d", factor: "1" }), dist: action.value === "2d" ? "2d" : "3d" }, shown: -1 };
+      case "factor": return { ...state, compose: { ...(state.compose ?? { dist: "3d", factor: "1" }), factor: (action.value as "0.5" | "1" | "2") ?? "1" }, shown: -1 };
+      case "code": return { ...state, heuristic: "custom", custom: action.value ?? DEFAULT_CUSTOM, shown: -1 };
       case "step": return { ...state, shown: state.shown < 0 ? 1 : state.shown + 1 };
       case "run": return { ...state, shown: -1 };
       default: return state;
@@ -110,9 +162,19 @@ export const searchCase: CaseDef<SearchState> = {
   render: (state) => {
     const t0 = Date.now();
     const { result, steps, finished } = run(state);
-    const { graph, goal, h } = problem(state);
+    const { graph, goal, h, error } = problem(state);
     const last = steps[steps.length - 1];
     const parts: string[] = [];
+
+    if (state.graph === "map" && (state.heuristic === "composed" || state.heuristic === "custom")) {
+      if (error) parts.push(`<p class="wb-summary wb-error"><strong>Your function did not run:</strong> ${esc(error)}. h = 0 was used instead.</p>`);
+      const adm = admissible(graph, h, goal), con = consistent(graph, h);
+      const code = state.heuristic === "composed"
+        ? `h = (node) => Math.floor(${state.compose?.factor ?? "1"} * dist${state.compose?.dist === "2d" ? "2d" : "3d"}(node, goal) / speed)`
+        : "your function";
+      const zero = new Searcher(graph, map.kitchen, goal).run();
+      parts.push(`<p class="wb-summary"><code>${esc(code)}</code> — on this graph it is <strong>${adm.ok ? "admissible" : `not admissible: h(${adm.violations[0].node}) = ${adm.violations[0].h} but the true cost to go is ${adm.violations[0].exact}`}</strong> and <strong>${con.ok ? "consistent" : `not consistent: at ${con.violations[0].from} → ${con.violations[0].to}, h = ${con.violations[0].h} but cost + h = ${con.violations[0].cost + con.violations[0].hTo}`}</strong>. Expansions: ${result?.expansions ?? steps.length} with it, ${zero.expansions} with h = 0${result && result.status === "found" ? `; cost found ${result.cost}${result.cost !== zero.cost ? ` — <strong>Dijkstra finds ${zero.cost}: the answer is wrong</strong>` : ", the same as Dijkstra"}` : ""}.</p>`);
+    }
 
     // the picture
     if (state.graph === "four") parts.push(fourSvg(steps, result));
