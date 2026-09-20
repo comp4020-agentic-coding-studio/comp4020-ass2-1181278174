@@ -4,10 +4,10 @@
   "type": "module",
   "scripts": {
     "prepare": "git rev-parse --git-dir >/dev/null 2>&1 && git config core.hooksPath .githooks || true",
-    "dev": "astro dev",
-    "build": "astro build",
+    "dev": "node scripts/build-lab.mjs && astro dev",
+    "build": "node scripts/build-lab.mjs && astro build",
     "preview": "astro preview",
-    "typecheck": "astro check",
+    "typecheck": "node scripts/build-lab.mjs && astro check",
     "check": "pnpm typecheck && pnpm test",
     "check:evidence": "node scripts/check-evidence.ts",
     "test": "pnpm build && vitest run spec",
@@ -25,11 +25,15 @@
     "astro-theme-slop": "github:benswift/astro-theme-slop#v0.1.0",
     "astro-theme-university": "git+https://github.com/ANUcybernetics/astro-theme-university.git#v0.13.2",
     "astromotion": "git+https://github.com/ANUcybernetics/astromotion.git#v0.23.0",
-    "sharp": "^0.35.3"
+    "sharp": "^0.35.3",
+    "three": "0.186.0"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.9",
     "@types/node": "^24.0.0",
+    "@types/three": "0.186.0",
+    "esbuild": "0.28.2",
+    "fflate": "0.8.3",
     "lightningcss": "^1.32.0",
     "pagefind": "^1.5.2",
     "typescript": "^6.0.3",

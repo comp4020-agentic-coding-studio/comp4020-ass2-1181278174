@@ -29,8 +29,7 @@ In the two-hour tutorial, work through the small example, implement the key chan
 your own planner, and finish with tests and an explanation.
 
 Compare three methods: assignment on independent costs; fixed assignment with route
-coordination only; assignment with cost feedback allowed. Trace at least one order from
-an assignment change to a changed wait, energy and lateness.
+coordination only; assignment with cost feedback allowed. Select bounded feedback and Run: the Lab evaluates fresh swaps and migrations up to your candidate budget. Inspect accepted and rejected candidates, then select a changed order to trace its preceding task, charging and corridor waits. A budget stop reports the best feasible plan found; it does not prove local optimality.
 
 ## Afterwards
 

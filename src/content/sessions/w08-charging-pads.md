@@ -26,9 +26,7 @@ Use the experiment steps above to record a prediction and a controlled compariso
 In the two-hour tutorial, work through the small example, implement the key change in
 your own planner, and finish with tests and an explanation.
 
-Schedule a two-drone, one-pad example by hand, then run the five-drone, two-pad case.
-Apply the same migration move with shared charging switched off and on, and locate the
-source of the difference.
+Select the two-drone, one-pad case and calculate its queue by hand. Then use the main ten-order case (#01–#09 and #20) with two pads. Keep a baseline, move an order on the fleet board, run again and select the delayed order to read its charging dependency. Compare with your saved W7 result to see what adding shared charging changes; this is a model comparison. The full evening is an extension.
 
 ## Afterwards
 

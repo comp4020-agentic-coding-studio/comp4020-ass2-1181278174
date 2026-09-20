@@ -43,10 +43,12 @@ const { Content } = await render(assessment);
     <p><a href={withBase(`/lab/#lab-w${assessment.id === "assignment-1" ? 6 : 11}`)}>Open the relevant Lab →</a></p>
     <ul>
       <li><a href={withBase("/practice/scenario.json")} download>Download canonical scenario (JSON)</a></li>
+      <li><a href={withBase("/practice/lab-practice.zip")} download>Download runnable practice pack: functions, skeletons and tests</a></li>
+      <li><a href={withBase(`/practice/sample-a${assessment.id === "assignment-1" ? 1 : 2}.json`)} download>Download this assignment’s computed sample record</a></li>
       <li><a href={withBase("/practice/reference-output.json")} download>Download complete fleet reference output (JSON)</a></li>
       <li><a href={withBase("/practice/README.md")} download>Download practice and output guide</a></li>
     </ul>
-    <p>Save a baseline and export your notes from “Try it yourself” in the Lab. Submit your own code, checked output and analysis through the course submission process; this demonstration site does not receive submissions.</p>
+    <p>Use “My experiment record” in the Lab to save a baseline, explain a change and export the run. Import the sample record and press Run to recompute it. Submit your own code, checked output and analysis through the course submission process; this demonstration site does not receive submissions.</p>
   </aside>
   <Content />
   <SpecList spec={assessment.data.spec}>

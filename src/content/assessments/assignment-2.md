@@ -52,8 +52,7 @@ after the week 12 tutorial. It starts with assignment and completes coordination
    changed an assignment or an order. Attach the results under fixed conditions and a
    failure explanation.
 6. Design one new order — place, weight, promised time — that makes the reference method
-   late or infeasible. Run it in your own planner using the published scenario format, validate it, and explain which
-   assumption of the reference method it hits.
+   late or infeasible. Create it in the Lab’s scenario copy at an existing address, or in your own planner using the published scenario format. Recompute, validate and explain which assumption the result exposes. Keep the variant separate from the fixed twenty-order submission.
 
 ## What you submit
 

@@ -53,9 +53,11 @@ This site is static. Everything it computes runs in your browser, and everything
 page source. The reference plans on the site are labelled *reference plan, re-validated
 live*: the assignment was computed in advance; the evaluator reconstructs its tasks and the resource validator checks their intervals.
 
-The workbench check covers activity overlap, resource capacity and delivery accounting. Route, payload and energy calculations belong to the evaluator; the interval validator cannot independently verify arbitrary imported trajectories. The site does not import new orders or complete flight plans. Use your own program for those assignment experiments. Nothing on this site says "received" or
-"submitted", because no service behind it could make that true. Formal submission and
-marking happen through the assignment pages' stated process, on the fixed cases.
+The independent full-plan checker reconstructs directed edges, durations, payload, service, energy, reserve, drone availability, FCFS charging, corridor intervals and completion from the action record. Invalid or incomplete plans have no comparable formal objective. The Lab accepts versioned experiment inputs and local scenario copies; imported totals are discarded and Run recomputes them. A stored reference assignment is labelled and evaluated again under the selected scenario.
+
+Strategy functions run in a terminable worker with network access blocked. Custom functions have an eight-second limit; other runs stop after 45 seconds. Errors and cancellation keep the previous result visibly stale, with no successful fallback. Importing JavaScript source never executes it automatically. Local practice-pack code runs as your own Node program.
+
+The site has no submission service. Export a record for the assignment process; importing it into the Lab is an experiment, not a submission.
 
 Your own records stay in your browser unless you export them. Export before you clear
 your browser data; the site cannot recover them.
@@ -82,14 +84,9 @@ reason; extensions after the due date are given only for documented circumstance
 
 ## 5. Accessibility
 
-The controls use native buttons, lists and text fields and can be operated with a keyboard.
-Maps have text descriptions, route legends and direction arrows. The W4 height profile
-uses the canonical waypoint heights; the hill shading on the map is illustrative. Labels
-are laid out for the available width, and detailed tables scroll within their own area.
+Controls use native buttons, lists and text fields and work with a keyboard. Maps have named landmarks, route legends and an accessible evidence table. Search stepping is separate from flight playback. The W4 profile uses actual waypoint heights; the 3D view exaggerates height threefold to reveal the slope and labels real elevations in metres.
 
-Nothing autoplays. Search expands one step at a time when requested. Experiment notes
-can be saved locally and exported. The current release uses two-dimensional maps and
-height profiles; it has no orbit camera or animated flight playback.
+The shared 3D scene appears on home, W1, W4, W9, W10, W12 and Lab. It is loaded on request on a phone, with a 2D map and readable tables as the fallback. Named camera buttons support keyboard users. Nothing autoplays; reduced motion retains static selection and explicit replay controls. Leaving a page disposes of its scene and cancels its active computation.
 
 ## 6. Who to ask
 

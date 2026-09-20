@@ -28,7 +28,7 @@ In the two-hour tutorial, work through the small example, implement the key chan
 your own planner, and finish with tests and an explanation.
 
 Implement a swap improver that prints every accepted move with the objective before and
-after. Find where it stops, check the final neighbourhood item by item, then use the enumerator to measure the exact gap. On the canonical flight case the gap is zero. Use the lecture’s labelled symbolic example to demonstrate a local optimum that is not global. Tidy your A1 search and scheduling code.
+after. Find where it stops, check the final neighbourhood item by item, then use the enumerator to measure the exact gap. On the canonical flight case the gap is zero. Use the Lab’s editable six-job symbolic example to demonstrate a local optimum that is not global. Tidy your A1 search and scheduling code.
 
 ## Afterwards
 

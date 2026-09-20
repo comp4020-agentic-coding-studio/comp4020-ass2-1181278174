@@ -4,6 +4,7 @@ dist/
 
 # Astro's generated types and build cache
 .astro/
+.generated/
 
 # staging dir for the CI link check
 linkcheck/

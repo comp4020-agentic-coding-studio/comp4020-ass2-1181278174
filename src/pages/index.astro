@@ -7,7 +7,7 @@ import { courseMeta } from "../course-config";
 import { sessionLabels, siteConfig } from "../site-config";
 import CourseRoadmap from "../components/CourseRoadmap.astro";
 import { withBase } from "astro-theme-university/url";
-import Workbench from "../components/Workbench.astro";
+import LabWorkspace from "../components/LabWorkspace.astro";
 ---
 
 <ContentLayout
@@ -30,7 +30,7 @@ import Workbench from "../components/Workbench.astro";
   </nav>
   <h2>One decision to try now</h2>
   <p>Two drones want the same narrow corridor. Change the arrangement and watch the conflict, wait and arrival time change.</p>
-  <Workbench case="corridor" week={9} compact title="Who goes through the corridor first?" />
+  <LabWorkspace week={9} compact />
   <h2>What you will learn to build</h2>
   <p>Each stage extends the same planner. The tutorials connect a prediction, a worked example, a change to the algorithm and evidence you can explain.</p>
   <CourseRoadmap compact />
