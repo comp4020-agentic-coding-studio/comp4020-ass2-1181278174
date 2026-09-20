@@ -11,6 +11,7 @@ import { pathOf } from "../engine/labels.ts";
 import { planTask } from "../engine/task.ts";
 import type { CaseDef, Control } from "./case.ts";
 import { esc, kJ, table } from "./html.ts";
+import { routeText } from "./names.ts";
 import { minimap } from "./minimap.ts";
 
 const map = mapJson as MapData;
@@ -75,7 +76,7 @@ export const labelsCase: CaseDef<LabelsState> = {
       p.candidates.map((c, i) => ({
         n: i + 1, time: c.time, energy: kJ(c.energy),
         verdict: c.energy <= p.budget ? (c === p.chosen ? "✓ within budget — flown" : "✓ within budget") : "✗ over budget",
-        out: pathOf(c.out).join(" → "),
+        out: routeText(pathOf(c.out)),
       })),
       `Non-dominated round trips to ${order.id} for type ${type.id}${state.fastestOnly ? " (fastest-only version)" : ""}`,
       (r) => (String(r.verdict).startsWith("✗") ? "wb-bad" : String(r.verdict).includes("flown") ? "wb-good" : ""),

@@ -11,6 +11,7 @@ import { edgeTicks, fromMap } from "../engine/graph.ts";
 import { search } from "../engine/search.ts";
 import type { CaseDef, Control } from "./case.ts";
 import { esc, table } from "./html.ts";
+import { buildingName, placeName, routeText } from "./names.ts";
 import { minimap } from "./minimap.ts";
 
 const map = mapJson as MapData;
@@ -73,7 +74,7 @@ export const edgesCase: CaseDef<EdgesState> = {
   }),
   initial: () => ({ proposal: proposals.find((p) => blockedBy([[node(p.from).x, node(p.from).y], [node(p.to).x, node(p.to).y]], map.buildings).length > 0)?.id ?? proposals[0]?.id ?? "" }),
   controls: (state): Control[] => [
-    { id: "proposal", label: "Check this connection", kind: "select", primary: true, value: state.proposal, options: proposals.map((p) => ({ value: p.id, label: `${p.from} → ${p.to}` })) },
+    { id: "proposal", label: "Check this connection", kind: "select", primary: true, value: state.proposal, options: proposals.map((p) => ({ value: p.id, label: `${placeName(p.from)} → ${placeName(p.to)}` })) },
   ],
   apply: (state, action) => (action.id === "proposal" && action.value ? { proposal: action.value } : state),
   render: (state) => {
@@ -85,15 +86,15 @@ export const edgesCase: CaseDef<EdgesState> = {
     const line: [number, number][] = [[a.x, a.y], [b.x, b.y]];
     const blocked = blockedBy(line, map.buildings);
     parts.push(minimap(map, {
-      routes: [...routes.map((r, i) => ({ path: r.path, cls: i === 0 ? "route-chosen" : "route-found", label: r.name })), { path: [prop.from, prop.to], cls: blocked.length ? "route-fastest" : "route-proposal", label: `the connection checked: ${prop.from} → ${prop.to}` }],
+      routes: [...routes.map((r, i) => ({ path: r.path, cls: i === 0 ? "route-chosen" : "route-found", label: r.name })), { path: [prop.from, prop.to], cls: blocked.length ? "route-fastest" : "route-proposal", label: `the connection checked: ${placeName(prop.from)} → ${placeName(prop.to)}` }],
       orders: orders.filter((o) => o.node === goal || o.node === orders[4].node),
       box: BOX,
-      ariaLabel: `The kitchen's block: the three candidate routes to ${orders[2].id} and the straight connection ${prop.from} → ${prop.to} being checked.`,
+      ariaLabel: `The kitchen's block: the three candidate routes to ${orders[2].id} and the straight connection ${placeName(prop.from)} → ${placeName(prop.to)} being checked.`,
     }));
-    parts.push(`<p class="wb-summary"><strong>${esc(prop.from)} → ${esc(prop.to)}:</strong> ${blocked.length ? `not a legal edge — it passes through ${blocked.map((x) => x.id).join(" and ")}. Both endpoints are streets; the line between them is not.` : "no building in the way. It could be a street; it is not one on this map, so it is not an edge either."}</p>`);
+    parts.push(`<p class="wb-summary"><strong>${esc(placeName(prop.from))} → ${esc(placeName(prop.to))}:</strong> ${blocked.length ? `not a legal edge — it passes through ${blocked.map((x) => buildingName(x.id)).join(" and ")}. Both endpoints are street corners; the line between them is not a street.` : "no building in the way. It could be a street; it is not one on this map, so it is not an edge either."}</p>`);
     parts.push(table(
       [{ key: "name", label: "route" }, { key: "path", label: "streets" }, { key: "ticks", label: "time for L (s)", align: "right" }],
-      routes.map((r) => ({ name: r.name, path: r.path.join(" → "), ticks: r.ticks })),
+      routes.map((r) => ({ name: r.name, path: routeText(r.path), ticks: r.ticks })),
       `Three candidate routes from the kitchen to ${orders[2].id}, costed edge by edge`,
     ));
     const ms = Date.now() - t0;

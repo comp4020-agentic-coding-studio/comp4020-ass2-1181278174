@@ -11,6 +11,7 @@ import { fromEdges, fromMap, straightLineTicks, type WeightedGraph } from "../en
 import { admissible, consistent, Searcher, type SearchResult, type Step } from "../engine/search.ts";
 import type { CaseDef, Control } from "./case.ts";
 import { esc, table } from "./html.ts";
+import { placeName, routeText } from "./names.ts";
 import { minimap } from "./minimap.ts";
 
 const map = mapJson as MapData;
@@ -173,7 +174,7 @@ export const searchCase: CaseDef<SearchState> = {
         ? `h = (node) => Math.floor(${state.compose?.factor ?? "1"} * dist${state.compose?.dist === "2d" ? "2d" : "3d"}(node, goal) / speed)`
         : "your function";
       const zero = new Searcher(graph, map.kitchen, goal).run();
-      parts.push(`<p class="wb-summary"><code>${esc(code)}</code> — on this graph it is <strong>${adm.ok ? "admissible" : `not admissible: h(${adm.violations[0].node}) = ${adm.violations[0].h} but the true cost to go is ${adm.violations[0].exact}`}</strong> and <strong>${con.ok ? "consistent" : `not consistent: at ${con.violations[0].from} → ${con.violations[0].to}, h = ${con.violations[0].h} but cost + h = ${con.violations[0].cost + con.violations[0].hTo}`}</strong>. Expansions: ${result?.expansions ?? steps.length} with it, ${zero.expansions} with h = 0${result && result.status === "found" ? `; cost found ${result.cost}${result.cost !== zero.cost ? ` — <strong>Dijkstra finds ${zero.cost}: the answer is wrong</strong>` : ", the same as Dijkstra"}` : ""}.</p>`);
+      parts.push(`<p class="wb-summary"><code>${esc(code)}</code> — on this graph it is <strong>${adm.ok ? "admissible" : `not admissible: h(${placeName(adm.violations[0].node)}) = ${adm.violations[0].h} but the true cost to go is ${adm.violations[0].exact}`}</strong> and <strong>${con.ok ? "consistent" : `not consistent: at ${placeName(con.violations[0].from)} → ${placeName(con.violations[0].to)}, h = ${con.violations[0].h} but cost + h = ${con.violations[0].cost + con.violations[0].hTo}`}</strong>. Expansions: ${result?.expansions ?? steps.length} with it, ${zero.expansions} with h = 0${result && result.status === "found" ? `; cost found ${result.cost}${result.cost !== zero.cost ? ` — <strong>Dijkstra finds ${zero.cost}: the answer is wrong</strong>` : ", the same as Dijkstra"}` : ""}.</p>`);
     }
 
     // the picture
@@ -183,7 +184,7 @@ export const searchCase: CaseDef<SearchState> = {
     // the summary
     if (finished && result) {
       const line = result.status === "found"
-        ? `<strong>Found</strong>: cost ${result.cost}, path ${result.path!.join(" → ")}, ${result.expansions} expansions, ${result.queueOps} queue operations.`
+        ? `<strong>Found</strong>: cost ${result.cost}, path ${routeText(result.path!)}, ${result.expansions} expansions, ${result.queueOps} queue operations.`
         : `<strong>${result.status === "budget" ? "Stopped at the expansion budget" : "No solution"}</strong> after ${result.expansions} expansions.`;
       parts.push(`<p class="wb-summary">${line}</p>`);
       if (state.graph === "four") {
@@ -203,8 +204,8 @@ export const searchCase: CaseDef<SearchState> = {
       parts.push(table(
         [{ key: "n", label: "#", align: "right" }, { key: "popped", label: "popped" }, { key: "g", label: "g", align: "right" }, { key: "f", label: "f", align: "right" }, { key: "note", label: "what happened" }],
         steps.map((s) => ({
-          n: s.n, popped: s.popped, g: s.g, f: s.f,
-          note: s.stale ? "stale entry, skipped" : s.relaxed.length === 0 ? (s.popped === goal ? "goal popped: done" : "no neighbours") : s.relaxed.map((r) => `${r.to}: g ${r.newG}${r.improved ? (r.reopened ? " (reopened)" : r.oldG === undefined ? " (new)" : ` (was ${r.oldG})`) : r.skippedClosed ? ` (better, but closed: ignored)` : ` (not better than ${r.oldG})`}`).join("; "),
+          n: s.n, popped: placeName(s.popped), g: s.g, f: s.f,
+          note: s.stale ? "stale entry, skipped" : s.relaxed.length === 0 ? (s.popped === goal ? "goal popped: done" : "no neighbours") : s.relaxed.map((r) => `${placeName(r.to)}: g ${r.newG}${r.improved ? (r.reopened ? " (reopened)" : r.oldG === undefined ? " (new)" : ` (was ${r.oldG})`) : r.skippedClosed ? ` (better, but closed: ignored)` : ` (not better than ${r.oldG})`}`).join("; "),
         })),
         "Expansions, in order",
         (r) => (String(r.note).includes("ignored") ? "wb-bad" : String(r.note).includes("reopened") ? "wb-good" : ""),
@@ -215,8 +216,8 @@ export const searchCase: CaseDef<SearchState> = {
     if (last && last.open.length) {
       parts.push(table(
         [{ key: "node", label: "node" }, { key: "g", label: "g", align: "right" }, { key: "h", label: "h", align: "right" }, { key: "f", label: "f", align: "right" }, { key: "parent", label: "parent" }],
-        last.open.map((e) => ({ node: e.node, g: e.g, h: e.h, f: e.f, parent: e.parent ?? "—" })),
-        `OPEN after expansion ${last.n}${last.closed.length ? ` · CLOSED: ${last.closed.join(", ")}` : ""}`,
+        last.open.map((e) => ({ node: placeName(e.node), g: e.g, h: e.h, f: e.f, parent: e.parent ? placeName(e.parent) : "—" })),
+        `OPEN after expansion ${last.n}${last.closed.length ? ` · CLOSED: ${last.closed.map(placeName).join(", ")}` : ""}`,
       ));
     }
 
