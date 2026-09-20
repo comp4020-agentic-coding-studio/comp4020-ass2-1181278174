@@ -35,6 +35,8 @@ const VIEWPORTS = [
 const PAGES = [
   { name: "home", path: "/" },
   { name: "lectures", path: "/lectures/" },
+  { name: "tutorials", path: "/sessions/" },
+  { name: "assessments", path: "/assessments/" },
   { name: "lecture-w04", path: "/lectures/w04-back-with-battery/" },
   { name: "tutorial-w09", path: "/sessions/w09-same-place/" },
   { name: "assignment-2", path: "/assessments/assignment-2/" },
