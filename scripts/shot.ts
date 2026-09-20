@@ -27,6 +27,8 @@ const LIBS = join(homedir(), "chromium-libs/root/usr/lib/x86_64-linux-gnu");
 // table or a long page can be checked below the fold. The layout width is
 // what the probe verifies; height only changes how much of the page is kept.
 const TALL = process.env.SHOT_TALL === "1";
+// SHOT_PAGES=home,tutorial-w04 shoots only those pages.
+const ONLY = (process.env.SHOT_PAGES ?? "").split(",").map((s) => s.trim()).filter(Boolean);
 const VIEWPORTS = [
   { name: TALL ? "1920-tall" : "1920", width: 1920, height: TALL ? 3000 : 1080 },
   { name: TALL ? "390-tall" : "390", width: 390, height: TALL ? 3000 : 844 },
@@ -155,6 +157,7 @@ async function main(): Promise<void> {
     for (const viewport of VIEWPORTS) {
       await verifyViewport(viewport.width, viewport.height);
       for (const page of PAGES) {
+        if (ONLY.length && !ONLY.includes(page.name)) continue;
         const path = `${OUT}/${stamp}-${page.name}-${viewport.name}.png`;
         await run([
           "--headless", "--no-sandbox", "--disable-gpu", "--hide-scrollbars",
