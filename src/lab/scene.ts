@@ -10,9 +10,10 @@ import { terrainScene } from './scene-terrain';
 import { sceneScenery, toScene } from './visual-layout';
 import { blockInspection, fitInspection, readableLine } from './scene-inspection';
 import { flightNetwork, loadAssets, release, roadSurface } from './scene-assets';
-export interface SceneOptions { lighting?: 'day' | 'evening'; labels?: boolean }
+export interface SceneOptions { lighting?: 'day' | 'evening'; labels?: boolean; mode?: 'hub' }
 export function mountScene(host: HTMLElement, data: SceneData, onSelect: (node: string) => void, options: SceneOptions = {}) {
-    const evening = options.lighting === 'evening';
+    const evening = options.lighting === 'evening', hub = options.mode === 'hub';
+    let afterRender: (() => void) | undefined, cameraFrame = 0, finishCamera: ((done: boolean) => void) | undefined;
     const isBlock=!!data.focusNodes, scenery=sceneScenery(data);
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(evening ? '#353e48' : '#edf1e6');
@@ -20,10 +21,11 @@ export function mountScene(host: HTMLElement, data: SceneData, onSelect: (node: 
     renderer.setPixelRatio(Math.min(devicePixelRatio, 1.7));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     host.append(renderer.domElement);
-    renderer.domElement.setAttribute('aria-label', '3D Slop Hill; use the named camera buttons and evidence table for keyboard access');
+    renderer.domElement.setAttribute('aria-label', hub ? 'Slop Hill at dusk. Choose a week or a course sign on the hill, or use the list below.' : '3D Slop Hill; use the named camera buttons and evidence table for keyboard access');
     renderer.domElement.setAttribute('role', 'img');
     const camera = new THREE.PerspectiveCamera(43, 1, 1, 10000), controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = false;
+    if(hub) { controls.enableZoom=false; controls.enablePan=false; }
     controls.minDistance = 170;
     controls.maxDistance = 4400;
     controls.maxPolarAngle = Math.PI * .49;
@@ -178,13 +180,14 @@ export function mountScene(host: HTMLElement, data: SceneData, onSelect: (node: 
         item.el.style.left = x + 'px';
         item.el.style.top = y + 'px';
     }
+    afterRender?.();
     if(isBlock) {
         const inView=(v:THREE.Vector3)=>{const p=v.clone().project(camera);return Math.abs(p.x)<.98&&Math.abs(p.y)<.98&&p.z>-1&&p.z<1;};
         host.dataset.visibleNodes=String(blockFrame.filter(inView).length);
         host.dataset.selectionInView=String(inspectionFrame.length>0&&inspectionFrame.every(inView));
     }
     };
-    const size = () => { const w = Math.max(200, host.clientWidth), h = host.closest('.lab-expanded,.lab-example') ? Math.max(200,host.clientHeight) : Math.max(330, Math.min(500, w * .72)); renderer.setSize(w, h); camera.aspect = w / h; camera.updateProjectionMatrix(); if(autoFrame)frame(autoFrame.points,autoFrame.top);else render(); };
+    const size = () => { const w = Math.max(200, host.clientWidth), h = host.closest('.lab-expanded,.lab-example,.hill-picture') ? Math.max(200,host.clientHeight) : Math.max(330, Math.min(500, w * .72)); renderer.setSize(w, h); camera.aspect = w / h; camera.updateProjectionMatrix(); if(autoFrame)frame(autoFrame.points,autoFrame.top);else render(); };
     const resize = new ResizeObserver(size);
     resize.observe(host);
     controls.addEventListener('change', render);
@@ -195,8 +198,8 @@ export function mountScene(host: HTMLElement, data: SceneData, onSelect: (node: 
     const onClick = (e: PointerEvent) => { if (Math.hypot(e.clientX - down.x, e.clientY - down.y) > 6)
         return; const rect = renderer.domElement.getBoundingClientRect(); pointer.set((e.clientX - rect.left) / rect.width * 2 - 1, -(e.clientY - rect.top) / rect.height * 2 + 1); ray.setFromCamera(pointer, camera); const hit = ray.intersectObjects(clickable)[0]; if (hit?.object.userData.node)
         onSelect(hit.object.userData.node); };
-    renderer.domElement.addEventListener('pointerdown', onDown);
-    renderer.domElement.addEventListener('pointerup', onClick);
+    if(!hub) renderer.domElement.addEventListener('pointerdown', onDown);
+    if(!hub) renderer.domElement.addEventListener('pointerup', onClick);
     function frame(points:THREE.Vector3[],top=false) {
         if(!points.length)return;
         autoFrame={points,top};controls.target.copy(fitInspection(camera,points,top));controls.update();render();
@@ -219,7 +222,48 @@ export function mountScene(host: HTMLElement, data: SceneData, onSelect: (node: 
         number,
         number,
         number
-    ]> = { overview: [1000, 1000, 70, 2500], mission: [850, 1130, 85, 1750], kitchen: [kitchen.x, kitchen.y, kitchen.z, 900], hilltop: [1240, 1460, 165, 1050], corridor: [(ca.x + cb.x) / 2, (ca.y + cb.y) / 2, (ca.z + cb.z) / 2, 900] }; const [x, y, z, d] = targets[name] ?? targets.overview; controls.target.copy(to3(x, y, z)); camera.position.copy(controls.target).add(new THREE.Vector3(d * .65, d * .42, d * .85)); controls.update(); render(); }
+    ]> = { overview: [1000, 1000, hub ? 0 : 70, hub ? 2250 : 2500], mission: [850, 1130, 85, 1750], kitchen: [kitchen.x, kitchen.y, kitchen.z, 900], hilltop: [1240, 1460, 165, 1050], corridor: [(ca.x + cb.x) / 2, (ca.y + cb.y) / 2, (ca.z + cb.z) / 2, 900] }; const [x, y, z, d] = targets[name] ?? targets.overview; controls.target.copy(to3(x, y, z)); camera.position.copy(controls.target).add(new THREE.Vector3(d * .65, d * (hub ? .35 : .42), d * .85)); controls.update(); render(); }
+    function hubPoint(node: string, place = 'node') {
+        const n = nodes.get(node)!;
+        if(place === 'corridor') return to3((ca.x+cb.x)/2,(ca.y+cb.y)/2,(ca.z+cb.z)/2+24);
+        if(place === 'pads') return to3(kitchen.x+74,kitchen.y,kitchen.z+12);
+        const home=scenery.homes.find(h=>h.node===node);
+        return home ? to3(home.x,home.y,home.z+home.h+8) : to3(n.x,n.y,n.z+20);
+    }
+    function project(node: string, place?: string) {
+        const p=hubPoint(node,place).project(camera);
+        return {x:(p.x+1)/2*host.clientWidth,y:(1-p.y)/2*host.clientHeight,visible:p.z>-1&&p.z<1};
+    }
+    const houseGlow=new THREE.Mesh(new THREE.BoxGeometry(1,1,1),new THREE.MeshBasicMaterial({color:'#ffcf70',transparent:true,opacity:.4,depthWrite:false}));
+    houseGlow.visible=false;scene.add(houseGlow);
+    function highlightNode(node?: string, place?: string) {
+        houseGlow.visible=!!node;
+        if(node) {
+            const home=scenery.homes.find(h=>h.node===node);
+            const building=node===data.map.kitchen ? scenery.buildings.find(b=>b.kind==='kitchen') : undefined;
+            if(home) {houseGlow.position.copy(to3(home.x,home.y,home.z+home.h/2));houseGlow.scale.set(home.w+8,home.h*3+8,home.d+8);}
+            else if(building && place!=='pads') {const x=building.x+building.w/2,y=building.y+building.d/2;houseGlow.position.copy(to3(x,y,terrainHeight(x,y)+building.h/2));houseGlow.scale.set(building.w+8,building.h*3+8,building.d+8);}
+            else {houseGlow.position.copy(hubPoint(node,place));houseGlow.scale.set(place==='corridor'?110:90,12,55);}
+        }
+        host.dataset.highlight=node??'';render();
+    }
+    function flyTo(node: string, place?: string) {
+        cancelAnimationFrame(cameraFrame);finishCamera?.(false);
+        const origin=camera.position.clone(), target=controls.target.clone(), destination=hubPoint(node,place);
+        const end=destination.clone().add(new THREE.Vector3(480,350,600)), start=performance.now();
+        controls.enabled=false;
+        return new Promise<boolean>(resolve=>{
+            finishCamera=resolve;
+            const step=(now:number)=>{
+                if(disposed) {resolve(false);return;}
+                const t=matchMedia('(prefers-reduced-motion: reduce)').matches?1:Math.min(1,(now-start)/750), smooth=t*t*(3-2*t);
+                camera.position.lerpVectors(origin,end,smooth);controls.target.lerpVectors(target,destination,smooth);controls.update();render();
+                if(t<1)cameraFrame=requestAnimationFrame(step);
+                else {controls.enabled=true;finishCamera=undefined;resolve(true);}
+            };
+            cameraFrame=requestAnimationFrame(step);
+        });
+    }
     function select(path: string[], blocked: string[] = []) {
         release(highlights);highlights.clear();
         if(selected){scene.remove(selected);release(selected);selected=undefined;}
@@ -306,5 +350,5 @@ export function mountScene(host: HTMLElement, data: SceneData, onSelect: (node: 
     layers(!!data.focusNodes,false);
     view(data.focusNodes ? 'block' : data.legOnly || data.orders.length === 2 ? 'corridor' : data.orders.length === 1 && data.orders[0].id === '#07' && host.clientWidth>=500 ? 'mission' : 'overview');
     time(0);
-    return { view, select, time, layers, follow, dispose() { disposed=true; resize.disconnect(); controls.dispose(); renderer.domElement.removeEventListener('pointerdown', onDown); renderer.domElement.removeEventListener('pointerup', onClick); release(scene); if (assetSource) release(assetSource); textures.forEach(t => t.dispose()); renderer.dispose(); renderer.forceContextLoss(); renderer.domElement.remove(); overlay.remove(); } };
+    return { view, select, time, layers, follow, project, highlightNode, flyTo, onRender(callback: () => void) { afterRender=callback;render(); }, dispose() { disposed=true; cancelAnimationFrame(cameraFrame); finishCamera?.(false); afterRender=undefined; resize.disconnect(); controls.dispose(); renderer.domElement.removeEventListener('pointerdown', onDown); renderer.domElement.removeEventListener('pointerup', onClick); release(scene); if (assetSource) release(assetSource); textures.forEach(t => t.dispose()); renderer.dispose(); renderer.forceContextLoss(); renderer.domElement.remove(); overlay.remove(); } };
 }

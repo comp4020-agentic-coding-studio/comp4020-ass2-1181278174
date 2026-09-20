@@ -2,24 +2,61 @@
 import hero from '../assets/images/hero-home.avif';
 import { hillStops, hillSections } from '../data/hill-stops';
 import { withBase } from 'astro-theme-university/url';
+import { defaultConfig } from '../lab/model';
+import { runExperiment } from '../lab/compute';
+const reference = runExperiment(defaultConfig(12)).scene!;
+const scene = { ...reference, routes: reference.routes.filter(r => r.order === '#07'), events: reference.events.filter(e => e.order === '#07') };
+const place = (week: number) => [9,10].includes(week) ? 'corridor' : [7,8].includes(week) ? 'pads' : 'node';
 ---
 <section id="hill" class="hill-walk" aria-labelledby="hill-title">
   <h2 id="hill-title">Walk the hill</h2>
   <p>Twelve weeks, one evening: each stop is where that week's case happens.</p>
   <div class="hill-picture">
-    <img src={hero.src} width={hero.width} height={hero.height} loading="lazy" alt="Slop Hill at dusk: the kitchen at the foot, two towers on the slope, and Home 07 at the summit." />
+    <div class="hill-canvas" data-hill-scene></div>
+    <svg class="hill-leaders" aria-hidden="true" data-hill-leaders></svg>
+    <nav class="hill-links" aria-label="Stops on Slop Hill" data-hill-links hidden>
+      {hillStops.map(stop => <a class="hill-stop" data-week={stop.week} data-node={stop.node} data-place={place(stop.week)} data-stage={stop.stage} href={withBase(stop.href)}><span aria-hidden="true">●</span> W{stop.week} · {stop.title}</a>)}
+      <div class="hill-signs">
+        {hillSections.map(stop => <a class="hill-sign" data-node={stop.node} href={withBase(stop.href)}>{stop.section} →</a>)}
+      </div>
+    </nav>
+    <img class="hill-poster" src={hero.src} width={hero.width} height={hero.height} loading="lazy" alt="Slop Hill at dusk: the kitchen at the foot, two towers on the slope, and Home 07 at the summit." />
   </div>
+  <script is:inline type="application/json" data-hill-initial set:html={JSON.stringify(scene).replace(/</g, '\u003c')} />
   <h3 id="hill-list-title">The hill as a list</h3>
   <ol class="hill-list" aria-labelledby="hill-list-title">
     {hillStops.map(stop => <li data-stage={stop.stage}><a href={withBase(stop.href)}><span class="hill-week">W{stop.week}</span> {stop.title}</a></li>)}
     {hillSections.map(stop => <li class="hill-section"><a href={withBase(stop.href)}>{stop.section} →</a></li>)}
   </ol>
 </section>
+<script>
+  import { mountHill } from '../lab/hill-client';
+  let dispose: (() => void) | undefined;
+  document.addEventListener('astro:before-swap', () => { dispose?.(); dispose=undefined; });
+  document.addEventListener('astro:page-load', () => {
+    dispose?.();
+    const root=document.querySelector<HTMLElement>('#hill');
+    dispose=root ? mountHill(root) : undefined;
+  });
+</script>
 <style>
   .hill-walk { scroll-margin-top: calc(var(--at-nav-height) + 1rem); }
   .hill-walk h2 { margin-bottom: .4rem; }
   .hill-picture { position: relative; background: #353e48; border-radius: .3rem; overflow: hidden; }
   .hill-picture img { display: block; width: 100%; height: auto; }
+  .hill-canvas, .hill-links, .hill-leaders { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .hill-canvas { z-index: 1; }
+  .hill-leaders { pointer-events: none; z-index: 2; }
+  .hill-links { z-index: 3; pointer-events: none; }
+  .hill-links[hidden] { display: none; }
+  .hill-links a { pointer-events: auto; text-decoration: none; font-size: .72rem; white-space: nowrap; background: #fffaf1; color: var(--stage-color,#55401c); padding: .45rem .55rem; border: 1px solid currentColor; border-radius: .2rem; box-shadow: 0 2px 6px #0003; }
+  .hill-stop { position: absolute; left: 0; top: 0; }
+  .hill-stop span { font-size: .65rem; margin-right: .2rem; }
+  .hill-links a:hover, .hill-links a:focus-visible { scale: 1.05; z-index: 5; text-decoration: underline; }
+  .hill-signs { position: absolute; display: flex; gap: .3rem; padding-top: 14px; border-top: 2px solid #ebc276; }
+  .hill-signs::before { content: ''; position: absolute; height: 14px; width: 2px; top: 0; left: 50%; background: #ebc276; }
+  @media(min-width:900px) { .hill-picture { height: 680px; } .hill-picture img { height: 100%; object-fit: cover; } }
+  @media(max-width:899px) { .hill-canvas,.hill-links,.hill-leaders { display: none; } }
   .hill-list { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: .5rem 1.3rem; list-style: none; padding: 0; }
   .hill-list li { margin: 0; }
   .hill-list a { display: block; padding: .55rem .7rem; border-left: 3px solid var(--stage-color,var(--at-border)); color: var(--stage-color,var(--at-text)); text-decoration: none; font-size: .9rem; }
