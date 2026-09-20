@@ -77,7 +77,9 @@ describe("the map", () => {
 
   it("has no street through a building", () => {
     for (const e of map.edges) for (const b of map.buildings) {
-      expect(segmentHitsRect(e.polyline[0], e.polyline[1], b), `${e.id} passes through ${b.id}`).toBe(false);
+      for (let i = 1; i < e.polyline.length; i++) {
+        expect(segmentHitsRect(e.polyline[i - 1], e.polyline[i], b), `${e.id} passes through ${b.id}`).toBe(false);
+      }
     }
     expect(map.buildings.filter((b) => b.kind === "tower")).toHaveLength(2);
   });

@@ -33,8 +33,12 @@ function mulberry32(seed: number): () => number {
 const rnd = mulberry32(SEED);
 const rand = (lo: number, hi: number) => lo + (hi - lo) * rnd();
 const r1 = (v: number) => Math.round(v * 10) / 10;
-const hill = (x: number, y: number) =>
-  WORLD.summitHeight * Math.exp(-((x - WORLD.summit[0]) ** 2 + (y - WORLD.summit[1]) ** 2) / (2 * SIGMA * SIGMA));
+const KNOB = 45; // metres the hilltop rises above the gaussian within KNOB_R of the summit
+const KNOB_R = 200;
+const hill = (x: number, y: number) => {
+  const d = Math.hypot(x - WORLD.summit[0], y - WORLD.summit[1]);
+  return WORLD.summitHeight * Math.exp(-(d * d) / (2 * SIGMA * SIGMA)) + KNOB * Math.max(0, 1 - d / KNOB_R);
+};
 const dist = (a: MapNode, b: MapNode) => Math.hypot(a.x - b.x, a.y - b.y);
 
 // ---- nodes -----------------------------------------------------------------
@@ -136,14 +140,42 @@ for (let i = 0; i < 60; i++) {
   if (!removed) throw new Error("could not lengthen the detour without disconnecting the map");
 }
 
+// The hilltop house: one node above the grid, reached by a short steep track
+// from the nearest street and by a long gentle spiral from the next one. The
+// track is faster; the spiral climbs the same height over three times the
+// distance. This is the week-4 pair of routes.
+const summit = addNode({ id: "summit", x: WORLD.summit[0], y: WORLD.summit[1], z: r1(hill(WORLD.summit[0], WORLD.summit[1])), kind: "street" });
+const nearSummit = nodes.filter((n) => n.kind === "street" && n.id !== "summit").sort((a, b) => dist(a, summit) - dist(b, summit));
+const trackFrom = nearSummit[0], spiralFrom = nearSummit[1];
+addLink(trackFrom.id, "summit");
+addLink(spiralFrom.id, "summit");
+function spiral(from: MapNode): [number, number][] {
+  const r0 = dist(from, summit);
+  const th0 = Math.atan2(from.y - summit.y, from.x - summit.x);
+  const pts: [number, number][] = [];
+  const steps = 6;
+  for (let k = 0; k <= steps; k++) {
+    const r = r0 * (1 - k / steps);
+    const th = th0 + (k / steps) * (1.5 * Math.PI);
+    pts.push([r1(summit.x + r * Math.cos(th)), r1(summit.y + r * Math.sin(th))]);
+  }
+  pts[0] = [from.x, from.y];
+  pts[steps] = [summit.x, summit.y];
+  return pts;
+}
+const polylineLength = (pts: [number, number][]) => pts.slice(1).reduce((s, q, i) => s + Math.hypot(q[0] - pts[i][0], q[1] - pts[i][1]), 0);
+const spiralPts = spiral(spiralFrom);
+
 // ---- directed edges ---------------------------------------------------------
 const edges: MapEdge[] = [];
 for (const [a, b] of links) {
   const A = byId.get(a)!, B = byId.get(b)!;
-  const length = r1(dist(A, B));
+  const isSpiral = (a === spiralFrom.id && b === "summit") || (b === spiralFrom.id && a === "summit");
+  const forward: [number, number][] = isSpiral ? (a === spiralFrom.id ? spiralPts : [...spiralPts].reverse()) : [[A.x, A.y], [B.x, B.y]];
+  const length = r1(isSpiral ? polylineLength(spiralPts) : dist(A, B));
   const resource = linkKey(a, b) === linkKey(...CORRIDOR) ? "corridor" : undefined;
-  edges.push({ id: `${a}>${b}`, from: a, to: b, length, rise: r1(B.z - A.z), polyline: [[A.x, A.y], [B.x, B.y]], ...(resource ? { resource } : {}) });
-  edges.push({ id: `${b}>${a}`, from: b, to: a, length, rise: r1(A.z - B.z), polyline: [[B.x, B.y], [A.x, A.y]], ...(resource ? { resource } : {}) });
+  edges.push({ id: `${a}>${b}`, from: a, to: b, length, rise: r1(B.z - A.z), polyline: forward, ...(resource ? { resource } : {}) });
+  edges.push({ id: `${b}>${a}`, from: b, to: a, length, rise: r1(A.z - B.z), polyline: [...forward].reverse(), ...(resource ? { resource } : {}) });
 }
 for (const id of [...CORRIDOR, ...kitchenNeighbours]) byId.get(id)!.wait = true;
 
@@ -173,7 +205,7 @@ for (const [a, b] of ridgeGaps) {
   const cx = (A.x + B.x) / 2, cy = (A.y + B.y) / 2;
   const w = 40, d = 110;
   const bld: Building = { id: `ridge-${a}`, kind: "block", x: r1(cx - w / 2), y: r1(cy - d / 2), w, d, h: 12 };
-  if (edges.every((e) => segRectDistance(e.polyline[0], e.polyline[1], bld) >= 20)) buildings.push(bld);
+  if (edges.every((e) => e.polyline.slice(1).every((q, i) => segRectDistance(e.polyline[i], q, bld) >= 20))) buildings.push(bld);
 }
 let blockNo = 0;
 for (let r = 0; r + 1 < GRID; r++) for (let c = 0; c + 1 < GRID; c++) {
@@ -182,10 +214,10 @@ for (let r = 0; r + 1 < GRID; r++) for (let c = 0; c + 1 < GRID; c++) {
   const cx = corners.reduce((s, n) => s + n.x, 0) / 4, cy = corners.reduce((s, n) => s + n.y, 0) / 4;
   const w = r1(rand(30, 60)), d = r1(rand(30, 60));
   const b: Building = { id: `block-${blockNo}`, kind: "block", x: r1(cx - w / 2), y: r1(cy - d / 2), w, d, h: r1(rand(8, 15)) };
-  if (edges.every((e) => segRectDistance(e.polyline[0], e.polyline[1], b) >= 25)) { buildings.push(b); blockNo++; }
+  if (edges.every((e) => e.polyline.slice(1).every((q, i) => segRectDistance(e.polyline[i], q, b) >= 25))) { buildings.push(b); blockNo++; }
 }
 for (const t of buildings.filter((b) => b.kind === "tower")) {
-  for (const e of edges) if (!e.resource && segRectDistance(e.polyline[0], e.polyline[1], t) < 1) throw new Error(`${e.id} passes through ${t.id}`);
+  for (const e of edges) if (!e.resource && e.polyline.slice(1).some((q, i) => segRectDistance(e.polyline[i], q, t) < 1)) throw new Error(`${e.id} passes through ${t.id}`);
 }
 
 // ---- orders --------------------------------------------------------------------
@@ -194,7 +226,6 @@ const taken = new Set<string>([...kitchenNeighbours, ...CORRIDOR]);
 const pick = (n: MapNode) => { taken.add(n.id); return n.id; };
 const nearKitchen = street.filter((n) => !taken.has(n.id)).sort((a, b) => dist(a, kitchen) - dist(b, kitchen));
 const house03 = pick(nearKitchen[0]), house05 = pick(nearKitchen[1]);
-const summit = street.filter((n) => !taken.has(n.id)).sort((a, b) => b.z - a.z)[0];
 const house07 = pick(summit);
 // #13: the shortest way there uses the corridor, and the detour would cost the most.
 let house13 = ""; let bestGap = -1;
@@ -231,4 +262,7 @@ writeFileSync("src/data/map.json", JSON.stringify(map, null, 2) + "\n");
 writeFileSync("src/data/orders.json", JSON.stringify(ordersData, null, 2) + "\n");
 const detour = shortest(CORRIDOR[0], CORRIDOR[1], CORRIDOR).d;
 console.log(`map: ${nodes.length} nodes, ${edges.length} directed edges, ${buildings.length} buildings; corridor ${r1(corridorLen)} m, detour ${r1(detour)} m (${(detour / corridorLen).toFixed(2)}x)`);
+const trackEdge = edges.find((e) => e.from === trackFrom.id && e.to === "summit")!;
+const spiralEdge = edges.find((e) => e.from === spiralFrom.id && e.to === "summit")!;
+console.log(`summit z ${summit.z}: track from ${trackFrom.id} ${trackEdge.length} m rise ${trackEdge.rise} (grade ${(trackEdge.rise / trackEdge.length).toFixed(2)}); spiral from ${spiralFrom.id} ${spiralEdge.length} m rise ${spiralEdge.rise} (grade ${(spiralEdge.rise / spiralEdge.length).toFixed(2)})`);
 console.log(`orders: #03 ${house03}, #05 ${house05}, #07 ${house07} (z ${summit.z}), #13 ${house13} (detour gap ${r1(bestGap)} m), #20 ${house20}`);
