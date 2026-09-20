@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import type { SceneData } from './model';
 import { displayArea, toScene } from './visual-layout';
-import { elevationBands, ridgeSections, terrainShade } from './landscape';
+import { elevationBands, terrainShade } from './landscape';
 import { contourRadius, terrainHeight } from './terrain';
 
 export function terrainScene(data:SceneData) {
@@ -41,16 +41,5 @@ export function terrainScene(data:SceneData) {
   }
   const sideGeometry=new THREE.BufferGeometry().setAttribute('position',new THREE.Float32BufferAttribute(sides,3));sideGeometry.computeVertexNormals();
   group.add(new THREE.Mesh(sideGeometry,new THREE.MeshStandardMaterial({color:'#987451',side:THREE.DoubleSide,roughness:1})));
-  const rocks:number[]=[];
-  for(const section of ridgeSections(data.map))for(let k=1;k<section.length;k++) {
-    const a=section[k-1],b=section[k],count=Math.ceil(Math.hypot(b[0]-a[0],b[1]-a[1])/22);
-    for(let i=0;i<count;i++) {
-      const slice=(t:number)=>{const x=a[0]+(b[0]-a[0])*t,y=a[1]+(b[1]-a[1])*t;return [toScene(x-24,y,terrainHeight(x-24,y)+1),toScene(x,y,terrainHeight(x,y)+24),toScene(x+24,y,terrainHeight(x+24,y)+1)];};
-      const p=slice(i/count),q=slice((i+1)/count);
-      for(let j=0;j<2;j++)rocks.push(...p[j],...q[j],...p[j+1],...p[j+1],...q[j],...q[j+1]);
-    }
-  }
-  const rockGeometry=new THREE.BufferGeometry().setAttribute('position',new THREE.Float32BufferAttribute(rocks,3));rockGeometry.computeVertexNormals();
-  group.add(new THREE.Mesh(rockGeometry,new THREE.MeshStandardMaterial({color:'#846d4e',flatShading:true,roughness:1,side:THREE.DoubleSide})));
   return group;
 }

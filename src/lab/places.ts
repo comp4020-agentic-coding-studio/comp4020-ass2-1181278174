@@ -6,11 +6,11 @@ export function placeName(id:string):string {
     const order=canonical.orders.find(o=>o.node===id);
     if(order)return `Home ${order.id.slice(1)}${id==='summit'?' · Hilltop':''}`;
     const landmarks:Record<string,string>={
-      's-2-0':'Kitchen Lane','s-3-2':'West Pass Gate','s-3-3':'East Pass Gate',
-      's-1-2':'South Ridge Approach','s-1-3':'South Ridge Crossing',
-      's-5-2':'North Ridge Approach','s-5-3':'North Ridge Crossing',
-      'tower-n':'North Pass Tower','tower-s':'South Pass Tower',
-      'ridge-s-2-2':'South Ridge','ridge-s-4-2':'North Ridge',
+      's-2-0':'Kitchen Lane','s-3-2':'West Passage Gate','s-3-3':'East Passage Gate',
+      's-1-2':'South Block Approach','s-1-3':'South Bypass',
+      's-5-2':'North Block Approach','s-5-3':'North Bypass',
+      'tower-n':'North Tower','tower-s':'South Tower',
+      'ridge-s-2-2':'South Apartment Block','ridge-s-4-2':'North Apartment Block',
     };
     if(landmarks[id])return landmarks[id];
     const street=/^s-(\d+)-(\d+)$/.exec(id);

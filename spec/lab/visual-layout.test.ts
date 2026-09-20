@@ -1,6 +1,11 @@
 import { it, expect } from 'vitest';
 import { canonical } from '../../src/lab/model';
-import { customerHomes, distanceToSegment, toScene, visualLayout } from '../../src/lab/visual-layout';
+import { customerHomes, distanceToSegment, sceneScenery, toScene, visualLayout } from '../../src/lab/visual-layout';
+it('keeps the two passage towers and every checked building in the whole-hill scene',()=>{
+  const scenery=sceneScenery({map:canonical.map,orders:canonical.orders,routes:[],events:[]});
+  expect(scenery.buildings).toEqual(canonical.map.buildings);
+  expect(scenery.buildings.filter(b=>b.kind==='tower')).toHaveLength(2);
+});
 it('decorations leave every flight edge, address and original obstacle clear',()=>{
   const before=JSON.stringify(canonical), {houses}=visualLayout(canonical.map);
   expect(houses).toHaveLength(22);

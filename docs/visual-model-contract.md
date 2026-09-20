@@ -1,6 +1,6 @@
 # Visual scene and replay contract — 21 September 2026
 
-The seven 3D pages share one scene. Assets are made in Blender; Three.js
+The six 3D pages share one scene. Assets are made in Blender; Three.js
 places them and animates the computed events. Keep the current render resolution and lighting.
 
 ## Space and assets
@@ -20,10 +20,12 @@ places them and animates the computed events. Keep the current render resolution
 ## Terrain
 
 Both maps use elevation bands and contour lines from the unchanged height field. The
-3D cut edge and oblique camera expose the slope. A rocky ridge ribbon follows the
-existing blocked crossing belt; its central pass and both end crossings stay open.
-The ribbon is a landscape cue, not an extra collision rule. Route text uses place
-names; raw graph identifiers remain in exported data.
+3D cut edge and oblique camera expose the slope. W4 compares a steep summit track
+with a gentler contour route. W9 uses a passage between two towers on the slope,
+with an explicit capacity-one rule. The two other blocked crossings are apartment
+blocks in the canonical data. Draw those buildings at their recorded footprints;
+do not join them with an invented terrain wall or label them as a natural mountain
+pass. Route text uses place names; raw graph identifiers remain in exported data.
 
 ## Layout
 
@@ -81,7 +83,7 @@ Twenty named customer homes now sit beside the canonical delivery points. Their 
 leaves legal flight edges and existing obstacles clear; a dotted doorstep link explains the
 short visual offset. A teal plot distinguishes a customer home from background buildings.
 The home number follows the original order address, including when an added order uses that
-address. Display aliases replace graph IDs in normal labels; technical details and exported
+address. Display aliases replace graph IDs in normal labels; technical route descriptions use the same names; exported
 plans retain the IDs.
 
 Tutorials use `WeeklyExample.astro` and a dedicated controller. Each starts from the published

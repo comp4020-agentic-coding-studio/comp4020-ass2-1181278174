@@ -8,7 +8,7 @@ const run = runExperiment(defaultConfig(9));
 const choices = [['both', 'Both depart'], ['wait', 'A waits at the pass'], ['detour', 'A takes the way around']];
 ---
 <section class="home-corridor" data-home-corridor aria-label="Try one shared-airspace decision">
-  <p>A carries order #13 to Home 13. B is returning through the same gap in the ridge. Only one drone fits at a time.</p>
+  <p>A carries order #13 to Home 13. B is returning through the passage between two towers on the slope. The passage rule allows one drone at a time.</p>
   <fieldset>
     <legend>What should A do?</legend>
     {choices.map(([value, label]) => <label><input type="radio" name="home-arrangement" value={value} checked={value === 'both'} data-home-arrangement />{label}</label>)}

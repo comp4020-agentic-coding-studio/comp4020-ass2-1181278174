@@ -167,7 +167,7 @@ entry; any "course-set" parameter appears in the policies page's simulation-boun
 | Parameter | Value | Status |
 |---|---|---|
 | Area | 2 km × 2 km; a gaussian hill of 120 m with a 45 m knob at the top; the summit house at 165 m; the kitchen at the foot, 9 m | set |
-| Route graph | 51 nodes, 148 directed edges; a jittered 7 × 7 street grid, thinned; a ridge between columns 2 and 3 on rows 2–4 with the corridor (298 m, resource `corridor`) as its only crossing; detour 1 607 m, 5.4× | set, `pnpm data` |
+| Route graph | 51 nodes, 148 directed edges; a jittered 7 × 7 street grid, thinned; a building-obstacle belt between columns 2 and 3 on rows 2–4 with the passage between two towers (298 m, resource `corridor`) as its only crossing within that belt; detour 1 607 m, 5.4× | set, `pnpm data` |
 | Hilltop | A track of 173 m rising 43 m (grade 0.25) from the nearest street, and a spiral of 531 m rising 51 m (grade 0.10) from the next | set |
 | Orders | #01–#20, numbered by ready time from 18:00:08 to 20:11; #07 at the summit, promised +25 min; #13 across the corridor (detour 508 m longer); #20 3.5 kg at s-6-5; others 0.3–1.4 kg | set |
 | Type L | 12 m/s; climb 3.0 m/s; payload 1.5 kg; battery 95 kJ; cruise 120 W (+15 %/kg); climb power 300 W; lift 60 J/m; gradeFactor 20; hover 100 W | set, `pnpm calibrate` |

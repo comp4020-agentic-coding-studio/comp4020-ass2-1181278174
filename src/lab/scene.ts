@@ -88,8 +88,11 @@ export function mountScene(host: HTMLElement, data: SceneData, onSelect: (node: 
         label('RIDGE · short, steep', 1260, 1315, terrainHeight(1260,1315)+30);
         label('CONTOUR · longer, gentler', 1490, 1610, terrainHeight(1490,1610)+30);
     }
-    const corridorLabel=isBlock?undefined:label('RIDGE PASS · one drone', (ca.x + cb.x) / 2, (ca.y + cb.y) / 2, (ca.z + cb.z) / 2 + 55);
-    if(!isBlock){label('RIDGE · north end',835,1310,terrainHeight(835,1310)+48);label('RIDGE · south end',822,650,terrainHeight(822,650)+48);}
+    const corridorLabel=isBlock?undefined:label('TOWER PASSAGE · capacity 1', (ca.x + cb.x) / 2, (ca.y + cb.y) / 2, (ca.z + cb.z) / 2 + 16, undefined, true);
+    if(!isBlock)for(const tower of data.map.buildings.filter(b=>b.kind==='tower')) {
+        const x=tower.x+tower.w/2,y=tower.y+tower.d/2;
+        label(placeName(tower.id),x,y,terrainHeight(x,y)+tower.h+12);
+    }
     const passage=new THREE.Mesh(new THREE.BoxGeometry(Math.hypot(cb.x-ca.x,cb.y-ca.y),75,55),new THREE.MeshBasicMaterial({color:'#c79726',transparent:true,opacity:.15,depthWrite:false}));
     passage.position.copy(to3((ca.x+cb.x)/2,(ca.y+cb.y)/2,(ca.z+cb.z)/2+20)); passage.rotation.y=Math.atan2(cb.y-ca.y,cb.x-ca.x); passage.visible=!isBlock;scene.add(passage);
     for (const o of data.orders) {
@@ -273,7 +276,7 @@ export function mountScene(host: HTMLElement, data: SceneData, onSelect: (node: 
         }
         const corridor=corridorAt(data,t);
         passage.material.color.set(corridor.color); passage.material.opacity=['closed','conflict'].includes(corridor.state)?.4:.15;
-        if(corridorLabel)corridorLabel.textContent=`RIDGE PASS · ${corridor.state==='closed'?'CLOSED':corridor.state==='conflict'?'CONFLICT':corridor.occupants.map(e=>e.drone).join(', ')||'free'}`;
+        if(corridorLabel)corridorLabel.textContent=`TOWER PASSAGE · ${corridor.state==='closed'?'CLOSED':corridor.state==='conflict'?'CONFLICT':corridor.occupants.map(e=>e.drone).join(', ')||'free'}`;
         host.dataset.corridorState=corridor.state;
         const charging=padSchedule(data).filter(p=>p.event.start<=t&&t<p.event.end);
         padLabels.forEach((el,i)=>{ const owner=charging.find(p=>p.pad===i)?.event.drone; el.textContent=`PAD ${i+1} · ${owner?'charging '+owner:'free'}`; });
