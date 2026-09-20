@@ -1,4 +1,5 @@
 ---
+import WeekNavigation from "../../components/WeekNavigation.astro";
 import { render } from "astro:content";
 import { getPublishedCollection } from "astro-course-university/content";
 import RelatedContent from "astro-course-university/components/RelatedContent.astro";
@@ -25,6 +26,7 @@ const { Content } = await render(session);
   {...siteConfig}
 >
   <p><strong>{formatCourseDate(session.data.date)}</strong></p>
+  <WeekNavigation week={session.data.week} kind="sessions" />
   {caseFor(session.data.week) && <Workbench week={session.data.week} />}
   <Content />
   <SpecList spec={session.data.spec}>

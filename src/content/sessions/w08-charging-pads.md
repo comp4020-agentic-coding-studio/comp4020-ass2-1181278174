@@ -22,9 +22,9 @@ when the second one can load, and what changes if the second drone had landed fi
 
 ## In the tutorial
 
-Two hours, the same shape every week: 15 minutes of prediction and hand computation, 25
-minutes deriving or tracing a small example, 55 minutes implementing and comparing, 25
-minutes of tests and explanation.
+Use the experiment steps above to record a prediction and a controlled comparison.
+In the two-hour tutorial, work through the small example, implement the key change in
+your own planner, and finish with tests and an explanation.
 
 Schedule a two-drone, one-pad example by hand, then run the five-drone, two-pad case.
 Apply the same migration move with shared charging switched off and on, and locate the
@@ -33,4 +33,4 @@ source of the difference.
 ## Afterwards
 
 A hand-computed charging timetable, capacity tests, a cross-drone dependence note and
-the first full A2 plan. 3D is a side view this week; pad occupancy is visible.
+the first full A2 plan. Use the labelled map and result tables to connect the calculation to the hill.

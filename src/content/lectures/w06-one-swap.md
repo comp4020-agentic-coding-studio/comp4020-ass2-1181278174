@@ -30,4 +30,4 @@ model; never lower lateness by dropping an order.
 ## Where it goes next
 
 The swap move stays; week 7 adds cross-drone migration and week 11 re-evaluates with
-real trajectories. 3D is a side view this week.
+real trajectories. Use the labelled map and result tables to connect the calculation to the hill.

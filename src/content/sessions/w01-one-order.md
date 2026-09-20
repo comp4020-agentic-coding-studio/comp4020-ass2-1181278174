@@ -23,9 +23,9 @@ think is illegal and why.
 
 ## In the tutorial
 
-Two hours, the same shape every week: 15 minutes of prediction and hand computation, 25
-minutes deriving or tracing a small example, 55 minutes implementing and comparing, 25
-minutes of tests and explanation.
+Use the experiment steps above to record a prediction and a controlled comparison.
+In the two-hour tutorial, work through the small example, implement the key change in
+your own planner, and finish with tests and an explanation.
 
 On the eight-node sub-graph of the kitchen's block (kitchen, depot merge point, four
 intersections, houses #03 and #05), list three candidate routes and compute their costs
@@ -36,4 +36,4 @@ delivery and return.
 ## Afterwards
 
 A one-page problem definition, a hand-computed route table, a task state diagram and one
-geometric counterexample. 3D is the main view this week: which connections the buildings block.
+geometric counterexample. The tutorial pairs the computed results with a labelled map; week 4 also includes the route elevation profile.

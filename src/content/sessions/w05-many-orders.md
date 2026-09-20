@@ -23,9 +23,9 @@ returned time separate them?
 
 ## In the tutorial
 
-Two hours, the same shape every week: 15 minutes of prediction and hand computation, 25
-minutes deriving or tracing a small example, 55 minutes implementing and comparing, 25
-minutes of tests and explanation.
+Use the experiment steps above to record a prediction and a controlled comparison.
+In the two-hour tutorial, work through the small example, implement the key change in
+your own planner, and finish with tests and an explanation.
 
 Compute the first few of the six orders #01–#06 by hand, then implement the timetable
 recurrence. Compare FIFO with earliest-deadline using the course's stated primary
@@ -35,4 +35,4 @@ changes" counterexample.
 ## Afterwards
 
 A single-drone timetable function, a per-order ledger, two baseline results and an
-objective definition. 3D is a side view this week.
+objective definition. Use the labelled map and result tables to connect the calculation to the hill.

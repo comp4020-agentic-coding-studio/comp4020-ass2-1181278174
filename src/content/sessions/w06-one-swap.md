@@ -1,13 +1,13 @@
 ---
 title: "The swaps stop; 720 permutations do not"
-description: "Implement a swap improver, find where it stops, and prove with the enumerator that a better sequence exists."
+description: "Implement a swap improver, find where it stops, and measure its exact gap against all 720 permutations."
 week: 6
 date: 2027-03-31
 teachers:
   - kofi-marchetti
 spec:
   - "your improver's stopping condition matches what your report claims"
-  - "you can show a sequence the enumerator finds that your swaps did not"
+  - "you report the measured gap, including zero, and distinguish the canonical case from the symbolic counterexample"
   - "\"no further improvement\" is never written as \"optimal\" in your report"
 ---
 
@@ -23,15 +23,14 @@ to be sure either way.
 
 ## In the tutorial
 
-Two hours, the same shape every week: 15 minutes of prediction and hand computation, 25
-minutes deriving or tracing a small example, 55 minutes implementing and comparing, 25
-minutes of tests and explanation.
+Use the experiment steps above to record a prediction and a controlled comparison.
+In the two-hour tutorial, work through the small example, implement the key change in
+your own planner, and finish with tests and an explanation.
 
 Implement a swap improver that prints every accepted move with the objective before and
-after. Find where it stops, check the final neighbourhood item by item, then prove with
-the enumerator that a better sequence exists. Tidy your A1 search and scheduling code.
+after. Find where it stops, check the final neighbourhood item by item, then use the enumerator to measure the exact gap. On the canonical flight case the gap is zero. Use the lecture’s labelled symbolic example to demonstrate a local optimum that is not global. Tidy your A1 search and scheduling code.
 
 ## Afterwards
 
 The swap improver, a single-drone comparison report, a local-optimum counterexample and
-a full A1 draft. 3D is a side view this week.
+a full A1 draft. Use the labelled map and result tables to connect the calculation to the hill.

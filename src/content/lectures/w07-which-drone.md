@@ -28,4 +28,4 @@ the plan objective. Say clearly what an independent estimate does and does not p
 
 ## Where it goes next
 
-A1's search, timetable and swap logic continue as the start of A2. 3D is a side view this week; the two drone types are distinguishable.
+A1's search, timetable and swap logic continue as the start of A2. Use the labelled map and result tables to connect the calculation to the hill.

@@ -1,0 +1,41 @@
+---
+const { week } = Astro.props;
+const checkpoints: Record<number, { question: string; given: string; answer: string; scope: string }> = {
+  1: { question: "What makes a direct connection invalid?", given: "Two waypoints are outside a building, but their connecting segment crosses its footprint. A longer path follows the allowed edges around it.", answer: "Checking endpoints is insufficient: every segment must be legal. The longer legal path is a candidate; the direct blocked segment is not an edge in the graph. Delivery and return remain separate task phases.", scope: "Geometric reasoning on the kitchen block; inspect an actual connection in the tutorial." },
+  2: { question: "Can we stop when G is first discovered?", given: "Symbolic directed costs: S→G = 10, S→A = 1, A→G = 1. Start at S with g(S) = 0.", answer: "After S, OPEN contains A:1 and G:10. Pop A and improve G to 2. Pop G at 2 to finish. Stopping when S first discovers G would incorrectly return 10.", scope: "Small symbolic route at the kitchen; non-negative costs, no energy constraint." },
+  3: { question: "Why does the first run return 5 instead of 4?", given: "S→A = 3, S→B = 1, B→A = 1, A→G = 2. Set h(B)=3 and all other h=0. A is expanded before B.", answer: "B later reaches A with g=2, improving its old value 3. Without reopening A, G stays at cost 5. Reopening propagates the improvement and returns S→B→A→G at 4. Consistency fails on B→A because 3 > 1+0.", scope: "The tutorial's exact four-edge counterexample; heuristic values and edge costs use the same unit." },
+  4: { question: "Does the faster arrival dominate the cheaper arrival?", given: "Symbolic labels at the hilltop Q: ridge (time 4, energy 7), contour (time 6, energy 3). Return adds (2,2); usable energy is 8.", answer: "Neither outbound label dominates the other. Complete trips are ridge (6,9), which exceeds 8, and contour (8,5), which fits. Keeping only the faster label loses a feasible complete trip.", scope: "Symbolic ridge/contour calculation. The live #07 experiment uses seconds and kJ from the canonical map." },
+  5: { question: "Which objective prefers the far order first?", given: "Symbolic N: delivery 1 min, round trip 2 min, promise 10. F: delivery 4 min, round trip 8 min, promise 5. Both ready at 0; no loading or charging.", answer: "N→F delivers at 1 and 6: total lateness 1, sum of delivery times 7. F→N delivers at 4 and 9: lateness 0, sum 13. Both return at 10. Total lateness prefers F first; the sum of delivery times prefers N first. Declare the objective before comparing.", scope: "Simplified near/far orders on Slop Hill. In the canonical six-order demo the preset methods tie on zero lateness." },
+  6: { question: "What does a full swap scan establish?", given: "Six positions have 6×5÷2 = 15 pair swaps. Checking all 15 and finding no strict improvement ends local search. Full enumeration checks 6! = 720 sequences.", answer: "The swap scan proves local optimality for that neighbourhood only. Enumeration establishes the optimum for this finite six-order instance. The canonical flight case has zero gap. In the separate symbolic case below, swaps stop at (48,55) while enumeration reaches (46,51).", scope: "Distinguish the live canonical case from the symbolic counterexample; objective is lexicographic." },
+  7: { question: "When should an assignment cost be infinite?", given: "Order #20 weighs 3.5 kg. A type L drone can carry 1.5 kg; type H can carry 4 kg.", answer: "Exclude every L–#20 pair before comparing predicted finish times: 3.5 > 1.5. H passes this payload test because 3.5 ≤ 4, but the complete energy and return checks still apply. A fast infeasible assignment cannot win an efficiency comparison.", scope: "Canonical payload values; a feasibility filter is separate from the scheduling objective." },
+  8: { question: "When may the third drone start charging?", given: "Symbolic kitchen queue: pad 1 holds A on [0,10); pad 2 holds B on [0,20). C requests at 5 and needs 6 seconds of charge.", answer: "C starts at 10 on the first released pad and finishes at 16. It waits 5 seconds on the ground. Process requests by arrival time, with the fixed drone-id tie break; planning a flight earlier does not entitle it to jump this queue.", scope: "A small two-pad interval calculation. Full charging durations in the live case come from energy used and charging rate." },
+  9: { question: "Where do the real corridor intervals overlap?", given: "B holds [87,112); A wants [107,132), in seconds after A's take-off. The corridor has capacity 1.", answer: "max(87,107)=107 < min(112,132)=112, so the conflict lasts 5 seconds. A can wait at the west entrance and use [112,137). Half-open intervals let B leave at the instant A enters. Hover adds energy as well as time.", scope: "The live two-drone corridor case. The slide deck also includes a separately labelled smaller symbolic model." },
+  10: { question: "Why must a waiting state retain time?", given: "Symbolic corridor: B holds [0,6). A reaches waiting point P at 3; P→G takes 2 seconds.", answer: "The legal trace is (P,3)→(P,4)→(P,5)→(P,6)→(G,8). A key containing only P discards the later waiting states. The full engine also keeps task phase and energy: adding time alone does not establish battery feasibility.", scope: "Small space-time counterexample at the same corridor; not the full-map timing." },
+  11: { question: "Why must a migration trigger full re-evaluation?", given: "Move #07 from drone A to C while keeping all orders. C's return time and charging request change; another drone may now wait at a pad or the corridor.", answer: "Rebuild the affected joint timetable and reservations from the same starting state before accepting the move. Compare total lateness first, then all-returned time, then energy. Reusing old waits would evaluate a different plan from the one being proposed.", scope: "One migration in the stored reference assignment. The live page recomputes the consequences rather than re-running the whole optimiser." },
+  12: { question: "What does twenty on-time deliveries prove?", given: "A reference assignment completes all twenty known orders under the published deterministic model. A separate new order has not been tested.", answer: "The result is evidence for the known instance, configuration and checking scope. It does not prove global optimality, success on the new order, or real-world flight safety. A reproducible report includes inputs, algorithm settings, output events, failures and limits.", scope: "Final evaluation: keep experimental observations separate from general guarantees." },
+};
+const item = checkpoints[week];
+---
+<section class="lecture-checkpoint">
+  <h2>Work through one example</h2>
+  <p class="checkpoint-scope">{item.scope}</p>
+  <h3>{item.question}</h3>
+  <p>{item.given}</p>
+  <details><summary>Check the reasoning</summary><p>{item.answer}</p>
+    {week === 6 && <>
+      <p>Symbolic orders A–F, with no loading or charging. Start each task at max(previous return, ready time); delivery adds d, return adds p.</p>
+      <table><caption>Symbolic six-order counterexample · teaching time units</caption><thead><tr><th scope="col">Order</th><th scope="col">Ready</th><th scope="col">d</th><th scope="col">p</th><th scope="col">Promise</th></tr></thead><tbody>
+        {[["A",5,3,6,9],["B",6,1,2,13],["C",3,6,12,12],["D",4,6,12,28],["E",1,5,10,25],["F",6,4,8,22]].map((row) => <tr>{row.map((v) => <td>{v}</td>)}</tr>)}
+      </tbody></table>
+      <p>Earliest deadline: A→C→B→F→E→D, objective (57,55). Swaps: A→B→C→F→E→D, (48,55). One exact optimum: E→B→A→F→C→D, (46,51). Compute both terms independently before accepting the claim.</p>
+    </>}
+  </details>
+</section>
+<style>
+  .lecture-checkpoint { padding: 1rem 1.25rem; margin-block: 2rem; background: var(--at-bg-alt); border-left: 3px solid var(--at-primary); }
+  .lecture-checkpoint h2 { margin-top: 0; }
+  .checkpoint-scope { font-size: 0.9rem; color: var(--at-text-secondary); }
+  .lecture-checkpoint summary { cursor: pointer; font-weight: 600; }
+  .lecture-checkpoint table { width: 100%; font-variant-numeric: tabular-nums; font-size: 0.9rem; }
+  .lecture-checkpoint td, .lecture-checkpoint th { padding: 0.25rem; }
+</style>

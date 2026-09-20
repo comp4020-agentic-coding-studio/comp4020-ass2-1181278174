@@ -30,4 +30,4 @@ candidate plan is recomputed together with every affected resource.
 ## Where it goes next
 
 The same occupancy-interval representation is used for the corridor in week 9 and for
-whole-system recomputation in week 11. 3D is a side view this week; pad occupancy is visible.
+whole-system recomputation in week 11. Use the labelled map and result tables to connect the calculation to the hill.

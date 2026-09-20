@@ -30,4 +30,4 @@ interval is not a real-world separation standard.
 ## Where it goes next
 
 The state, queue and resource judgements of weeks 2 to 4 are unified into one search in
-week 10. 3D is the main view this week: the conflict shown as a volume of air in the corridor.
+week 10. The tutorial pairs the computed results with a labelled map; week 4 also includes the route elevation profile.

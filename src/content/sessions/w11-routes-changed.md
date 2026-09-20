@@ -24,9 +24,9 @@ have to be true for the answer to change.
 
 ## In the tutorial
 
-Two hours, the same shape every week: 15 minutes of prediction and hand computation, 25
-minutes deriving or tracing a small example, 55 minutes implementing and comparing, 25
-minutes of tests and explanation.
+Use the experiment steps above to record a prediction and a controlled comparison.
+In the two-hour tutorial, work through the small example, implement the key change in
+your own planner, and finish with tests and an explanation.
 
 Compare three methods: assignment on independent costs; fixed assignment with route
 coordination only; assignment with cost feedback allowed. Trace at least one order from
@@ -34,4 +34,4 @@ an assignment change to a changed wait, energy and lateness.
 
 ## Afterwards
 
-A linked-improvement record, three same-condition comparisons and one failure analysis. 3D is a side view this week.
+A linked-improvement record, three same-condition comparisons and one failure analysis. Use the labelled map and result tables to connect the calculation to the hill.

@@ -51,14 +51,14 @@ covers weeks 1 to 6 only; nothing about several drones is examined here.
 
 ## What you submit
 
-- Runnable code, configuration and tests, in the practice-pack format.
-- A structured six-order plan with its run results, exported from the workbench.
+- Runnable code, configuration and tests, using the practice guide linked above.
+- A structured six-order plan produced by your program, with run results and exported workbench comparison records.
 - The search and scheduling comparison tables.
 - A personal analysis of at most 1,200 English words. Code, references and tables do not
   count. It states assumptions, correctness conditions, counterexamples and experimental
   conclusions; it is not a development diary.
 
-## How it is marked
+## How to justify the result
 
 The four criteria below carry the weights shown. Constraints are checked before performance
 is compared: a plan with a violation is not a valid plan, but an accurate diagnosis of why it

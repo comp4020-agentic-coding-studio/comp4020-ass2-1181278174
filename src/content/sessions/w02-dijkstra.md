@@ -23,9 +23,9 @@ generated would return.
 
 ## In the tutorial
 
-Two hours, the same shape every week: 15 minutes of prediction and hand computation, 25
-minutes deriving or tracing a small example, 55 minutes implementing and comparing, 25
-minutes of tests and explanation.
+Use the experiment steps above to record a prediction and a controlled comparison.
+In the two-hour tutorial, work through the small example, implement the key change in
+your own planner, and finish with tests and an explanation.
 
 Trace a wrong implementation that returns early, then complete the search core. Test
 source equals goal, unreachable, repeated improvement and equal-cost paths. Count
@@ -34,4 +34,4 @@ effective expansions and queue operations; animation steps are not algorithm sta
 ## Afterwards
 
 A runnable Dijkstra, parent-pointer reconstruction, four test classes and a short
-correctness note. 3D is a side view this week; the graph and the queue table carry the argument.
+correctness note. Use the labelled map and result tables to connect the calculation to the hill.

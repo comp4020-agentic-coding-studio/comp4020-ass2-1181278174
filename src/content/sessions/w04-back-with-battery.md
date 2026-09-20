@@ -17,17 +17,18 @@ The fastest route runs out of battery; can we declare the order undeliverable?
 
 ## Before the tutorial
 
-Two routes to #07: the ridge line, S→A→Q, and the contour route, S→B→Q; then Q→G back
-down. Usable energy is 8. Before running: which route is faster, which is cheaper, and
+Use the lecture’s symbolic version of #07: ridge S→A→Q gives label (4,7), contour
+S→B→Q gives (6,3), and the return adds (2,2), written as (time, energy). Usable energy
+is 8 teaching units; these are separate from the live map’s seconds and kJ. Before running: which route is faster, which is cheaper, and
 does either dominate the other at Q?
 
 ## In the tutorial
 
-Two hours, the same shape every week: 15 minutes of prediction and hand computation, 25
-minutes deriving or tracing a small example, 55 minutes implementing and comparing, 25
-minutes of tests and explanation.
+Use the experiment steps above to record a prediction and a controlled comparison.
+In the two-hour tutorial, work through the small example, implement the key change in
+your own planner, and finish with tests and an explanation.
 
-In the label-search skeleton complete the budget and dominance checks (strategy slot 2).
+Implement the budget and dominance checks in your label-search module.
 Run the wrong version that keeps only the fastest label per node first and explain what
 it lost. Confirm by enumerating both routes. Connect to the ledger and watch loaded
 outbound, unloaded return and service consumption.
@@ -35,4 +36,4 @@ outbound, unloaded return and service consumption.
 ## Afterwards
 
 The resource-extension and label-filter functions, two feasibility counterexamples and a
-full-task record. 3D is the main view this week: the two routes to #07 coloured by energy, with the climb visibly more expensive.
+full-task record. The tutorial pairs the computed results with a labelled map; week 4 also includes the route elevation profile.

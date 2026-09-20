@@ -23,9 +23,9 @@ comes back?
 
 ## In the tutorial
 
-Two hours, the same shape every week: 15 minutes of prediction and hand computation, 25
-minutes deriving or tracing a small example, 55 minutes implementing and comparing, 25
-minutes of tests and explanation.
+Use the experiment steps above to record a prediction and a controlled comparison.
+In the two-hour tutorial, work through the small example, implement the key change in
+your own planner, and finish with tests and an explanation.
 
 Predict, trace, locate the bug, fix re-expansion, then change the graph so the same bug
 appears on a different structure. On the same graph compare h = 0 with a legal heuristic
@@ -34,4 +34,4 @@ on cost, expansions and time. Put your own h in strategy slot 1.
 ## Afterwards
 
 A* reusing your week-2 loop, the counterexample and its regression test, the heuristic's
-justification and a small comparison table. 3D is a side view this week.
+justification and a small comparison table. Use the labelled map and result tables to connect the calculation to the hill.

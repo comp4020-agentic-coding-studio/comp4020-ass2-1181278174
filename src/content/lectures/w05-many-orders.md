@@ -29,4 +29,4 @@ and routes fixed, swapping the order does not change total flight distance.
 ## Where it goes next
 
 The same evaluation function drives the ordering improvements of week 6 and the
-assignment of week 7. 3D is a side view this week.
+assignment of week 7. Use the labelled map and result tables to connect the calculation to the hill.

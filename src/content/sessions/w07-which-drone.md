@@ -23,9 +23,9 @@ take, and why?
 
 ## In the tutorial
 
-Two hours, the same shape every week: 15 minutes of prediction and hand computation, 25
-minutes deriving or tracing a small example, 55 minutes implementing and comparing, 25
-minutes of tests and explanation.
+Use the experiment steps above to record a prediction and a controlled comparison.
+In the two-hour tutorial, work through the small example, implement the key change in
+your own planner, and finish with tests and an explanation.
 
 Three drones of one type on #01–#09 plus #20, then the same map with two types; #20 fits
 only type H. Implement earliest-predicted-completion assignment (strategy slot 4) and
@@ -34,4 +34,4 @@ one cross-drone migration. Build an "equal counts, unequal time" counterexample.
 ## Afterwards
 
 Feasibility and cost matrices, a greedy initial solution and cross-drone improvement
-records. 3D is a side view this week; the two drone types are distinguishable.
+records. Use the labelled map and result tables to connect the calculation to the hill.

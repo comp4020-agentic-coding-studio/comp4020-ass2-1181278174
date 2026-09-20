@@ -23,9 +23,9 @@ either can still meet its promised time.
 
 ## In the tutorial
 
-Two hours, the same shape every week: 15 minutes of prediction and hand computation, 25
-minutes deriving or tracing a small example, 55 minutes implementing and comparing, 25
-minutes of tests and explanation.
+Use the experiment steps above to record a prediction and a controlled comparison.
+In the two-hour tutorial, work through the small example, implement the key change in
+your own planner, and finish with tests and an explanation.
 
 In the provided skeleton complete neighbour generation and reservation filtering.
 Compare two priorities (strategy slot 5); check that added waiting changes energy,
@@ -34,4 +34,4 @@ delivery and return together. Add one failed-reservation rollback test.
 ## Afterwards
 
 The key cooperative-search functions, results under two priorities, and notes on budget
-and failure classes. 3D is the main view this week: scrub the timeline and watch existing reservations make the next drone wait or detour.
+and failure classes. The tutorial pairs the computed results with a labelled map; week 4 also includes the route elevation profile.

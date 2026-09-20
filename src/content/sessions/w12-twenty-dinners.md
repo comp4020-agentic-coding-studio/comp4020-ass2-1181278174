@@ -24,9 +24,9 @@ think caused it.
 
 ## In the tutorial
 
-Two hours, the same shape every week: 15 minutes of prediction and hand computation, 25
-minutes deriving or tracing a small example, 55 minutes implementing and comparing, 25
-minutes of tests and explanation.
+Use the experiment steps above to record a prediction and a controlled comparison.
+In the two-hour tutorial, work through the small example, implement the key change in
+your own planner, and finish with tests and an explanation.
 
 Run and audit the final plan. Take the order you picked and trace its cause through
 events and search states. Reproduce one conclusion given by a peer or the teacher, and
@@ -34,4 +34,4 @@ write your personal explanation.
 
 ## Afterwards
 
-A2's code, plan, per-order and resource records, comparison tables and your explanation. 3D is the main view this week: the twenty-order replay, stopped at the failure point of the order you chose.
+A2's code, plan, per-order and resource records, comparison tables and your explanation. The tutorial pairs the computed results with a labelled map; week 4 also includes the route elevation profile.

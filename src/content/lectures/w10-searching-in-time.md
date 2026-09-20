@@ -28,4 +28,4 @@ prioritised planning, stated in one sentence you can defend.
 
 ## Where it goes next
 
-The real cost of these routes replaces week 7's independent estimate in week 11. 3D is the main view this week: scrub the timeline and watch existing reservations make the next drone wait or detour.
+The real cost of these routes replaces week 7's independent estimate in week 11. The tutorial pairs the computed results with a labelled map; week 4 also includes the route elevation profile.

@@ -23,11 +23,10 @@ are labelled and never compared as if they were the same conditions.
 
 ## 2. Parameters
 
-The canonical data is five files: the map, the orders, the fleet, the pads and the rules.
+The canonical scenario has four input files: map, orders, fleet and rules. Charging pad capacity is part of rules.
 Their checksums are pinned in the repository's own tests, and every weekly case is a
 subset or a view of them. The table below lists what the model depends on and which values
-are fixed. Values marked *to be set* are calibrated against a reference run before the data
-is released, and published here with their range and source when they are.
+are fixed. These are course-set parameters, published in the downloadable canonical scenario on each assignment page; they are not manufacturer specifications.
 
 | Parameter | Value | Status |
 |---|---|---|
@@ -52,10 +51,9 @@ That reference plan is the baseline the assignments compare against. It is store
 This site is static. Everything it computes runs in your browser, and everything it holds
 — the data files, the reference plans, the cases — can be read by anyone who opens the
 page source. The reference plans on the site are labelled *reference plan, re-validated
-live*: the plan was computed in advance; the validator checks it again in front of you.
+live*: the assignment was computed in advance; the evaluator reconstructs its tasks and the resource validator checks their intervals.
 
-The workbench's plan check is a local pre-check. It runs the same validator the course
-uses, but it is not a submission and not a mark. Nothing on this site says "received" or
+The workbench check covers activity overlap, resource capacity and delivery accounting. Route, payload and energy calculations belong to the evaluator; the interval validator cannot independently verify arbitrary imported trajectories. The site does not import new orders or complete flight plans. Use your own program for those assignment experiments. Nothing on this site says "received" or
 "submitted", because no service behind it could make that true. Formal submission and
 marking happen through the assignment pages' stated process, on the fixed cases.
 
@@ -84,16 +82,14 @@ reason; extensions after the due date are given only for documented circumstance
 
 ## 5. Accessibility
 
-Every pointer action has a keyboard path: ordering has move-up and move-down buttons,
-selection has lists, playback has previous and next event buttons, and the 3D views have
-orbit buttons. Every 3D view has a text description and a result table beside it, and
-nothing on the site is conveyed by colour alone. The site respects your reduced-motion
-setting: nothing autoplays, and every animation has a static result and a step button.
-The core operations — change, run, compare, locate, export — work at desktop width and on
-a phone; the phone shows tables first and loads 3D only when you ask for it.
+The controls use native buttons, lists and text fields and can be operated with a keyboard.
+Maps have text descriptions, route legends and direction arrows. The W4 height profile
+uses the canonical waypoint heights; the hill shading on the map is illustrative. Labels
+are laid out for the available width, and detailed tables scroll within their own area.
 
-If something is not reachable for you, tell the tutor; that is a bug in the site, not a
-limit you should work around.
+Nothing autoplays. Search expands one step at a time when requested. Experiment notes
+can be saved locally and exported. The current release uses two-dimensional maps and
+height profiles; it has no orbit camera or animated flight playback.
 
 ## 6. Who to ask
 

@@ -30,4 +30,4 @@ generated.
 ## Where it goes next
 
 The same search loop takes a heuristic in week 3 and searches space-time states in week
-10. 3D is a side view this week; the graph and the queue table carry the argument.
+10. Use the labelled map and result tables to connect the calculation to the hill.

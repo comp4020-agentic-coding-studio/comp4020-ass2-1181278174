@@ -29,4 +29,4 @@ each model condition it depends on. Never add metres to seconds.
 ## Where it goes next
 
 The heuristic and the state-deduplication judgement come back in resource labels (week
-4) and space-time search (week 10). 3D is a side view this week.
+4) and space-time search (week 10). Use the labelled map and result tables to connect the calculation to the hill.

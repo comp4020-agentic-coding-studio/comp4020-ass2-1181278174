@@ -28,4 +28,4 @@ you cannot support.
 
 ## Where it goes next
 
-Nothing new this week; everything from the semester is in use. 3D is the main view this week: the twenty-order replay, stopped at the failure point of the order you chose.
+Nothing new this week; everything from the semester is in use. The tutorial pairs the computed results with a labelled map; week 4 also includes the route elevation profile.

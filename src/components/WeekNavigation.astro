@@ -1,0 +1,16 @@
+---
+import { getPublishedCollection } from "astro-course-university/content";
+import { withBase } from "astro-theme-university/url";
+const { week, kind } = Astro.props;
+const entries = await getPublishedCollection(kind as "lectures" | "sessions");
+const otherKind = kind === "lectures" ? "sessions" : "lectures";
+const other = (await getPublishedCollection(otherKind)).find((e) => e.data.week === week)!;
+const previous = entries.find((e) => e.data.week === week - 1), next = entries.find((e) => e.data.week === week + 1);
+---
+<nav class="week-navigation" aria-label="Course week navigation">
+  {previous && <a href={withBase(`/${kind}/${previous.id}/`)}>← Week {week - 1}</a>}
+  <a href={withBase(`/${otherKind}/${other.id}/`)}>{otherKind === "lectures" ? "This week's lecture" : "Try this week's tutorial"}</a>
+  <a href={withBase(`/lab/#lab-w${week}`)}>Open W{week} in Lab</a>
+  {next && <a href={withBase(`/${kind}/${next.id}/`)}>Week {week + 1} →</a>}
+</nav>
+<style>.week-navigation { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; font-size: 0.9rem; padding-block: 0.75rem; margin-block: 0.5rem 1.5rem; border-block: 1px solid var(--at-border); }</style>

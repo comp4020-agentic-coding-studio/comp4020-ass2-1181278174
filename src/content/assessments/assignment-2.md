@@ -52,7 +52,7 @@ after the week 12 tutorial. It starts with assignment and completes coordination
    changed an assignment or an order. Attach the results under fixed conditions and a
    failure explanation.
 6. Design one new order — place, weight, promised time — that makes the reference method
-   late or infeasible. Import it into the workbench, validate it, and explain which
+   late or infeasible. Run it in your own planner using the published scenario format, validate it, and explain which
    assumption of the reference method it hits.
 
 ## What you submit
@@ -60,11 +60,11 @@ after the week 12 tutorial. It starts with assignment and completes coordination
 - Code and tests, with algorithm and configuration versions.
 - The twenty-order plan, with per-order and resource event records.
 - The comparison tables for the three levels and the two priorities.
-- The designed order and its validation, as an export or a link.
+- The designed order and its validation, as a separate input file and checked output.
 - A personal analysis of at most 1,600 English words. Formal evaluation uses the fixed cases
   and resources; there are no marks for code volume or rendering quality.
 
-## How it is marked
+## How to justify the result
 
 The four criteria below carry the weights shown. Constraints first, performance second: for
 complete feasible plans the objective is total lateness, then the time every drone is back,
