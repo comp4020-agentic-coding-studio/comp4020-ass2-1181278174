@@ -7,7 +7,6 @@
 // leg is planned in space-time against the reservations committed so far.
 
 import type { DroneType, FleetData, MapData, Order, RulesData } from "../data/schema.ts";
-import { hoverEnergy } from "./graph.ts";
 import { ReservationTable, type Occupancy } from "./reservations.ts";
 import { planSpaceTimeTask } from "./spacetime.ts";
 import { planTask } from "./task.ts";
@@ -68,18 +67,21 @@ export interface FleetPlan {
   expansions: number;
 }
 
-const staticMemo = new Map<string, { out: number; back: number; energy: number; pathOut?: string[]; pathBack?: string[]; status: string }>();
+type StaticTask = { out: number; back: number; energy: number; pathOut?: string[]; pathBack?: string[]; status: string };
+const staticMemo = new WeakMap<MapData, Map<string, StaticTask>>();
 
 /** The static round trip for a type and an order does not depend on when it starts; plan it once. */
 function staticTask(world: World, type: DroneType, order: Order) {
-  const key = `${world.map.seed}|${type.id}|${type.batteryJ}|${order.id}`;
-  let s = staticMemo.get(key);
+  let memo = staticMemo.get(world.map);
+  if (!memo) { memo = new Map(); staticMemo.set(world.map, memo); }
+  const key = JSON.stringify([world.rules, type, order]);
+  let s = memo.get(key);
   if (!s) {
     const p = planTask({ map: world.map, rules: world.rules, type, order, loadFrom: 0 });
     s = p.status === "found"
       ? { status: "found", out: p.chosen!.out.time, back: p.chosen!.back.time, energy: p.energyUsed!, pathOut: p.legs[1].path, pathBack: p.legs[3].path }
       : { status: p.status, out: 0, back: 0, energy: 0 };
-    staticMemo.set(key, s);
+    memo.set(key, s);
   }
   return s;
 }
@@ -95,6 +97,7 @@ interface Ev {
   kind: "start" | "charge";
   drone: string;
   promised: number;
+  record?: TaskRecord;
 }
 
 export function evaluate(world: World, assignment: Assignment, options: FleetOptions = {}): FleetPlan {
@@ -120,7 +123,7 @@ export function evaluate(world: World, assignment: Assignment, options: FleetOpt
     let k = 0;
     for (let i = 1; i < events.length; i++) {
       const a = events[i], b = events[k];
-      const key = (e: Ev) => (options.tieBreak === "promised" ? e.promised : 0);
+      const key = (e: Ev) => (e.kind === "start" && options.tieBreak === "promised" ? e.promised : 0);
       if (a.time < b.time || (a.time === b.time && (a.kind === "charge") !== (b.kind === "charge") && a.kind === "charge") ||
         (a.time === b.time && a.kind === b.kind && (key(a) < key(b) || (key(a) === key(b) && a.drone < b.drone)))) k = i;
     }
@@ -144,7 +147,16 @@ export function evaluate(world: World, assignment: Assignment, options: FleetOpt
     const drone = ev.drone;
     const type = droneType(world, drone);
     if (ev.kind === "charge") {
-      // handled inline below; kept for ordering
+      const rec = ev.record!;
+      const duration = Math.max(1, Math.ceil(rec.energyUsed! / (type.batteryJ / rules.chargeTicks)));
+      const chargeStart = table.earliestFree("pads", ev.time, duration, drone);
+      table.reserve({ resource: "pads", owner: drone, task: rec.order, start: chargeStart, end: chargeStart + duration });
+      activities.push({ owner: drone, kind: "charge", start: chargeStart, end: chargeStart + duration, task: rec.order });
+      rec.chargeStart = chargeStart;
+      rec.chargeEnd = chargeStart + duration;
+      rec.available = rec.chargeEnd;
+      available.set(drone, rec.available);
+      scheduleNext(drone);
       continue;
     }
     const i = idx.get(drone)!;
@@ -152,7 +164,6 @@ export function evaluate(world: World, assignment: Assignment, options: FleetOpt
     idx.set(drone, i + 1);
     const start = ev.time;
     const depart = start + rules.loadingTicks;
-    const budget = Math.floor(type.batteryJ * (1 - rules.reserveFraction));
 
     let outTicks: number, backTicks: number, hover = 0, groundWait = 0, energyUsed: number, pathOut: string[] | undefined, pathBack: string[] | undefined;
     let failure: string | undefined;
@@ -178,7 +189,6 @@ export function evaluate(world: World, assignment: Assignment, options: FleetOpt
     const deliver = arrive + rules.serviceTicks;
     const land = deliver + backTicks!;
     const turnaroundEnd = land + rules.turnaroundTicks;
-    void budget;
     activities.push({ owner: drone, kind: "load", start, end: depart, task: order.id });
     if (groundWait > 0) activities.push({ owner: drone, kind: "wait", start: depart, end: takeOff, task: order.id });
     activities.push(
@@ -188,22 +198,17 @@ export function evaluate(world: World, assignment: Assignment, options: FleetOpt
       { owner: drone, kind: "turnaround", start: land, end: turnaroundEnd, task: order.id },
     );
     deliveries.push({ order: order.id, owner: drone, tick: deliver });
-    const rec: TaskRecord = { order: order.id, drone, status: "flown", start, depart: takeOff, arrive, deliver, land, hover, groundWait, energyUsed: energyUsed! + hoverEnergy(type, 0), late: Math.max(0, deliver - order.promised), pathOut, pathBack };
+    const rec: TaskRecord = { order: order.id, drone, status: "flown", start, depart: takeOff, arrive, deliver, land, hover, groundWait, energyUsed: energyUsed!, late: Math.max(0, deliver - order.promised), pathOut, pathBack };
+    tasks.push(rec);
     if (charging && idx.get(drone)! < (assignment[drone]?.length ?? 0)) {
-      const rate = type.batteryJ / rules.chargeTicks;
-      const duration = Math.max(1, Math.ceil(energyUsed! / rate));
-      const chargeStart = table.earliestFree("pads", turnaroundEnd, duration, drone);
-      table.reserve({ resource: "pads", owner: drone, task: order.id, start: chargeStart, end: chargeStart + duration });
-      activities.push({ owner: drone, kind: "charge", start: chargeStart, end: chargeStart + duration, task: order.id });
-      rec.chargeStart = chargeStart;
-      rec.chargeEnd = chargeStart + duration;
-      available.set(drone, chargeStart + duration);
+      // Enqueue the actual request. Reserving a future pad while planning this
+      // flight lets a later arrival overtake a drone that is already waiting.
+      push({ time: turnaroundEnd, kind: "charge", drone, promised: 0, record: rec });
     } else {
       available.set(drone, turnaroundEnd);
+      rec.available = turnaroundEnd;
+      scheduleNext(drone);
     }
-    rec.available = available.get(drone);
-    tasks.push(rec);
-    scheduleNext(drone);
   }
 
   const occupancies = table.list();

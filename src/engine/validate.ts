@@ -1,5 +1,6 @@
-// The independent validator (docs/engine.md §5–§7): it reads a plan, never
-// a planner's opinion of it. A plan with a violation is not a valid plan.
+// The interval and delivery validator reads activities and occupancy records.
+// Its ok flag covers this scope, not independent geometry, payload or energy
+// validation of arbitrary imported trajectories. Those require the world and paths.
 // Unfinished orders are reported, not hidden, and stay in the denominator.
 
 import { overlaps, type Occupancy } from "./reservations.ts";

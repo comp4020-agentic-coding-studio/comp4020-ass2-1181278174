@@ -49,6 +49,16 @@ describe("greedy assignment", () => {
 });
 
 describe("the fleet evaluator", () => {
+  it("serves pad requests by actual arrival, even when flights were planned in a different order", () => {
+    const assignment = read("reference.json").greedy.assignment;
+    const plan = evaluate(world, assignment, { charging: true, corridor: true });
+    const requests = plan.tasks.filter((t) => t.chargeStart !== undefined).sort((a, b) =>
+      a.land! - b.land! || a.drone.localeCompare(b.drone));
+    for (let i = 1; i < requests.length; i++) {
+      expect(requests[i].chargeStart!, `${requests[i].drone}/${requests[i].order} jumped the queue ahead of ${requests[i - 1].drone}/${requests[i - 1].order}`)
+        .toBeGreaterThanOrEqual(requests[i - 1].chargeStart!);
+    }
+  });
   it("runs a consistent timetable per drone with charging off", () => {
     const g = greedyAssign(tenWorld);
     const plan = evaluate(tenWorld, g.assignment);
