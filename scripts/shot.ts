@@ -53,9 +53,13 @@ const PAGES = [
   { name: "tutorial-w05", path: "/sessions/w05-many-orders/" },
   { name: "tutorial-w06", path: "/sessions/w06-one-swap/" },
   { name: "tutorial-w06-720", path: "/sessions/w06-one-swap/?wb-timetable=" + encodeURIComponent('{"rule":"enumerate"}') },
+  // plans made by hand, through the deep link: the editor and the verdict
+  { name: "tutorial-w05-hand", path: "/sessions/w05-many-orders/?wb-timetable=" + encodeURIComponent('{"rule":"hand","hand":["#02","#01","#03","#04","#05","#06"]}') },
   { name: "tutorial-w07", path: "/sessions/w07-which-drone/" },
+  { name: "tutorial-w07-hand", path: "/sessions/w07-which-drone/?wb-assign=" + encodeURIComponent('{"rule":"hand","fleet":"mixed","hand":{"A":["#01","#03","#20"],"B":["#02","#05"],"C":["#04","#06"],"D":["#07","#08"],"E":["#09"]}}') },
   { name: "tutorial-w08", path: "/sessions/w08-charging-pads/" },
   { name: "tutorial-w09", path: "/sessions/w09-same-place/" },
+  { name: "tutorial-w09-hand", path: "/sessions/w09-same-place/?wb-corridor=" + encodeURIComponent('{"arrangement":"hand","delay":5,"via":"corridor"}') },
   { name: "tutorial-w10", path: "/sessions/w10-searching-in-time/" },
   { name: "tutorial-w11", path: "/sessions/w11-routes-changed/" },
   { name: "tutorial-w12", path: "/sessions/w12-twenty-dinners/" },
@@ -63,6 +67,8 @@ const PAGES = [
   { name: "people", path: "/people/" },
   { name: "policies", path: "/policies/" },
   { name: "lab", path: "/lab/" },
+  // a designed scenario through the deep link: an order on the summit, the corridor closed, one pad
+  { name: "lab-design", path: "/lab/?wb-design=" + encodeURIComponent('{"extra":[{"node":"summit","weight":1.5,"ready":5400,"promised":6600}],"node":"summit","weight":"1","ready":"5400","lead":"30","closure":"3600-5400","pads":"1","light":"3","heavy":"2"}') + "#lab-w1" },
   { name: "deck-w9", path: "/decks/same-place/" },
 ] as const;
 
