@@ -26,3 +26,8 @@ The course-content review and the separate visual-model plan are in
 acceptance record is [`course-revision-verification.md`](course-revision-verification.md).
 [`course-process-notes.md`](course-process-notes.md) gives factual evidence and questions
 for the owner's own process account.
+
+The Blender models, roads and event replay are documented in
+[`visual-model-contract.md`](visual-model-contract.md). The completed Plan B stages,
+measurements and reproduction steps are in
+[`visual-replay-verification.md`](visual-replay-verification.md).

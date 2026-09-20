@@ -59,6 +59,13 @@ The practice pack now calls actual student implementations and separates teacher
 Fresh-folder tests reject fabricated paths, changed timetable times, missing orders and
 illegal successors. The owner requested a separate commit for each completed step.
 
+The visual phase added original Blender houses and drones
+([`5276a3b`](https://github.com/comp4020-agentic-coding-studio/comp4020-ass2-1181278174/commit/5276a3b)).
+Replay now shows actual task phases, pad queues and corridor conflicts
+([`68f2539`](https://github.com/comp4020-agentic-coding-studio/comp4020-ass2-1181278174/commit/68f2539)).
+Boundary tests caught inconsistent curved-route elevations. Decorative scenery remains
+separate from flight legality; failed strategies never acquire successful flight records.
+
 The [verification record](docs/lab-rebuild-verification.md) distinguishes measured results
 from guarantees. The bounded search claims no global optimum. Canonical hashes, assessment
 dates and weights remain unchanged. The work is committed locally on `codex/ass2`;
