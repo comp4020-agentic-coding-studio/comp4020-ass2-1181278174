@@ -410,3 +410,12 @@ Poster fallback (in the SSR HTML); `<canvas role="img" aria-label>` plus the res
 keyboard orbit buttons; `prefers-reduced-motion`; disposal on `astro:before-swap`; no
 automatic load on the phone (tap the poster); total ≤ 1.2 MB. One missing and 3D is a
 deduction.
+
+## 7. Revision — 20 September 2026
+
+The owner requested implementation of the site and map review. The delivery sequence and
+acceptance criteria are in `improvement-plan.md`. For this revision the main map is a
+responsive 2D teaching view, with direction arrows, named landmarks, a route legend and
+endpoint framing; W4 pairs it with an elevation profile. Full WebGL scenes remain a later
+extension. The Lab selects one week at a time. Weekly prediction and explanation records
+can be saved locally and exported alongside the computed result and configuration.
