@@ -21,8 +21,9 @@ disagree, stop and ask.
 - `pnpm check` — `astro check`, then `pnpm build`, then `vitest run spec`. Run before every
   commit. This is the same command CI runs.
 - `pnpm check:evidence` — the submission gate: STARTER_CONTENT markers, the four starter
-  images, `PROCESS.md` (400–600 words, `TEMPLATE:` gone, every commit citation resolves),
-  this file exists. Run before `/ship`.
+  images, `PROCESS.md` (`TEMPLATE:` gone, every commit citation resolves), this file exists.
+  Run before `/ship`. It does not count words: the course guides 400–600 for `PROCESS.md`
+  with no penalty, and `spec/process.test.ts` fails above 1000.
 - `pnpm test:template` — starter internals, not ours. Ignore unless a template file changed.
 - `/preflight` before `/ship`. `/ship` flips the repo public. That cannot be undone and
   only happens on my word.
