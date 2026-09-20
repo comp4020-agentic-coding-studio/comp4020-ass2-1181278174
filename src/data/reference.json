@@ -1,0 +1,132 @@
+{
+  "method": "greedy earliest-completion on static costs, then best-improvement swaps and migrations under full re-evaluation with charging and corridor reservations",
+  "options": {
+    "charging": true,
+    "corridor": true
+  },
+  "greedy": {
+    "assignment": {
+      "A": [
+        "#01",
+        "#03",
+        "#04",
+        "#06",
+        "#07",
+        "#09",
+        "#10",
+        "#12",
+        "#15",
+        "#17",
+        "#19"
+      ],
+      "B": [
+        "#02",
+        "#05",
+        "#08",
+        "#11",
+        "#13",
+        "#16",
+        "#18"
+      ],
+      "C": [],
+      "D": [
+        "#14",
+        "#20"
+      ],
+      "E": []
+    },
+    "objective": {
+      "lateness": 10504,
+      "allReturned": 11649,
+      "energy": 1275860,
+      "lateCount": 7,
+      "sumDelivery": 111168
+    },
+    "onTime": 13,
+    "complete": true
+  },
+  "reference": {
+    "assignment": {
+      "A": [
+        "#01",
+        "#03",
+        "#04",
+        "#06",
+        "#09",
+        "#12",
+        "#15",
+        "#17",
+        "#19"
+      ],
+      "B": [
+        "#02",
+        "#05",
+        "#08",
+        "#11",
+        "#13",
+        "#16",
+        "#18"
+      ],
+      "C": [
+        "#07"
+      ],
+      "D": [
+        "#14",
+        "#20"
+      ],
+      "E": [
+        "#10"
+      ]
+    },
+    "objective": {
+      "lateness": 0,
+      "allReturned": 8579,
+      "energy": 1339003,
+      "lateCount": 0,
+      "sumDelivery": 92342
+    },
+    "onTime": 20,
+    "complete": true,
+    "status": "local-optimum"
+  },
+  "moves": [
+    {
+      "kind": "migrate",
+      "description": "#07: A → C at position 1",
+      "before": {
+        "lateness": 10504,
+        "allReturned": 11649,
+        "energy": 1275860,
+        "lateCount": 7,
+        "sumDelivery": 111168
+      },
+      "after": {
+        "lateness": 615,
+        "allReturned": 9654,
+        "energy": 1275860,
+        "lateCount": 3,
+        "sumDelivery": 98057
+      }
+    },
+    {
+      "kind": "migrate",
+      "description": "#10: A → E at position 1",
+      "before": {
+        "lateness": 615,
+        "allReturned": 9654,
+        "energy": 1275860,
+        "lateCount": 3,
+        "sumDelivery": 98057
+      },
+      "after": {
+        "lateness": 0,
+        "allReturned": 8579,
+        "energy": 1339003,
+        "lateCount": 0,
+        "sumDelivery": 92342
+      }
+    }
+  ],
+  "candidatesEvaluated": 1179,
+  "millis": 121557
+}
