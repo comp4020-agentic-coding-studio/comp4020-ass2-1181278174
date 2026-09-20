@@ -7,7 +7,8 @@ import { esc, mapPoint, tableHtml } from './render';
 import { placeName, placeText } from './places';
 import { corridorAt, replayBounds, replayIssues, skipIdle } from './replay-inspection';
 import { fleetAt, routePoints } from './replay';
-import { orderCause } from './lesson-evidence';
+import { orderCause, lessonEvidence } from './lesson-evidence';
+import { markLessonChanges } from './comparison';
 
 let cleanup:(()=>void)|undefined,mounted:HTMLElement|undefined;
 function mount(root:HTMLElement) {
@@ -86,7 +87,7 @@ function mount(root:HTMLElement) {
   }
   function draw(){
     pause();generation++;scene?.dispose();scene=undefined;loading3D=false;selectedPath=[];blocked=[];selectedOrder=undefined;trace=-1;tick=0;
-    content.innerHTML=exampleHtml(run,initial,mode);expanded.refresh();
+    content.innerHTML=exampleHtml(run,initial,mode);expanded.refresh();if(mode!=='start')markLessonChanges(content,lessonEvidence(initial,initial));
     if(week===1)inspect(mode==='start'?'route0':run.tables.find(t=>t.id==='connections')!.rows.find(r=>r.values[1]==='Building intersection')!.id);
     else if(run.scene?.orders.length)order(week===12?'#20':run.scene.orders[0].id,false);
     time(tick);

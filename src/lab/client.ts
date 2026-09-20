@@ -1,3 +1,4 @@
+import { metricComparison } from './comparison';
 import { canonical, defaultConfig, fingerprint, type LabConfig, type LabRun, type Selection, type SlotKey } from './model.ts';
 import { parseConfig } from './input.ts';
 import { importRecord, verifyPlanForInput } from './import.ts';
@@ -234,12 +235,13 @@ export function mountWorkspace(root: HTMLElement) {
         if (!host)
             return;
         const baseline = storage.baseline, compare = q('[data-comparison]');
-        compare.innerHTML = baseline ? `<p><strong>Baseline: ${esc(baseline.name)}</strong> · ${baseline.modelHash === run.modelHash ? 'Same model; compare the changed decision.' : 'Different model assumptions; these totals are not an algorithm-only improvement.'}</p><div class="lab-baseline-metrics">${run.metrics.map(m => { const b = baseline.metrics.find(x => x.key === m.key); const delta = typeof b?.value === 'number' && typeof m.value === 'number' ? m.value - b.value : undefined; return `<p>${esc(m.label)}: ${esc(b?.value ?? '—')} → ${esc(m.value)}${delta !== undefined ? ` (${delta > 0 ? '+' : ''}${delta})` : ''}</p>`; }).join('')}</div>` : '<p>No baseline yet. Keep this result before changing the strategy.</p>';
+        compare.innerHTML = baseline ? metricComparison(baseline,run,'Saved baseline') : '<p>No baseline yet. Keep this result before changing the strategy.</p>';
         if (baseline?.facts && run.plan) {
             const changes = run.plan.tasks.filter(t => { const b = baseline.facts!.find(x => x.id === t.order); return b && (b.drone !== t.drone || b.deliver !== t.deliver || b.land !== t.land); });
             if (changes.length)
                 compare.innerHTML += '<p><strong>Changed tasks · inspect the cause</strong></p><ul>' + changes.slice(0, 8).map(t => { const b = baseline.facts!.find(x => x.id === t.order)!; return `<li><button type="button" data-action="inspect" data-row-id="${esc(t.order)}">${esc(t.order)}: drone ${esc(b.drone)} → ${esc(t.drone)}, delivery ${b.deliver ?? '—'} → ${t.deliver ?? '—'}</button></li>`; }).join('') + '</ul>';
         }
+        const live=q('[data-live-comparison]');if(live)live.innerHTML=baseline?.input.week===run.input.week&&baseline.inputHash!==run.inputHash?metricComparison(baseline,run,'Starting case'):'';
         host.innerHTML = `<h3>Saved runs (${storage.archive.length}/8)</h3>${storage.archive.length ? `<ul>${storage.archive.map((x, i) => `<li><button type="button" data-action="restore" data-index="${i}">${esc(x.name)}</button> <small>${esc(x.inputHash)}</small></li>`).join('')}</ul>` : '<p>Your saved experiments will appear here.</p>'}`;
     }
     function snapshot(): Archive { return { name: `W${run.input.week} · ${run.input.caseId} · ${new Date().toLocaleTimeString()}`, input: run.input, inputHash: run.inputHash, modelHash: run.modelHash, metrics: run.metrics, notes: { ...storage.notes }, facts: run.plan?.tasks.map(t => ({ id: t.order, drone: t.drone, deliver: t.deliver, land: t.land })) }; }
