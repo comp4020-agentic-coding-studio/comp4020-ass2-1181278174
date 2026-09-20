@@ -40,23 +40,20 @@ export const slopCourseMetaSchema = z
 
 // The single source of truth for the course record. The generated homepage,
 // navigation label and /api/index.json all read this object.
-// Replace every placeholder value, but keep the shape: the catalogue ingests
-// this API contract when the course is published.
 //
-// The code's last three digits were assigned to this repo when it was
-// provisioned, and no other course in the cohort has them. Change the first
-// digit to your course's level (and `level` to match); keep the other three.
-// STARTER_CONTENT: replace this course record, then remove this comment.
+// The code's last three digits (969) were assigned to this repo; the first
+// digit is the level.
 export const courseMeta = slopCourseMetaSchema.parse({
-  code: "SLOP1969",
-  title: "Course Title Goes Here",
+  code: "SLOP3969",
+  title: "Twenty Dinners, One Hill",
   session: "Semester 1",
   year: 2027,
-  level: 1,
+  level: 3,
   startDate: "2027-02-22",
   endDate: "2027-05-28",
   description:
-    "One concise paragraph explaining what this course is, who it is for, " +
-    "and why somebody would choose to spend a semester taking it.",
-  tags: ["replace me"],
+    "One ghost kitchen, one evening, twenty orders. Start with a drone that can find a " +
+    "route; end with a planner that schedules all twenty across five drones, two charging " +
+    "pads and one shared corridor, and can say why a plan fails.",
+  tags: ["planning", "drones", "algorithms"],
 }) satisfies CourseMetaInput;
