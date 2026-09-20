@@ -91,3 +91,42 @@ export function straightLineTicks(graph: MapGraph, type: DroneType, goal: string
     return Math.floor(Math.hypot(n.x - g.x, n.y - g.y) / type.speed);
   };
 }
+
+export interface BiNeighbour {
+  to: string;
+  time: number;
+  energy: number;
+  edge?: string;
+}
+
+/** A graph whose edges carry both a time and an energy, for label search. */
+export interface BiGraph {
+  nodeIds(): string[];
+  neighbours(from: string): BiNeighbour[];
+}
+
+/** The map for one drone type and payload, each edge costed in ticks and joules. */
+export function fromMapTimeEnergy(map: MapData, type: DroneType, payloadKg = 0): BiGraph {
+  const ids = map.nodes.map((n) => n.id);
+  const out = new Map<string, BiNeighbour[]>();
+  for (const e of map.edges) {
+    const list = out.get(e.from) ?? [];
+    list.push({ to: e.to, time: edgeTicks(e, type), energy: edgeEnergy(e, type, payloadKg), edge: e.id });
+    out.set(e.from, list);
+  }
+  return { nodeIds: () => ids, neighbours: (from) => out.get(from) ?? [] };
+}
+
+/** A small (time, energy) graph given as a list of edges, for the teaching examples. */
+export function fromBiEdges(edges: { from: string; to: string; time: number; energy: number }[]): BiGraph {
+  const ids = new Set<string>();
+  const out = new Map<string, BiNeighbour[]>();
+  for (const e of edges) {
+    ids.add(e.from);
+    ids.add(e.to);
+    const list = out.get(e.from) ?? [];
+    list.push({ to: e.to, time: e.time, energy: e.energy });
+    out.set(e.from, list);
+  }
+  return { nodeIds: () => [...ids], neighbours: (from) => out.get(from) ?? [] };
+}
