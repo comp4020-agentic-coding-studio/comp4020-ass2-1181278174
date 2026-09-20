@@ -58,24 +58,32 @@ const bTakeOff = caseJson.a.takeOff + A.corridor!.enter - caseJson.b.leadTicks -
 const bWindow = { start: bTakeOff + B.corridor!.enter, end: bTakeOff + B.corridor!.exit };
 
 export interface CorridorState {
-  arrangement: "both" | "wait" | "detour";
+  arrangement: "both" | "wait" | "detour" | "hand";
+  /** By hand: seconds A's take-off is delayed on the ground. */
+  delay?: number;
+  /** By hand: A's route. */
+  via?: "corridor" | "around";
 }
+
+const DELAYS = [0, 5, 10, 15, 20, 25, 30, 45, 60];
 
 interface Outcome {
   label: string;
   aPath: string[];
   aCorridor?: { start: number; end: number };
   wait: number;
+  /** Seconds A's take-off was delayed on the ground, which costs no energy. */
+  delay: number;
   arrive: number;
   energy: number;
   verdict: string;
   ok: boolean;
 }
 
-function outcome(arr: CorridorState["arrangement"]): Outcome {
-  const t0 = caseJson.a.takeOff;
-  if (arr === "detour") {
-    return { label: "A detours around the ridge", aPath: A_DETOUR.path, wait: 0, arrive: t0 + A_DETOUR.ticks, energy: A_DETOUR.energy, verdict: "no shared resource used", ok: true };
+function outcome(arr: CorridorState["arrangement"], delay = 0, via: "corridor" | "around" = "corridor"): Outcome {
+  const t0 = caseJson.a.takeOff + (arr === "hand" ? delay : 0);
+  if (arr === "detour" || (arr === "hand" && via === "around")) {
+    return { label: arr === "hand" ? `by hand: A around the ridge, take-off ${delay} s later` : "A detours around the ridge", aPath: A_DETOUR.path, wait: 0, delay: arr === "hand" ? delay : 0, arrive: t0 + A_DETOUR.ticks, energy: A_DETOUR.energy, verdict: "no shared resource used", ok: true };
   }
   const table = new ReservationTable({ corridor: 1 });
   table.reserve({ resource: "corridor", owner: "B", start: bWindow.start, end: bWindow.end });
@@ -90,10 +98,11 @@ function outcome(arr: CorridorState["arrangement"]): Outcome {
   const v = validate({ orders: [order.id], activities: [], occupancies, deliveries: [], capacities: Object.fromEntries(Object.entries(rules.resources).map(([k, v]) => [k, v.capacity])), cutoff: rules.evening.cutoffTick });
   const conflict = v.violations.find((x) => x.rule === "capacity");
   return {
-    label: arr === "wait" ? "B first; A waits at the west end" : "both fly their own shortest route",
+    label: arr === "wait" ? "B first; A waits at the west end" : arr === "hand" ? `by hand: A through the corridor, take-off ${delay} s later` : "both fly their own shortest route",
     aPath: A.path,
     aCorridor: { start: enter, end: enter + dur },
     wait,
+    delay: arr === "hand" ? delay : 0,
     arrive: t0 + A.ticks + wait,
     energy: A.energy + hoverEnergy(L, wait),
     verdict: conflict ? `conflict: ${conflict.detail}` : `validated: no violation; A holds the corridor [${enter}, ${enter + dur})`,
@@ -128,13 +137,23 @@ export const corridorCase: CaseDef<CorridorState> = {
       { value: "both", label: "both depart as planned" },
       { value: "wait", label: "B first, A waits" },
       { value: "detour", label: "A detours" },
+      { value: "hand", label: "by hand: delay and route" },
     ] },
+    ...(state.arrangement === "hand" ? [
+      { id: "delay", label: "A's take-off delay", kind: "select" as const, value: String(state.delay ?? 0), options: DELAYS.map((d) => ({ value: String(d), label: `${d} s` })) },
+      { id: "via", label: "A's route", kind: "radio" as const, value: state.via ?? "corridor", options: [{ value: "corridor", label: "through the corridor" }, { value: "around", label: "around the ridge" }] },
+    ] : []),
   ],
-  apply: (state, action) => (action.id === "arrangement" && action.value ? { arrangement: action.value as CorridorState["arrangement"] } : state),
+  apply: (state, action) => {
+    if (action.id === "arrangement" && action.value) return { ...state, arrangement: action.value as CorridorState["arrangement"] };
+    if (action.id === "delay" && DELAYS.includes(Number(action.value))) return { ...state, arrangement: "hand", delay: Number(action.value) };
+    if (action.id === "via" && (action.value === "corridor" || action.value === "around")) return { ...state, arrangement: "hand", via: action.value };
+    return state;
+  },
   render: (state) => {
     const t0 = Date.now();
-    const o = outcome(state.arrangement);
-    const all = (["both", "wait", "detour"] as const).map((a) => ({ a, o: outcome(a) }));
+    const o = outcome(state.arrangement, state.delay ?? 0, state.via ?? "corridor");
+    const all = [...(["both", "wait", "detour"] as const).map((a) => ({ a, o: outcome(a) })), ...(state.arrangement === "hand" ? [{ a: "hand" as const, o }] : [])];
     const parts: string[] = [];
     parts.push(minimap(map, {
       routes: [{ path: B.path, cls: "route-fastest", label: "B, flying back" }, { path: o.aPath, cls: o.ok ? "route-chosen" : "route-found", label: `A, ${o.label}` }],
@@ -144,14 +163,14 @@ export const corridorCase: CaseDef<CorridorState> = {
       ariaLabel: `The ridge and the corridor. B's route back is dashed; A's route out to ${order.id} is solid: ${o.label}.`,
     }));
     parts.push(timeline(o));
-    parts.push(`<p class="wb-summary"><strong>${esc(o.label)}:</strong> ${o.ok ? "✓" : "✗"} ${esc(o.verdict)}. A reaches ${order.id} ${o.arrive} s after take-off${o.wait ? `, ${o.wait} s of them hovering at the west end` : ""}, using ${kJ(o.energy)}.</p>`);
+    parts.push(`<p class="wb-summary"><strong>${esc(o.label)}:</strong> ${o.ok ? "✓" : "✗"} ${esc(o.verdict)}. A reaches ${order.id} ${o.arrive} s after the planned take-off${o.delay ? `, ${o.delay} s of them waiting on the ground before take-off` : ""}${o.wait ? `, ${o.wait} s of them hovering at the west end` : ""}, using ${kJ(o.energy)}.</p>`);
     parts.push(table(
       [{ key: "label", label: "arrangement" }, { key: "corridor", label: "A in the corridor" }, { key: "arrive", label: "A arrives (s)", align: "right" }, { key: "wait", label: "hover (s)", align: "right" }, { key: "energy", label: "A's energy", align: "right" }, { key: "verdict", label: "validator" }],
       all.map(({ a, o: x }) => ({ label: x.label + (a === state.arrangement ? " (shown)" : ""), corridor: x.aCorridor ? `[${x.aCorridor.start}, ${x.aCorridor.end})` : "—", arrive: x.arrive, wait: x.wait, energy: kJ(x.energy), verdict: x.ok ? "✓ no violation" : "✗ conflict" })),
-      `B holds the corridor [${bWindow.start}, ${bWindow.end}). The three arrangements for A, all checked by the same validator`,
+      `B holds the corridor [${bWindow.start}, ${bWindow.end}). The arrangements for A, all checked by the same validator`,
       (r) => (String(r.verdict).startsWith("✗") ? "wb-bad" : String(r.label).includes("(shown)") ? "wb-good" : ""),
     ));
     const ms = Date.now() - t0;
-    return { html: parts.join(""), status: `computed in your browser · 3 arrangements, validator run on each · ${ms} ms · engine 0.1 · case corridor-two-drones` };
+    return { html: parts.join(""), status: `computed in your browser · ${all.length} arrangements, validator run on each · ${ms} ms · engine 0.1 · case corridor-two-drones` };
   },
 };
