@@ -43,9 +43,9 @@ is released, and published here with their range and source when they are.
 | Reserve | 15 % of the battery must remain on landing | fixed |
 | Objective | Total lateness, then all-returned time, then total energy, in that order | fixed |
 | Calibrated facts | A light drone can fly #01–#06. For #07 its fastest round trip (447 s, 84.7 kJ) is over its 80.75 kJ budget, so a slower, cheaper one (472 s, 80.4 kJ) is flown. Every order can be flown by some type; #20 only by H; H reaches all twenty; L cannot reach #14. | checked by the repository's tests |
-| Design target | A complete feasible baseline exists for the normal batch and the reference method delivers at least N orders on time | N to be set when the fleet planner exists |
+| Reference plan | A greedy assignment on static costs delivers 13 of the 20 on time. The reference method — that assignment, then best-improvement migrations with every candidate re-evaluated as a whole plan, charging queue and corridor reservations included — delivers all 20 on time and has every drone back by 20:23. | checked by the repository's tests |
 
-If the data does not meet the design target, the data changes, not the promise.
+That reference plan is the baseline the assignments compare against. It is stored and re-checked by the same evaluator every time the site is built, never trusted from the file.
 
 ## 3. What a static site can and cannot do
 

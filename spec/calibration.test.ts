@@ -70,3 +70,42 @@ describe("the calibrated facts", () => {
     expect(gentle.length).toBeGreaterThan(2 * steep.length);
   });
 });
+
+// The reference plan (tools/data/reference.ts) is stored, and re-evaluated
+// here through the fleet evaluator with charging and the corridor on: the
+// stored assignment must still give the stored objective, and it is the
+// number the course promises — every one of the twenty on time.
+describe("the reference plan", () => {
+  const ref = JSON.parse(read("reference.json").toString()) as {
+    greedy: { assignment: Record<string, string[]>; onTime: number };
+    reference: { assignment: Record<string, string[]>; objective: { lateness: number; allReturned: number; energy: number }; onTime: number };
+  };
+  const world = () => ({
+    map: JSON.parse(read("map.json").toString()) as MapData,
+    fleet: JSON.parse(read("fleet.json").toString()) as FleetData,
+    rules: JSON.parse(read("rules.json").toString()) as RulesData,
+    orders: (JSON.parse(read("orders.json").toString()) as OrdersData).orders,
+  });
+
+  it("is pinned", () => {
+    expect(sha(read("reference.json"))).toBe("7a9dc2d79f97bcc5af763358aabc309fc2ebe6a59858b7fc895c9e7f38188f3b");
+  });
+
+  it("re-evaluates to the stored objective: complete, valid, all twenty on time", async () => {
+    const { evaluate } = await import("../src/engine/fleet.ts");
+    const plan = evaluate(world(), ref.reference.assignment, { charging: true, corridor: true });
+    expect(plan.complete).toBe(true);
+    expect(plan.validation.ok).toBe(true);
+    expect(plan.onTime).toBe(20);
+    expect(plan.objective).toMatchObject(ref.reference.objective);
+    expect(plan.occupancies.some((o) => o.resource === "corridor")).toBe(true);
+    expect(plan.occupancies.some((o) => o.resource === "pads")).toBe(true);
+  });
+
+  it("the greedy assignment alone leaves orders late; the improvement is what reaches twenty", async () => {
+    const { evaluate } = await import("../src/engine/fleet.ts");
+    const plan = evaluate(world(), ref.greedy.assignment, { charging: true, corridor: true });
+    expect(plan.onTime).toBe(ref.greedy.onTime);
+    expect(plan.onTime).toBeLessThan(20);
+  });
+});

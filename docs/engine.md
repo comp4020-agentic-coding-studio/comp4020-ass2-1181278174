@@ -176,6 +176,6 @@ entry; any "course-set" parameter appears in the policies page's simulation-boun
 | Rules | Reserve 15 % of the battery; loading 60 s; service 45 s; turnaround 60 s; full charge in 1 200 s; tick 1 s; evening 18:00–21:00 (ticks 0–10 800); cut-off 21:30 (12 600) | set |
 | Resources | corridor capacity 1; pads capacity 2 | set |
 | Calibrated facts | A light drone can fly #01–#06. For #07 the light drone's fastest round trip (447 s, 84.7 kJ) is over its 80.75 kJ budget and a slower, cheaper one (472 s, 80.4 kJ) is chosen. Every order can be flown by some type; #20 only by H, on payload; H reaches all twenty; L is out of range for #14. | held by `spec/calibration.test.ts` |
-| Design target | The normal batch has a complete feasible baseline and the reference method delivers at least N on time | to verify once the fleet planner exists; N then pinned |
+| Reference plan | Greedy earliest-completion assignment on static costs delivers 13 of 20 on time (lateness 10 504 s). Two migrations under full re-evaluation with the pads and the corridor — #07 from A to C, #10 from A to E — deliver all 20 on time, all back by tick 8 579 (20:23). Stored in `reference.json` by `pnpm reference` and re-evaluated by the spec. | set; N = 20 |
 
 If the data does not meet the design target, the data changes, not the promise.
