@@ -1,0 +1,36 @@
+---
+import { withBase } from 'astro-theme-university/url';
+import { runExperiment } from '../lab/compute';
+import { defaultConfig } from '../lab/model';
+import { homeCorridorHtml } from '../lab/home-corridor';
+import '../lab/home-corridor.css';
+const run = runExperiment(defaultConfig(9));
+const choices = [['both', 'Both depart'], ['wait', 'A waits at the pass'], ['detour', 'A takes the way around']];
+---
+<section class="home-corridor" data-home-corridor aria-label="Try one shared-airspace decision">
+  <p>A carries order #13 to Home 13. B is returning through the same gap in the ridge. Only one drone fits at a time.</p>
+  <fieldset>
+    <legend>What should A do?</legend>
+    {choices.map(([value, label]) => <label><input type="radio" name="home-arrangement" value={value} checked={value === 'both'} data-home-arrangement />{label}</label>)}
+  </fieldset>
+  <div data-home-result set:html={homeCorridorHtml(run, run)} />
+  <p class="home-corridor-provenance" role="status" data-home-run-state>Starting case computed at build time. JavaScript recomputes each choice.</p>
+  <p class="home-corridor-boundary">This checks two flight legs sharing the pass. Complete deliveries, batteries and charging are checked in later weeks.</p>
+  <nav aria-label="Continue the corridor experiment"><a href={withBase('/sessions/w09-same-place/')}>See the W9 map and explanation →</a><a href={withBase('/lab/#lab-w9')}>Try your own delay in Lab →</a></nav>
+  <script is:inline type="application/json" data-home-initial set:html={JSON.stringify(run).replace(/</g, '\\u003c')} />
+</section>
+<script>
+  import { mountHomeCorridor } from '../lab/home-corridor';
+  let dispose: (() => void) | undefined;
+  let mounted: HTMLElement | null = null;
+  const cleanup = () => { dispose?.(); dispose = undefined; mounted = null; };
+  const mount = () => {
+    const root = document.querySelector<HTMLElement>('[data-home-corridor]');
+    if (root && root === mounted) return;
+    cleanup();
+    if (root) { mounted = root; dispose = mountHomeCorridor(root); }
+  };
+  document.addEventListener('astro:before-swap', cleanup);
+  document.addEventListener('astro:page-load', mount);
+  mount();
+</script>

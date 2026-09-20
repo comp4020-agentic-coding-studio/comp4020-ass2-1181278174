@@ -88,7 +88,8 @@ try {
     checks.push({ name: 'WebGL unavailable retains readable 2D map and evidence', ok: await js(`!document.querySelector('[data-map-host]').hidden && document.querySelector('[data-example-table-host] table')!==null && document.querySelector('[data-example-status]').textContent.includes('3D could not open')`) });
     await call('Page.removeScriptToEvaluateOnNewDocument', { identifier });
     checks.push({ name: 'all 74 page/viewports have no overflow or runtime exceptions', ok: results.length === 74 && results.every(x => x.scrollWidth <= x.width && !x.errors.length) });
-    checks.push({ name: '3D loads only on seven designated desktop pages', ok: results.filter(x => x.width === 1920 && x.canvases).length === 7 });
+    checks.push({ name: '3D loads only on the six designated desktop lab/tutorial pages', ok: results.filter(x => x.width === 1920 && x.canvases).length === 6 });
+    checks.push({ name: 'the home decision loads no WebGL scene', ok: results.filter(x => x.path === '/comp4020-ass2-1181278174/').every(x => x.canvases === 0) });
     checks.push({ name: 'no phone page loads WebGL automatically', ok: results.filter(x => x.width === 390).every(x => x.canvases === 0) });
     writeFileSync(out + '/pages.json', JSON.stringify(results, null, 2));
     writeFileSync(out + '/checks.json', JSON.stringify(checks, null, 2));
