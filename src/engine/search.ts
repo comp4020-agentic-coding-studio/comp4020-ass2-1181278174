@@ -71,13 +71,12 @@ export class Searcher {
   private queueOps = 0;
   private readonly steps: Step[] = [];
   private done: SearchResult | null = null;
+  private readonly graph: WeightedGraph;
+  private readonly goal: string;
 
-  constructor(
-    private readonly graph: WeightedGraph,
-    start: string,
-    private readonly goal: string,
-    options: SearchOptions = {},
-  ) {
+  constructor(graph: WeightedGraph, start: string, goal: string, options: SearchOptions = {}) {
+    this.graph = graph;
+    this.goal = goal;
     this.h = options.heuristic ?? (() => 0);
     this.reopen = options.reopenClosed ?? true;
     this.budget = options.maxExpansions ?? Infinity;

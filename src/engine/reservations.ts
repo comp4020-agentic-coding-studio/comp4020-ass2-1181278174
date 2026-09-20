@@ -37,8 +37,13 @@ function peakOwners(entries: Occupancy[], resource: string, start: number, end: 
 
 export class ReservationTable {
   private entries: Occupancy[] = [];
+  private readonly capacities: Record<string, number>;
+  private readonly defaultCapacity: number;
 
-  constructor(private readonly capacities: Record<string, number> = {}, private readonly defaultCapacity = 1) {}
+  constructor(capacities: Record<string, number> = {}, defaultCapacity = 1) {
+    this.capacities = capacities;
+    this.defaultCapacity = defaultCapacity;
+  }
 
   capacity(resource: string): number {
     return this.capacities[resource] ?? this.defaultCapacity;
@@ -97,8 +102,11 @@ export class ReservationTable {
 export class Transaction {
   private pending: Occupancy[] = [];
   private open = true;
+  private readonly table: ReservationTable;
 
-  constructor(private readonly table: ReservationTable) {}
+  constructor(table: ReservationTable) {
+    this.table = table;
+  }
 
   reserve(occ: Occupancy): boolean {
     if (!this.open) throw new Error("transaction is closed");
