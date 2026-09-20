@@ -1,5 +1,6 @@
 ---
 import LectureCheckpoint from "../../components/LectureCheckpoint.astro";
+import LectureDiagram from "../../components/LectureDiagram.astro";
 import WeekNavigation from "../../components/WeekNavigation.astro";
 import { render } from "astro:content";
 import { getPublishedCollection } from "astro-course-university/content";
@@ -24,6 +25,7 @@ const title = `Week ${lecture.data.week}: ${lecture.data.title}`;
   <p><strong>{formatCourseDate(lecture.data.date)}</strong></p>
   <WeekNavigation week={lecture.data.week} kind="lectures" />
   {lecture.data.slides && <p><a href={withBase(lecture.data.slides)}>Open the slides</a></p>}
+  <LectureDiagram week={lecture.data.week} />
   <Content />
   <LectureCheckpoint week={lecture.data.week} />
   <TeachingTeam teachers={lecture.data.teachers} />

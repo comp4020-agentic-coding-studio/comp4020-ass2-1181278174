@@ -1,5 +1,5 @@
 ---
-title: "Improving the order: why one swap is worth accepting"
+title: "When swaps stop helping"
 description: "Plans as permutations, a swap neighbourhood, strict improvement, and what a local optimum does and does not mean."
 week: 6
 date: 2027-03-29
@@ -11,23 +11,43 @@ related:
   - "lectures/w11-routes-changed"
 ---
 
-Keep swapping pairs; is the final plan optimal?
+A timetable evaluator lets us test a change. It does not tell us which change to try, or whether the best change nearby is the best schedule overall.
 
-## What the lecture covers
+## What you will learn
 
-A single-drone plan is a permutation. Fix the swap neighbourhood and the acceptance
-rule; evaluate every candidate from the same initial state. Strict improvement
-terminates on a finite set; a local optimum depends on the neighbourhood. Six orders
-have 720 permutations, so the exact optimum is available for comparison. It may be tied:
-report one of the optima.
+- Define a swap neighbourhood and a strict acceptance rule.
+- Explain the difference between a local optimum and an exact finite result.
+- Measure an observed gap without generalising beyond the tested case.
 
-## What you must be able to derive
+**Model:** first the editable six-job symbolic table, then the canonical six-order flight case. Keep their units and results separate. Use the same objective within each comparison.
 
-Enumerate all 6! = 720 permutations and compare with FIFO, earliest-deadline and swap
-improvement. Compare objectives only between complete feasible plans under the same
-model; never lower lateness by dropping an order.
+## Define the search before running it
 
-## Where it goes next
+Represent a schedule by a permutation: each order appears exactly once. A pair swap exchanges positions i and j. With six positions there are 6×5/2=15 neighbours.
 
-The swap move stays; week 7 adds cross-drone migration and week 11 re-evaluates with
-real trajectories.
+```text
+current = starting sequence
+repeat:
+    evaluate all pair swaps from the same initial state
+    best = the feasible neighbour with the best objective
+    if best does not strictly improve current: stop
+    current = best
+```
+
+The **neighbourhood** is this defined set of candidate changes. Strict improvement cannot revisit a previous objective on a finite set of permutations, so the search terminates. Stopping after a complete scan proves local optimality for pair swaps. Stopping because a budget expires does not even establish that local claim.
+
+## Work through the counterexample
+
+The lecture checkpoint below gives the full six-job input table. Starting with earliest deadlines gives A→C→B→F→E→D, with (lateness, final return)=(57,55). An accepted swap produces A→B→C→F→E→D and (48,55). Every further pair swap is no better.
+
+Enumeration tries all 6!=720 sequences. One optimum is E→B→A→F→C→D, with (46,51). Its lateness is two teaching units lower. This does not contradict the local stopping rule: a better sequence can exist outside the current pair-swap neighbourhood.
+
+The canonical flight case behaves differently: swaps reach an exact optimum and the measured gap is zero. That supports a claim about those six orders, not a theorem that swaps always succeed.
+
+## What to report
+
+State the input, initial sequence, neighbourhood, objective, accepted moves and stopping reason. Compare only complete feasible plans. An omitted dinner cannot improve a valid result. If multiple sequences tie, report “one optimum”, not a uniquely best sequence.
+
+## Read and try
+
+Use this course note and W5's evaluator. First inspect the swap result; then request all 720 permutations and compare the two results. Implement `mySwaps` using `myTimetable`. Your A1 report should include the canonical comparison and the separate symbolic counterexample. W7 keeps the same evaluation habit but moves an order between drones.

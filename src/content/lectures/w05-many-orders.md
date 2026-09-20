@@ -1,5 +1,5 @@
 ---
-title: "One drone, many orders: write \"a good plan\" as a formula first"
+title: "Which dinner goes first?"
 description: "The timetable recurrence, and four objectives that are not the same objective."
 week: 5
 date: 2027-03-22
@@ -11,22 +11,46 @@ related:
   - "lectures/w07-which-drone"
 ---
 
-Same total distance; why different lateness?
+W4 can cost a complete trip. With six orders, we must decide what “better” means before choosing their sequence. A shorter route and an earlier dinner are different objectives.
 
-## What the lecture covers
+## What you will learn
 
-From full-task cost we derive loading, departure, delivery, return and next
-availability. Total lateness, number of late orders, all-returned time and the sum of
-delivery times are four different objectives, and a two-order case proves they disagree.
-Lateness is measured at delivery, not at return.
+- Calculate a single-drone timetable from ready times and full-task costs.
+- Measure lateness at delivery, not at return.
+- Compare objectives without changing the question after seeing the result.
 
-## What you must be able to derive
+**Model:** #01–#06, one light drone, static full trips and a fixed turnaround. Shared charging queues are introduced in W8. One order is carried per trip.
 
-start = max(ready time, drone available time), then loading, flight and service; next
-availability from the actual return plus the fixed turnaround and charging. With tasks
-and routes fixed, swapping the order does not change total flight distance.
+## The recurrence
 
-## Where it goes next
+For order i, let r be its ready time, a the drone's availability, L loading time, d the time from take-off through delivery, p the time from take-off to landing, and T turnaround.
 
-The same evaluation function drives the ordering improvements of week 6 and the
-assignment of week 7.
+```text
+loadStart = max(r, a)
+depart = loadStart + L
+deliver = depart + d
+land = depart + p
+nextAvailable = land + T
+late = max(0, deliver - promised)
+```
+
+For a hand calculation, suppose r=100 s, a=120 s, L=60 s, d=90 s, p=150 s and T=60 s. Loading starts at 120, take-off is 180, delivery is 270, landing is 330 and next availability is 390. If promised at 250, lateness is 20 seconds. These are teaching values, not a canonical order's record.
+
+## Two objectives can disagree
+
+A smaller example removes loading and turnaround. Both orders are ready at zero. N delivers after 1 minute, returns after 2 and is promised at 10. F delivers after 4, returns after 8 and is promised at 5.
+
+| Sequence | Delivery times | Total lateness | Sum of delivery times | Final return |
+|---|---|---:|---:|---:|
+| N then F | N=1, F=6 | 1 | 7 | 10 |
+| F then N | F=4, N=9 | 0 | 13 | 10 |
+
+F first wins on lateness; N first wins on delivery-time sum. Neither changes total trip distance. The course compares complete feasible plans **lexicographically**: compare total lateness first; use all-returned time only if lateness ties; use energy only if both tie. This is not a weighted sum.
+
+## Baselines worth keeping
+
+FIFO means ready-time order. EDF means earliest promised time first. Neither guarantees the best schedule. On the canonical six-order case, both have zero lateness; their final-return times differ. A tie on the first objective is a result to explain, not an excuse to alter the data.
+
+## Read and try
+
+This recurrence and the N/F table are this week's required course note. Revisit W4's full-task ledger if d and p are unclear. In the tutorial, calculate the first rows yourself, then compare FIFO and EDF. Implement `myTimetable`; next week we will reuse it to score a swapped sequence.

@@ -1,5 +1,5 @@
 ---
-title: "The routes changed, so the assignment must be reconsidered"
+title: "Let delays change the assignment"
 description: "Assignment, routes, resources and the objective as one evaluation; full re-evaluation of every candidate; what a decomposed method can claim."
 week: 11
 date: 2027-05-03
@@ -10,24 +10,47 @@ related:
   - "lectures/w12-twenty-dinners"
 ---
 
-The drone that looked fastest at assignment time: is it still fastest under real
-reservations?
+A drone that looked best using independent trip costs may spend time waiting once every plan is combined. We can feed those actual costs back into the assignment decision.
 
-## What the lecture covers
+## What you will learn
 
-Assignment, routes, resources and the objective join into one evaluation. Swap and
-cross-drone migration are reused; every candidate regenerates the full plan from the
-same initial state so that old reservations and old costs cannot leak in. A compute
-budget is fixed; only complete, feasible candidates that improve the objective are
-accepted. A decomposed method may depend on the initial solution, the priority and the
-budget, and claims nothing about joint global optimality.
+- Compare independent, coordinated and feedback methods fairly.
+- Re-evaluate a candidate from a clean initial state.
+- Explain an accepted move and a budget-limited result.
 
-## What you must be able to derive
+**Model:** all twenty orders, five drones, two pads and the shared corridor. The three methods use the same initial assignment and evaluation rules. An independent plan is still checked for joint conflicts.
 
-The input of local improvement is the full plan, and its evaluation includes real
-reservations and charging. Say where the method's result depends on the order things
-were done in.
+## Three questions, one input
 
-## Where it goes next
+| Method | What changes? | What to inspect |
+|---|---|---|
+| Independent routes | Routing ignores corridor commitments | Does the final joint checker find a conflict? |
+| Fixed assignment with coordination | Route planning respects reservations | Did waits, energy or delivery times change? |
+| Bounded feedback | Swaps and migrations may change the assignment/order | Is the complete recomputed objective better? |
 
-All code goes into A2; no new mechanism after this week.
+The first two can tie. On the default input they both deliver 13/20 on time without a corridor violation. Report that observation. It does not establish that independent planning always avoids conflicts; W9 already supplies a counterexample.
+
+## Evaluate the proposed plan, not yesterday's costs
+
+Start from one assignment. A candidate swaps positions or migrates an order. Rebuild its tasks, charging queue and reservations from the same initial state, then apply the independent checker. Compare only complete feasible candidates on total lateness, final return and energy in that order.
+
+```text
+best = checked initial plan
+for candidates within the stated budget:
+    proposed = evaluate from a fresh world and reservation table
+    if complete and valid and objective improves:
+        retain the best candidate for this scan
+accept the best strict improvement, then repeat if budget remains
+```
+
+Old reservations cannot leak into the next proposal. A migration changes at least two drone queues and may change a third through charging. Trace that dependency instead of merely presenting two totals.
+
+## Read the stopping reason
+
+With the default 120-candidate budget, the current feedback run improves the on-time count from 13 to 17 and stops at its budget. That is a valid plan with three late orders, not a proof of local optimality. The stored reference assignment reaches 20/20 after recomputation; it is a separate reference, not the claimed output of this bounded run.
+
+An **ablation** removes one mechanism to see what changes: here, holding assignment fixed removes feedback. Keep all other inputs fixed. A better observed result is evidence on this instance, not a global optimum for all assignments and priorities.
+
+## Read and try
+
+Use this evaluation note with W7's migration, W8's queue and W10's reservations. Save the initial plan, run each method and inspect one accepted change. Complete `myImprove` using the provided full evaluator. W12 checks whether another reader can reproduce your causal explanation.
