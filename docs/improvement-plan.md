@@ -43,9 +43,9 @@ branding. Results remain visible before interaction. All site content stays in E
 
 ## Progress
 
-- [ ] Result correctness and reproducible state
-- [ ] Shared map and W4 route comparison
-- [ ] Weekly experiments and records
-- [ ] Course navigation, Lab and home
-- [ ] Lecture checkpoints, assignment resources and deck
-- [ ] Browser verification, checks and process evidence
+- [x] Result correctness and reproducible state
+- [x] Shared map and W4 route comparison
+- [x] Weekly experiments and records
+- [x] Course navigation, Lab and home
+- [x] Lecture checkpoints, assignment resources and deck
+- [x] Browser verification, checks and process evidence
