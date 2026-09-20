@@ -666,3 +666,18 @@ introduces the five-drone fleet with shared pads. Symbolic and canonical cases r
 separate. Exact enumeration is explicitly requested and reports its finite-domain
 guarantee. The course revision adds worked lectures and guided tutorials before the
 full workspace. See `course-review-and-next-plan.md` for the accepted sequence.
+
+## Local implementation boundary — 21 September 2026
+
+The slot table above describes the browser framework. The offline practice pack additionally
+connects `mySearch`, `myTimetable`, `mySwaps`, `myAssign`, `myMigrations`, `myNeighbours`
+and `myImprove` to an integrated student runner. These are explicit unfinished exercises;
+the reference has its own executable entry point. A missing function cannot produce a new
+student success record. The pack checks real paths, recurrence outputs, order completeness,
+complete neighbourhood generation and claimed local optima against independent calculations.
+
+The space-time student exercise uses a bounded supplied driver with phase, absolute time,
+energy and full-interval checks. The full fleet flight planner, charging queue, geometry and
+physical validator remain provided. A1 compares the student's canonical-six timetable with
+actual flight actions; A2 records independent/coordinated/improved plans and two priorities.
+Browser records and local implementation records have distinct, documented formats.

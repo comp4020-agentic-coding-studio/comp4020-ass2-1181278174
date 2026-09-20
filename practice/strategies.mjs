@@ -16,6 +16,27 @@ export function mySearch(edges, source, goal, heuristic = () => 0) {
   throw new Error('Implement OPEN, best distances, parents, relaxation and reopening.');
 }
 // W10: propose wait/move successors; test the whole occupancy interval.
-export function myNeighbours(state, edges, reservations) {
-  throw new Error('Generate legal (node, phase, tick, energy) successors.');
+export function myNeighbours(state, edges, reservations, options = {}) {
+  throw new Error('Implement legal (node, phase, tick, energy) successors.');
+}
+
+// W5: return {slots, infeasible, feasible, objective}; see README for slot fields.
+export function myTimetable(sequence, cost, options = {}) {
+  throw new Error('Implement the loading, delivery, return and availability recurrence.');
+}
+// W6: score(sequence) returns a checked objective; return {sequence, status, checked, moves}.
+export function mySwaps(sequence, score, limit = 1000) {
+  throw new Error('Implement strict improvement over pair swaps; distinguish a budget stop.');
+}
+// W7: matrix contains full-trip feasibility and costs for every drone/order pair.
+export function myAssign(world, matrix) {
+  throw new Error('Implement feasible assignment with per-drone availability.');
+}
+// W8: return [{description, assignment}]; preserve every order exactly once.
+export function myMigrations(assignment) {
+  throw new Error('Implement swaps and cross-drone insertion moves without mutating the input.');
+}
+// W11: evaluate(assignment) returns a checked objective, or undefined if infeasible.
+export function myImprove(assignment, { evaluate, neighbours, compare, limit }) {
+  throw new Error('Implement bounded improvement using full evaluation of each candidate.');
 }

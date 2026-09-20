@@ -1,10 +1,11 @@
-import { writeFileSync } from 'node:fs';
-import { defaultConfig, runExperiment } from './engine.mjs';
-import * as strategy from './strategies.mjs';
-const week=Number(process.argv[2]??4),config=defaultConfig(week);
-for(const key of ['h','dominates','withinBudget','orderKey','objective','assignCost','priority']){
-  const fn=strategy[key].toString();config.strategies[key].mode='custom';config.strategies[key].code=fn.slice(fn.indexOf('{')+1,fn.lastIndexOf('}'));
-}
-const run=runExperiment(config,{allowCustom:true});
-writeFileSync(`run-w${week}.json`,JSON.stringify({format:'slop3969-experiment',version:2,run},null,2));
-console.log(run.summary);console.table(run.metrics);
+import { writeFileSync, readFileSync } from 'node:fs';
+import * as student from './strategies.mjs';
+import { runStudent } from './student-runner.mjs';
+try {
+  const task=process.argv[2]??'4';
+  const config=process.argv[3]?JSON.parse(readFileSync(process.argv[3],'utf8')):undefined;
+  const record=runStudent(task,student,{config});
+  const path=`student-${task}.json`;
+  writeFileSync(path,JSON.stringify(record,null,2));
+  console.log(`${record.kind}: ${record.status}; ${path}`); console.log(record.checks.join('\n'));
+} catch(error) { console.error(error.message); process.exitCode=1; }

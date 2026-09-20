@@ -8,3 +8,6 @@ export { planTask } from '../engine/task.ts';
 export { evaluate } from '../engine/fleet.ts';
 export { checkPlan } from '../engine/check-plan.ts';
 export { ReservationTable } from '../engine/reservations.ts';
+export { worldFor, symbolicJobs, microEdges, ENGINE_VERSION, fingerprint } from './model.ts';
+export { timetable, mapCost, compareObjective, enumerate, improveBySwaps } from '../engine/timetable.ts';
+export { feasibilityMatrix, greedyAssign, neighbours } from '../engine/assign.ts';
