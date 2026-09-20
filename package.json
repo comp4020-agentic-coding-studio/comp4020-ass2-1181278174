@@ -13,7 +13,8 @@
     "test": "pnpm build && vitest run spec",
     "test:template": "vitest run scripts",
     "shot": "node scripts/shot.ts",
-    "data": "node tools/data/build-map.ts"
+    "data": "node tools/data/build-map.ts",
+    "calibrate": "node tools/data/calibrate.ts"
   },
   "dependencies": {
     "@astrojs/mdx": "^7.0.0",
