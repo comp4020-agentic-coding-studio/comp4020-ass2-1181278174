@@ -174,6 +174,7 @@ function sceneFromPlan(world: World, p: FleetPlan): SceneData {
         staticEvent('load', world.map.kitchen, t.start, t.start + world.rules.loadingTicks);
         staticEvent('service', order.node, t.arrive, t.deliver, hoverEnergy(droneType(world, t.drone), world.rules.serviceTicks));
         staticEvent('turnaround', world.map.kitchen, t.land, t.land! + world.rules.turnaroundTicks);
+        staticEvent('pad-queue', world.map.kitchen, t.land! + world.rules.turnaroundTicks, t.chargeStart);
         staticEvent('charge', world.map.kitchen, t.chargeStart, t.chargeEnd);
     }
     return { map: world.map, orders: world.orders, routes, events: events.sort((a, b) => a.start - b.start), pads: world.rules.resources.pads.capacity, droneTypes: Object.fromEntries(world.fleet.drones.map(d => [d.id, d.type])) };
@@ -286,7 +287,7 @@ function corridorRun(r: LabRun) {
         A = rawA.flatMap(e => e === ac ? [{ kind: 'hover' as const, from: e.from, to: e.from, start: e.start, end: e.start + wait, energy: hoverEnergy(type, wait) }, { ...e, start: e.start + wait, end: e.end + wait }] : [{ ...e, start: e.start + (e.start >= ac.start ? wait : 0), end: e.end + (e.start >= ac.start ? wait : 0) }]);
     const conflict = c.arrangement === 'both' && ac.start < window.end && window.start < ac.end;
     const events: FlightEvent[] = [...A.map((e, i) => ({ ...e, id: 'A' + i, drone: 'A', order: order.id, phase: 'out' as const })), ...B.map((e, i) => ({ ...e, id: 'B' + i, drone: 'B', order: order.id, phase: 'back' as const }))];
-    r.scene = { map: m, orders: [order], routes: [route('A', `A · ${c.arrangement}`, A.filter(e => e.kind === 'move').map(e => e.from).concat(A.at(-1)!.to)), { ...route('B', 'B · returning', back, 1), dashed: true }], events };
+    r.scene = { legOnly: true, map: m, orders: [order], routes: [route('A', `A · ${c.arrangement}`, A.filter(e => e.kind === 'move').map(e => e.from).concat(A.at(-1)!.to)), { ...route('B', 'B · returning', back, 1), dashed: true }], events };
     r.status = conflict ? 'diagnostic' : 'verified';
     r.assumptions = ['Two individual flight legs: loaded A outbound, unloaded B returning', 'Corridor capacity one; half-open intervals', 'This case checks the shared passage, not a complete delivery schedule'];
     r.summary = conflict ? `Conflict on [${Math.max(ac.start, window.start)}, ${Math.min(ac.end, window.end)}): both drones occupy the corridor.` : c.arrangement === 'wait' ? `A hovers ${wait} s at ${ac.from} and enters when B leaves. Hover energy is charged.` : 'A takes a legal route around the corridor. Compare the longer flight and its energy with waiting.';

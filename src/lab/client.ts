@@ -306,7 +306,7 @@ export function mountWorkspace(root: HTMLElement) {
         const current = selected?.kind === 'task' ? states.filter(s => s.event.order === selected!.id) : states;
         const out = q('[data-live-position]');
         if (out)
-            out.textContent = current.slice(0, 5).map(s => { const type = canonical.fleet.types.find(t => t.id === (run.scene!.droneTypes?.[s.drone] ?? config.scenario.drones.find(d => d.id === s.drone)?.type ?? 'L'))!; return `${s.drone} · ${s.event.order}: ${t >= s.event.end ? 'idle' : s.event.phase}, ${Math.round(s.position.z)} m high, ${Math.round(type.batteryJ - s.energyUsed)} J remaining for this trip`; }).join(' | ');
+            out.textContent = current.slice(0, 5).map(s => { const type = canonical.fleet.types.find(t => t.id === (run.scene!.droneTypes?.[s.drone] ?? config.scenario.drones.find(d => d.id === s.drone)?.type ?? 'L'))!; return `${s.drone} · ${s.event.order}: ${s.phase}, ${Math.round(s.position.z)} m elevation, ${Math.round(type.batteryJ - s.energyUsed)} J remaining${s.parcel ? ', carrying parcel' : ', no parcel'}${s.pad !== undefined && s.pad >= 0 ? ', pad '+(s.pad+1) : ''}`; }).join(' | ');
     }
     function animate(now: number) { if (!playing)
         return; const max = Number(q<HTMLInputElement>('[data-time-slider]').max), speed = Number(q<HTMLSelectElement>('[data-speed]').value); time = Math.min(max, time + (lastFrame ? now - lastFrame : 0) / 1000 * speed); lastFrame = now; updateTime(time); if (time >= max)

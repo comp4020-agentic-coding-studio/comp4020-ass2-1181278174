@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import type { SceneData } from './model.ts';
-import { fleetAt, routePoints } from './replay.ts';
+import { fleetAt, padSchedule, routePoints } from './replay.ts';
 import { terrainHeight } from './terrain.ts';
 import { toScene, visualLayout } from './visual-layout';
 import { loadAssets, release, roadSurface } from './scene-assets';
@@ -109,22 +109,26 @@ export function mountScene(host: HTMLElement, data: SceneData, onSelect: (node: 
         pads.add(pad);
     }
     scene.add(pads);
+    const padLabels = data.events.some(e=>e.phase==='charge') ? pads.children.map((_,i)=>label(`PAD ${i+1} · free`,kitchen.x+50+i*48,kitchen.y,kitchen.z+25)) : [];
     const drones = new Map<string, THREE.Group>();
+    const droneLabels = new Map<string, typeof labels[number]>();
     for (const id of new Set(data.events.map(e => e.drone))) {
         const group = new THREE.Group(), mat = new THREE.MeshStandardMaterial({ color: id === 'A' ? '#08796f' : id === 'B' ? '#bc4c25' : '#57489c' });
         group.add(new THREE.Mesh(new THREE.BoxGeometry(22, 8, 13), mat));
         for (const x of [-16, 16])
             for (const z of [-16, 16]) {
-                const rotor = new THREE.Mesh(new THREE.CylinderGeometry(10, 10, 2, 12), mat);
-                rotor.position.set(x, 0, z);
+                const rotor = new THREE.Mesh(new THREE.BoxGeometry(20, 2, 3), mat);
+                rotor.position.set(x, 0, z); rotor.userData.anchor='rotor_'+group.children.length;
                 group.add(rotor);
             }
+        const parcel=new THREE.Mesh(new THREE.BoxGeometry(8,6,8), new THREE.MeshStandardMaterial({color:'#c3925d'})); parcel.position.y=-4; parcel.userData.anchor='parcel'; group.add(parcel);
+        label(id,kitchen.x,kitchen.y,kitchen.z+20); droneLabels.set(id,labels.at(-1)!);
         if (data.droneTypes?.[id] === 'H')
             group.scale.setScalar(1.5);
         scene.add(group);
         drones.set(id, group);
     }
-    let selected: THREE.Line | undefined, disposed=false, currentTime=0;
+    let selected: THREE.Line | undefined, disposed=false, currentTime=0, followed: string | undefined;
     const highlights = new THREE.Group(); scene.add(highlights);
     let assetSource: THREE.Object3D | undefined;
     const render = () => { if (disposed) return; renderer.render(scene, camera); host.dataset.drawCalls=String(renderer.info.render.calls); host.dataset.triangles=String(renderer.info.render.triangles); const placed: {
@@ -173,10 +177,36 @@ export function mountScene(host: HTMLElement, data: SceneData, onSelect: (node: 
         if (pts.length===1) pts.push(pts[0].clone().add(new THREE.Vector3(0,100,0)));
         selected=pts.length?drawLine(pts,'#f02d95',5):undefined; render();
     }
-    function time(t: number) { currentTime=t; for (const state of fleetAt(data, t)) {
-        const p = state.position;
-        drones.get(state.drone)?.position.copy(to3(p.x, p.y, p.z + 22));
-    } render(); }
+    function follow(id?: string) {
+        followed=matchMedia('(prefers-reduced-motion: reduce)').matches?undefined:id;
+        if(followed) { const target=drones.get(followed)?.position; if(target) { controls.target.copy(target); camera.position.copy(target).add(new THREE.Vector3(220,280,350)); } }
+        time(currentTime);
+    }
+    function time(t: number) {
+        currentTime=t;
+        const states=fleetAt(data,t);
+        for (const [i,state] of states.entries()) {
+            const p=state.position, drone=drones.get(state.drone)!;
+            const offset=!state.airborne&&state.event.from===data.map.kitchen ? {x:30+i*40,y:-35} : {x:0,y:0};
+            let point=to3(p.x+offset.x,p.y+offset.y,p.z+(state.airborne?22:3));
+            if(state.pad!==undefined&&state.pad>=0) point=to3(kitchen.x+50+state.pad*48,kitchen.y,kitchen.z+5);
+            // An isolated outward leg stops in the air; it does not invent service or landing.
+            if(data.legOnly&&state.phase==='leg complete'&&state.event.phase==='out') point=to3(p.x,p.y,p.z+22);
+            drone.position.copy(point); drone.rotation.y=p.heading;
+            drone.traverse(o=>{ const anchor=o.userData.anchor as string|undefined;
+                if(anchor==='parcel') o.visible=state.parcel;
+                if(anchor?.startsWith('rotor_')) o.rotation.y=state.rotorAngle;
+            });
+            const caption=droneLabels.get(state.drone)!;
+            caption.point.copy(point).add(new THREE.Vector3(0,45,0));
+            caption.el.textContent=`${state.drone} · ${state.phase}`;
+            caption.el.dataset.drone=state.drone; caption.el.dataset.phase=state.phase; caption.el.dataset.parcel=String(state.parcel);
+            if(followed===state.drone) { const delta=point.clone().sub(controls.target); controls.target.copy(point); camera.position.add(delta); controls.update(); }
+        }
+        const charging=padSchedule(data).filter(p=>p.event.start<=t&&t<p.event.end);
+        padLabels.forEach((el,i)=>{ const owner=charging.find(p=>p.pad===i)?.event.drone; el.textContent=`PAD ${i+1} · ${owner?'charging '+owner:'free'}`; });
+        render();
+    }
     host.dataset.models='loading';
     void loadAssets(data).then(assets=>{
         if (disposed) { release(assets.source); return; }
@@ -189,5 +219,5 @@ export function mountScene(host: HTMLElement, data: SceneData, onSelect: (node: 
     layers(!!data.focusNodes,false);
     view(data.focusNodes ? 'kitchen' : data.orders.length === 1 && data.orders[0].id === '#07' ? 'mission' : 'overview');
     time(0);
-    return { view, select, time, layers, dispose() { disposed=true; resize.disconnect(); controls.dispose(); renderer.domElement.removeEventListener('pointerdown', onDown); renderer.domElement.removeEventListener('pointerup', onClick); release(scene); if (assetSource) release(assetSource); textures.forEach(t => t.dispose()); renderer.dispose(); renderer.forceContextLoss(); renderer.domElement.remove(); overlay.remove(); } };
+    return { view, select, time, layers, follow, dispose() { disposed=true; resize.disconnect(); controls.dispose(); renderer.domElement.removeEventListener('pointerdown', onDown); renderer.domElement.removeEventListener('pointerup', onClick); release(scene); if (assetSource) release(assetSource); textures.forEach(t => t.dispose()); renderer.dispose(); renderer.forceContextLoss(); renderer.domElement.remove(); overlay.remove(); } };
 }

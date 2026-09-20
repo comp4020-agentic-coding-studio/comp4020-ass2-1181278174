@@ -114,7 +114,7 @@ export interface FlightEvent extends Movement {
     id: string;
     drone: string;
     order: string;
-    phase: "out" | "back" | "service" | "load" | "charge" | "turnaround";
+    phase: "out" | "back" | "service" | "load" | "charge" | "turnaround" | "pad-queue";
 }
 export interface SceneData {
     map: MapData;
@@ -125,6 +125,7 @@ export interface SceneData {
     droneTypes?: Record<string, string>;
     blockedBuildings?: string[];
     focusNodes?: string[];
+    legOnly?: boolean;
 }
 export interface LabRun {
     format: "slop3969-lab-run";
