@@ -7,11 +7,11 @@ import type { SceneData } from './model.ts';
 import { fleetAt, padSchedule, routePoints } from './replay.ts';
 import { terrainHeight } from './terrain.ts';
 import { terrainScene } from './scene-terrain';
-import { displayArea, sceneScenery, toScene } from './visual-layout';
+import { sceneScenery, toScene } from './visual-layout';
 import { blockInspection, fitInspection, readableLine } from './scene-inspection';
 import { flightNetwork, loadAssets, release, roadSurface } from './scene-assets';
 export function mountScene(host: HTMLElement, data: SceneData, onSelect: (node: string) => void) {
-    const isBlock=!!data.focusNodes, area=displayArea(data), scenery=sceneScenery(data);
+    const isBlock=!!data.focusNodes, scenery=sceneScenery(data);
     const scene = new THREE.Scene();
     scene.background = new THREE.Color('#edf1e6');
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
@@ -74,10 +74,10 @@ export function mountScene(host: HTMLElement, data: SceneData, onSelect: (node: 
     const overlay = document.createElement('div');
     overlay.className = 'lab-scene-labels';
     host.append(overlay);
-    function label(text: string, x: number, y: number, z: number, node?: string, priority=false) { const el = document.createElement(node ? 'button' : 'span'); el.textContent = text; el.className = 'lab-scene-label'; if (node) {
+    function label(text: string, x: number, y: number, z: number, node?: string, priority=false) { const interactive=!!node&&!host.closest('[data-weekly-example]');const el = document.createElement(interactive ? 'button' : 'span'); el.textContent = text; el.className = 'lab-scene-label'; if (interactive) {
         el.setAttribute('type', 'button');
         el.setAttribute('aria-label', 'Inspect ' + text);
-        el.addEventListener('click', () => onSelect(node));
+        el.addEventListener('click', () => onSelect(node!));
     } overlay.append(el); labels.push({ el, point: to3(x, y, z), node, priority }); return el; }
     const kitchen = nodes.get(data.map.kitchen)!;
     label('KITCHEN · dispatch', kitchen.x, kitchen.y, kitchen.z + 40, data.map.kitchen);

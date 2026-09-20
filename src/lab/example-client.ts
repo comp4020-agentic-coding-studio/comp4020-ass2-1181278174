@@ -7,6 +7,7 @@ import { esc, mapPoint, tableHtml } from './render';
 import { placeName, placeText } from './places';
 import { corridorAt, replayBounds, replayIssues, skipIdle } from './replay-inspection';
 import { fleetAt, routePoints } from './replay';
+import { orderCause } from './lesson-evidence';
 
 let cleanup:(()=>void)|undefined,mounted:HTMLElement|undefined;
 function mount(root:HTMLElement) {
@@ -57,6 +58,8 @@ function mount(root:HTMLElement) {
   function order(id:string,focus=true){
     const item=run.scene?.orders.find(o=>o.id===id);if(!item)return;
     selectedOrder=id;
+    const picker=q<HTMLSelectElement>('[data-example-order]');if(picker)picker.value=id;
+    const cause=q('[data-example-cause]');if(cause)cause.innerHTML=orderCause(run,id);
     const task=run.plan?.tasks.find(t=>t.order===id),route=task?.pathOut??run.scene?.routes.find(r=>r.order===id)?.path;
     q('[data-example-selection]')!.textContent=`${id} → ${placeName(item.node)}`;
     const evidence=run.tables.find(t=>t.id==='tasks')?.rows.find(r=>r.id===id)?.detail;
@@ -78,14 +81,14 @@ function mount(root:HTMLElement) {
     try {
       if(!scene){const mod=await import('./scene');if(disposed||current!==generation)return;scene=mod.mountScene(host,run.scene,node);scene.layers(week===1,false,selectedOrder);scene.time(tick);if(selectedPath.length)scene.select(selectedPath,blocked);}
       q('[data-map-host]')!.hidden=true;q('[data-example-camera]')!.hidden=false;
-      q('[data-example-action="map-3d"]')!.setAttribute('aria-pressed','true');q('[data-example-action="map-2d"]')!.setAttribute('aria-pressed','false');
+      const toggle=q('[data-example-action="toggle-map"]');if(toggle){toggle.textContent='Use 2D map';toggle.setAttribute('aria-pressed','true');}
     }catch{host.hidden=true;q('[data-map-host]')!.hidden=false;status('3D could not open. The 2D map and result are still available.');}finally{if(current===generation)loading3D=false;}
   }
   function draw(){
     pause();generation++;scene?.dispose();scene=undefined;loading3D=false;selectedPath=[];blocked=[];selectedOrder=undefined;trace=-1;tick=0;
     content.innerHTML=exampleHtml(run,initial,mode);expanded.refresh();
     if(week===1)inspect(mode==='start'?'route0':run.tables.find(t=>t.id==='connections')!.rows.find(r=>r.values[1]==='Building intersection')!.id);
-    else if(run.scene?.orders.length)order(run.scene.orders[0].id,false);
+    else if(run.scene?.orders.length)order(week===12?'#20':run.scene.orders[0].id,false);
     time(tick);
     if(!prefer2D&&matchMedia('(min-width:900px)').matches&&!matchMedia('(prefers-reduced-motion:reduce)').matches)void enable3D();
   }
@@ -107,12 +110,12 @@ function mount(root:HTMLElement) {
     if(b.dataset.action==='inspect'){inspect(b.dataset.rowId!);return;}
     if(b.dataset.action==='timeline'){time(Number(b.dataset.start));return;}
     const action=b.dataset.exampleAction;
-    if(['start','change','reserved'].includes(action!))await change(action!);
+    if(['start','change','reserved'].includes(action!))await change(b.dataset.next??action!);
     else if(action==='expand')await expanded.toggle();
     else if(action==='inspect')inspect(b.dataset.id!);
     else if(action==='order')order(b.dataset.order!);
-    else if(action==='map-3d')await enable3D();
-    else if(action==='map-2d'){prefer2D=true;q('[data-scene-host]')!.hidden=true;q('[data-map-host]')!.hidden=false;q('[data-example-camera]')!.hidden=true;b.setAttribute('aria-pressed','true');q('[data-example-action="map-3d"]')?.setAttribute('aria-pressed','false');}
+    else if(action==='map-3d'||action==='toggle-map'&&q('[data-scene-host]')!.hidden)await enable3D();
+    else if(action==='map-2d'||action==='toggle-map'){prefer2D=true;q('[data-scene-host]')!.hidden=true;q('[data-map-host]')!.hidden=false;q('[data-example-camera]')!.hidden=true;b.textContent='Open 3D';b.setAttribute('aria-pressed','false');}
     else if(action==='overview')scene?.view(week===1?'block':[9,10].includes(week)?'corridor':'overview');
     else if(action==='top')scene?.view('top');
     else if(action==='destination')scene?.view('destination');
@@ -122,7 +125,7 @@ function mount(root:HTMLElement) {
     else if(action==='trace-next'||action==='trace-prev'){trace=Math.max(0,Math.min(run.trace.length-1,trace+(action==='trace-next'?1:-1)));inspect(run.trace[trace].id);q('[data-example-trace-count]')!.textContent=`${trace+1} / ${run.trace.length}`;}
   },{signal});
   content.addEventListener('input',event=>{const el=event.target as HTMLInputElement;if(el.matches('[data-example-time-slider]')){pause();time(Number(el.value));}},{signal});
-  content.addEventListener('change',event=>{const el=event.target as HTMLSelectElement;if(el.matches('[data-example-table]'))q('[data-example-table-host]')!.innerHTML=tableHtml(run.tables.find(t=>t.id===el.value)!);},{signal});
+  content.addEventListener('change',event=>{const el=event.target as HTMLSelectElement;if(el.matches('[data-example-order]'))order(el.value);else if(el.matches('[data-example-table]'))q('[data-example-table-host]')!.innerHTML=tableHtml(run.tables.find(t=>t.id===el.value)!);},{signal});
   content.addEventListener('keydown',event=>{const el=(event.target as HTMLElement).closest<HTMLElement>('[data-node]');if(el&&(event.key==='Enter'||event.key===' ')){event.preventDefault();node(el.dataset.node!);}},{signal});
   draw();
   return ()=>{disposed=true;generation++;pause();active?.cancel();scene?.dispose();expanded.dispose();controller.abort();};

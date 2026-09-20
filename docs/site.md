@@ -413,8 +413,9 @@ deduction.
 
 ## 7. Shared implementation
 
-`LabWorkspace.astro` now provides the shared home, tutorial and semester workspace. The
-Lab mounts one active experiment, with three modes, cumulative capabilities and saved
+`LabWorkspace.astro` provides the complete semester workspace. Weekly tutorials use
+`WeeklyExample.astro` to present a focused figure from the same computed run. The
+Lab mounts one active experiment, with cumulative capabilities and saved
 weekly inputs. Computation returns structured results and events; the board, table,
 inspector, map and replay present the same run. Search expansions and flight execution
 have separate cursors. A changed input marks the previous result stale until Run.
@@ -443,8 +444,8 @@ and computed examples. Export is local evidence, not a submission service.
 ## Guided tutorials — 21 September 2026
 
 Tutorial pages now put the weekly question and computed result before the full tools.
-Each has one published demonstration action, an explicit restore action and an adjacent
-baseline comparison. The action reconstructs reproducible inputs and calls the real
+Each has one published demonstration action that changes to a restore action after a run.
+The main figure follows the weekly shape table above; extra controls and replay are folded. The action reconstructs reproducible inputs and calls the real
 evaluator. W11 also exposes the intermediate coordination-only comparison. The full
 two-hour lesson, strategies, scenario editing and records expand on demand. The semester
 Lab retains its complete controls. W2/W3 draw their actual directed graph and edge costs.
