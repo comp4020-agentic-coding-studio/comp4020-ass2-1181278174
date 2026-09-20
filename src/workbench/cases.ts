@@ -1,8 +1,9 @@
 import type { CaseDef } from "./case.ts";
 import { labelsCase } from "./labels-case.ts";
 import { searchCase } from "./search-case.ts";
+import { timetableCase } from "./timetable-case.ts";
 
-const all: CaseDef<any>[] = [searchCase, labelsCase];
+const all: CaseDef<any>[] = [searchCase, labelsCase, timetableCase];
 
 export function caseFor(week: number): CaseDef<any> | undefined {
   return all.find((c) => c.weeks.includes(week));
