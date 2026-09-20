@@ -1,5 +1,5 @@
 ---
-title: "Six orders by hand, then by recurrence"
+title: "Order six dinners"
 description: "Compute the first orders by hand, implement the recurrence, and compare FIFO with earliest-deadline on the course's objective."
 week: 5
 date: 2027-03-24
@@ -11,28 +11,30 @@ spec:
   - "you can show a case where two objectives prefer different sequences"
 ---
 
-## This week's question
+## This week's task
 
-Same total distance; why different lateness?
+**Model:** #01–#06, one L drone, full static trips and turnaround. No shared charging queue. Compare lateness, then final return, then energy.
 
-## Before the tutorial
+## Before you start · 15 minutes
 
-Two orders, N (near) and F (far, promised early). Write your prediction: which sequence
-has less total lateness, which has the smaller sum of delivery times, and does the all-
-returned time separate them?
+Read W5 and compute both N/F sequences from the lecture. Name the objective before comparing them.
 
-## In the tutorial
+## Trace the example · 25 minutes
 
-Use the experiment steps above to record a prediction and a controlled comparison.
-In the two-hour tutorial, work through the small example, implement the key change in
-your own planner, and finish with tests and an explanation.
+Compare FIFO with earliest deadline. Both canonical runs have zero lateness; locate the difference in the final-return time.
 
-Compute the first few of the six orders #01–#06 by hand, then implement the timetable
-recurrence. Compare FIFO with earliest-deadline using the course's stated primary
-objective (strategy slot 3). Build a small "change the metric and the preferred plan
-changes" counterexample.
+## Implement and compare · 55 minutes
 
-## Afterwards
+Complete myTimetable using the supplied trip-cost function. Calculate the first three rows by hand, including ready time, loading, delivery, return and next availability.
 
-A single-drone timetable function, a per-order ledger, two baseline results and an
-objective definition.
+The practice pack is linked under “My experiment record”. Browser presets demonstrate the teacher's framework; your local student runner must call the functions you complete.
+
+## Check and explain · 25 minutes
+
+Test readiness, turnaround and lateness measured at delivery. Submit the per-order table and two objective tuples with one sentence explaining the tie on lateness.
+
+**What to keep:** A1: timetable recurrence and baseline comparison. These tutorial records are ungraded preparation for the assignment.
+
+## Optional extension
+
+Open the order board, move an order and predict the later departures before running. Leave swap search and enumeration for W6.

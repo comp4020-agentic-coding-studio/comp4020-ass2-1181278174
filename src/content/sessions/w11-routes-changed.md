@@ -1,5 +1,5 @@
 ---
-title: "Three methods, one causal chain"
+title: "Explain a feedback change"
 description: "Compare independent-cost assignment, fixed assignment with coordination, and assignment with cost feedback; trace one order through the chain."
 week: 11
 date: 2027-05-05
@@ -11,26 +11,30 @@ spec:
   - "you can name one input the result depends on that a joint optimum would not"
 ---
 
-## This week's question
+## This week's task
 
-The drone that looked fastest at assignment time: is it still fastest under real
-reservations?
+**Model:** Twenty orders, five drones, two pads and the corridor. Compare from the same initial assignment with a stated candidate budget.
 
-## Before the tutorial
+## Before you start · 15 minutes
 
-Pick one order from your week-8 plan. Predict whether its assigned drone will still be
-the best choice once the corridor reservations from week 10 are in force, and what would
-have to be true for the answer to change.
+Read W11. Pick an order and predict how changing its drone might affect charging and reservations.
 
-## In the tutorial
+## Trace the example · 25 minutes
 
-Use the experiment steps above to record a prediction and a controlled comparison.
-In the two-hour tutorial, work through the small example, implement the key change in
-your own planner, and finish with tests and an explanation.
+Compare Independent routes, Add coordination only, and feedback. The first two may tie; do not invent a conflict. Feedback reports the best feasible result within its budget.
 
-Compare three methods: assignment on independent costs; fixed assignment with route
-coordination only; assignment with cost feedback allowed. Select bounded feedback and Run: the Lab evaluates fresh swaps and migrations up to your candidate budget. Inspect accepted and rejected candidates, then select a changed order to trace its preceding task, charging and corridor waits. A budget stop reports the best feasible plan found; it does not prove local optimality.
+## Implement and compare · 55 minutes
 
-## Afterwards
+Complete myImprove using myMigrations and the provided full-plan evaluator. Start each candidate with fresh resource state and retain only complete feasible improvements.
 
-A linked-improvement record, three same-condition comparisons and one failure analysis.
+The practice pack is linked under “My experiment record”. Browser presets demonstrate the teacher's framework; your local student runner must call the functions you complete.
+
+## Check and explain · 25 minutes
+
+Inspect an accepted migration and its changed task times. Record the objective before/after, the search budget and a causal explanation. A budget stop is not a local-optimum proof.
+
+**What to keep:** A2: integrated improvement and a same-input comparison. These tutorial records are ungraded preparation for the assignment.
+
+## Optional extension
+
+Repeat with a different candidate budget and report both quality and computation cost. Keep the stored reference labelled separately.

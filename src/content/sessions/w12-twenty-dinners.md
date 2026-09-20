@@ -1,5 +1,5 @@
 ---
-title: "Audit the twenty-order plan"
+title: "Audit a complete evening"
 description: "Run the final plan, trace one late or unscheduled order to its cause, and reproduce someone else's conclusion."
 week: 12
 date: 2027-05-12
@@ -11,27 +11,30 @@ spec:
   - "your late-order trace ends at a cause, not at a symptom"
 ---
 
-## This week's question
+## This week's task
 
-Can someone else reproduce your conclusion from your plan and records, and say which
-conditions it holds under?
+**Model:** All twenty published orders and shared resources. The starting reference assignment is recomputed and checked.
 
-## Before the tutorial
+## Before you start · 15 minutes
 
-Look at your final plan and pick, before the tutorial, the one order you least
-understand: late, unscheduled, or delivered later than you expected. Write down what you
-think caused it.
+Read W12. Choose #07, #13 or #20 and predict what limits its departure.
 
-## In the tutorial
+## Trace the example · 25 minutes
 
-Use the experiment steps above to record a prediction and a controlled comparison.
-In the two-hour tutorial, work through the small example, implement the key change in
-your own planner, and finish with tests and an explanation.
+Compare the greedy plan with the reference. Select an actual late or unexpected order and trace its previous task, readiness, charging and reservations.
 
-Run and audit the final plan. Take the order you picked and trace its cause through
-events and search states. Reproduce one conclusion given by a peer or the teacher, and
-write your personal explanation.
+## Implement and compare · 55 minutes
 
-## Afterwards
+No new implementation this week. Re-run your student planner and tests, complete the record, and import an exported browser experiment in a fresh workspace to reproduce it.
 
-A2's code, plan, per-order and resource records, comparison tables and your explanation.
+The practice pack is linked under “My experiment record”. Browser presets demonstrate the teacher's framework; your local student runner must call the functions you complete.
+
+## Check and explain · 25 minutes
+
+Ask another reader to recover one delivery time and its cause. Finish code, tests, checked plan, comparisons and your own explanation; keep a designed extra order in a separate scenario.
+
+**What to keep:** A2: final audit, reproducible files and personal analysis. These tutorial records are ungraded preparation for the assignment.
+
+## Optional extension
+
+Explain one untested generalisation your successful reference run cannot justify.

@@ -1,5 +1,5 @@
 ---
-title: "Trace a Dijkstra that returns too early"
+title: "Catch an early stop"
 description: "Trace a wrong implementation, complete the search core, and test the four cases that catch it."
 week: 2
 date: 2027-03-03
@@ -11,27 +11,30 @@ spec:
   - "you can build a counterexample that exposes stop-when-goal-generated"
 ---
 
-## This week's question
+## This week's task
 
-Why does "the goal has been discovered" not mean "the lowest-cost route has been found"?
+**Model:** The symbolic S→G=10, S→A=1, A→G=1 example first; then the kitchen→#03 graph. No energy or reservations.
 
-## Before the tutorial
+## Before you start · 15 minutes
 
-Take the block graph from week 1. Predict, on paper, the order in which nodes are
-settled from the kitchen. Then predict what a version that stops when the goal is first
-generated would return.
+Read W2. Predict OPEN after removing S and A; write the answer an early-stop implementation returns.
 
-## In the tutorial
+## Trace the example · 25 minutes
 
-Use the experiment steps above to record a prediction and a controlled comparison.
-In the two-hour tutorial, work through the small example, implement the key change in
-your own planner, and finish with tests and an explanation.
+Try stopping at discovery, then restore the starting example. Step through the search table and identify when the better goal cost appears.
 
-Trace a wrong implementation that returns early, then complete the search core. Test
-source equals goal, unreachable, repeated improvement and equal-cost paths. Count
-effective expansions and queue operations; animation steps are not algorithm statistics.
+## Implement and compare · 55 minutes
 
-## Afterwards
+Complete mySearch in the practice pack. Keep best costs, parent pointers and a priority queue; stop on the non-stale goal pop. Run the provided early-discovery test.
 
-A runnable Dijkstra, parent-pointer reconstruction, four test classes and a short
-correctness note.
+The practice pack is linked under “My experiment record”. Browser presets demonstrate the teacher's framework; your local student runner must call the functions you complete.
+
+## Check and explain · 25 minutes
+
+Add source=goal, unreachable, repeated-improvement and equal-cost tests. Report the returned path and cost; explain why discovery is too early.
+
+**What to keep:** A1: Dijkstra implementation and its counterexample. These tutorial records are ungraded preparation for the assignment.
+
+## Optional extension
+
+Switch to the canonical graph and trace one improved parent. Heuristic design is next week.

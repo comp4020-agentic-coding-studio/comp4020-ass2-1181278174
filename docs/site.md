@@ -453,3 +453,16 @@ departures and route candidates are evaluated under the same rules. Versioned re
 include inputs, source, events, checks and notes; imported code is visible for review and
 only runs after an explicit Run. Assignment pages link to the offline practice archive
 and computed examples. Export is local evidence, not a submission service.
+
+## Guided tutorials — 21 September 2026
+
+Tutorial pages now put the weekly question and computed result before the full tools.
+Each has one published demonstration action, an explicit restore action and an adjacent
+baseline comparison. The action reconstructs reproducible inputs and calls the real
+evaluator. W11 also exposes the intermediate coordination-only comparison. The full
+two-hour lesson, strategies, scenario editing and records expand on demand. The semester
+Lab retains its complete controls. W2/W3 draw their actual directed graph and edge costs.
+
+The twelve tutorial outlines allocate 15/25/55/25 minutes to preparation, tracing,
+implementation/comparison and explanation. They name cumulative practice entry points
+and distinguish the local student implementation from the provided browser demonstration.

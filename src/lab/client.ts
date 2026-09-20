@@ -4,6 +4,7 @@ import { importRecord, verifyPlanForInput } from './import.ts';
 import { startRun } from './runner.ts';
 import { basePath, esc, mapPoint, tableHtml, workspaceHtml } from './render.ts';
 import { sourceFor } from './strategies.ts';
+import { demonstrationInput } from './teaching';
 import { fleetAt, routePoints } from './replay.ts';
 type Archive = {
     name: string;
@@ -31,7 +32,7 @@ const STORAGE = 'slop3969.lab.v2';
 let disposeCurrent: (() => void) | undefined;
 let mountedRoot: HTMLElement | undefined;
 export function mountWorkspace(root: HTMLElement) {
-    const controller = new AbortController(), signal = controller.signal, semester = root.dataset.semester === 'true', compact = root.dataset.compact === 'true';
+    const controller = new AbortController(), signal = controller.signal, semester = root.dataset.semester === 'true', compact = root.dataset.compact === 'true', guided = root.dataset.guided === 'true';
     let run = JSON.parse(root.querySelector<HTMLScriptElement>('[data-initial-run]')!.textContent!) as LabRun;
     let config = structuredClone(run.input), draft = false, request = 0, active: ReturnType<typeof startRun> | undefined, scene: ReturnType<typeof import('./scene.ts')['mountScene']> | undefined, sceneLoading = false, sceneGeneration = 0;
     let storage: StorageData = { version: 2, weeks: {}, notes: {}, archive: [] }, tableId = '', page = 0, filter = '', selected: Selection | undefined, traceIndex = -1, time = 0, prefer2D = false, playing = false, raf = 0, lastFrame = 0;
@@ -56,7 +57,7 @@ export function mountWorkspace(root: HTMLElement) {
     const stopPlayback = () => { playing = false; cancelAnimationFrame(raf); const b = q('[data-action="play"]'); if (b)
         b.textContent = 'Play replay'; };
     const disposeScene = () => { sceneGeneration++; sceneLoading = false; scene?.dispose(); scene = undefined; };
-    function draw() { const opened = new Set([...content.querySelectorAll('details[open]')].map(d => d.querySelector('summary')?.textContent)); stopPlayback(); disposeScene(); content.innerHTML = workspaceHtml({ ...run, input: config }, semester, compact); content.querySelectorAll('details').forEach(d => { if (opened.has(d.querySelector('summary')?.textContent))
+    function draw() { const opened = new Set([...content.querySelectorAll('details[open]')].map(d => d.querySelector('summary')?.textContent)); stopPlayback(); disposeScene(); content.innerHTML = workspaceHtml({ ...run, input: config }, semester, compact, guided); content.querySelectorAll('details').forEach(d => { if (opened.has(d.querySelector('summary')?.textContent))
         d.open = true; }); tableId = (run.tables.find(t => t.primary) ?? run.tables[0]).id; page = 0; filter = ''; selected = undefined; traceIndex = -1; time = 0; for (const el of content.querySelectorAll<HTMLTextAreaElement>('[data-note]'))
         el.value = storage.notes[`${config.week}:${el.dataset.note}`] ?? ''; recordUi(); updateTime(0); if (wants3D())
         void enable3D(); }
@@ -360,6 +361,35 @@ export function mountWorkspace(root: HTMLElement) {
             }
             else if (action === 'week')
                 await switchWeek(Number(target.dataset.week));
+            else if (action === 'demo') {
+                saveNotes();
+                const week = config.week, mode = target.dataset.demo;
+                const { runExperiment } = await import('./compute.ts');
+                active?.cancel(); request++;
+                config = demonstrationInput(week);
+                run = runExperiment(config);
+                draft = false;
+                storage.baseline = snapshot();
+                if (mode !== 'reset') {
+                    config = demonstrationInput(week, true);
+                    if (mode === 'reserved') config.method = 'reserved';
+                    if (week === 7) {
+                        config.assignment = structuredClone(run.assignment!);
+                        for (const ids of Object.values(config.assignment)) {
+                            const at = ids.indexOf('#20'); if (at >= 0) ids.splice(at, 1);
+                        }
+                        config.assignment.A.push('#20'); config.method = 'manual';
+                    }
+                }
+                draw();
+                await execute();
+                if (week === 1) {
+                    const row = run.tables.find(t => t.id === 'connections')?.rows.find(r => r.values[1] === 'Building intersection');
+                    if (row?.selection) select(row.selection);
+                }
+                const result = q('[data-verdict]');
+                result?.setAttribute('tabindex', '-1'); result?.focus({ preventScroll: true });
+            }
             else if (action === 'inspect')
                 select(run.tables.flatMap(t => t.rows).find(x => x.id === target.dataset.rowId)?.selection ?? { kind: 'route', id: target.dataset.rowId! });
             else if (action === 'timeline') {

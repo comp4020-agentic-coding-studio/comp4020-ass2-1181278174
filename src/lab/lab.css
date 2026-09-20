@@ -17,3 +17,7 @@
 .lab-address{padding:0 15px 12px;max-width:260px}.lab-map [data-map-markers] circle{stroke-width:3px}.lab-map [data-map-markers] text{font-size:25px}.lab-lane button.late{background:#a9432d}
 
 .lab-phase-diagram{padding:12px 15px;background:var(--lab-soft);font-size:.78rem}
+
+.lab-demo{padding:12px 14px;background:var(--lab-soft);border-left:3px solid var(--lab-accent);margin-block:14px}.lab-demo p{font-size:.8rem;margin:.4rem 0}.lab-demo button{margin:4px 4px 4px 0}.lab-compare{font-size:.8rem}.lab-compare ul{max-height:180px;overflow:auto}.lab-search-graph{width:100%;max-height:320px;color:var(--lab-ink)}.lab-search-graph circle{fill:var(--lab-panel);stroke:currentColor;stroke-width:2}.lab-search-graph text{fill:currentColor;font-size:20px}.lab-search-graph .lab-edge-cost{paint-order:stroke;stroke:var(--lab-panel);stroke-width:6px;stroke-linejoin:round}.lab-guided .lab-assumptions{font-size:.72rem}.lab-guided .lab-edit{margin-block:10px}.lab-mode-b>.lab-result-facts{order:1}
+
+.lab-guided .lab-heading h2{font-size:1.35rem}.lab-guided .lab-mode-b>.lab-demo{order:1}.lab-guided .lab-mode-b>.lab-compare{order:1}

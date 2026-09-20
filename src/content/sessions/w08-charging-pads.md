@@ -1,5 +1,5 @@
 ---
-title: "Two pads, five drones, one queue"
+title: "Trace the pad queue"
 description: "Schedule a two-drone, one-pad case by hand, run the five-drone, two-pad case, and locate where shared charging changes the answer."
 week: 8
 date: 2027-04-14
@@ -11,24 +11,30 @@ spec:
   - "your capacity test fails when a third drone is charged at once"
 ---
 
-## This week's question
+## This week's task
 
-Move one order to another drone; why does a third drone's plan change too?
+**Model:** The main case has ten orders, five drones and two pads. A separate #01–#04 case has A/B and one pad. Corridor reservations are not active.
 
-## Before the tutorial
+## Before you start · 15 minutes
 
-Two drones, one pad. Both land within a minute of each other. Predict who charges first,
-when the second one can load, and what changes if the second drone had landed first.
+Read W8. Work the symbolic request-at-5 example and explain when the earliest pad becomes free.
 
-## In the tutorial
+## Trace the example · 25 minutes
 
-Use the experiment steps above to record a prediction and a controlled comparison.
-In the two-hour tutorial, work through the small example, implement the key change in
-your own planner, and finish with tests and an explanation.
+Compare one pad with two in the main case. This changes resource capacity: inspect the queue rather than presenting it as an algorithm-only improvement.
 
-Select the two-drone, one-pad case and calculate its queue by hand. Then use the main ten-order case (#01–#09 and #20) with two pads. Keep a baseline, move an order on the fleet board, run again and select the delayed order to read its charging dependency. Compare with your saved W7 result to see what adding shared charging changes; this is a model comparison. The full evening is an extension.
+## Implement and compare · 55 minutes
 
-## Afterwards
+Select the two-drone case in the controls and compute its queue by hand. Return to the main case, save a baseline and use myMigrations with the provided shared evaluator. Inspect the next task after a charge.
 
-A hand-computed charging timetable, capacity tests, a cross-drone dependence note and
-the first full A2 plan.
+The practice pack is linked under “My experiment record”. Browser presets demonstrate the teacher's framework; your local student runner must call the functions you complete.
+
+## Check and explain · 25 minutes
+
+Record request, charge start, charge end and the next departure. Add a capacity test and name the event that causes a delay to another drone.
+
+**What to keep:** A2: shared-resource evaluation and the first checked fleet plan. These tutorial records are ungraded preparation for the assignment.
+
+## Optional extension
+
+Keep capacity fixed and move a different order. A migration may leave some times unchanged; report the actual outcome.

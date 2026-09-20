@@ -1,5 +1,5 @@
 ---
-title: "Legal routes on the kitchen's block"
+title: "Check a legal route"
 description: "Hand-compute the available candidate routes on the ten-node block graph, find the edge that passes through a building, and draw the task state diagram."
 week: 1
 date: 2027-02-24
@@ -11,29 +11,30 @@ spec:
   - "your candidate routes have the costs the workbench reports"
 ---
 
-## This week's question
+## This week's task
 
-Why is "a line from the depot to the customer" not yet a problem definition?
+**Model:** The ten-node kitchen block; two computed alternatives to #03 and proposed connections near #03/#05. Costs are flight seconds, without battery constraints.
 
-## Before the tutorial
+## Before you start · 15 minutes
 
-Read the one-order case #07 and write down, before anything is computed: which nodes a
-route must visit, which events end a task, and one connection on the block that you
-think is illegal and why.
+Read W1 and sketch load → outward → service → return. Predict which proposed segment crosses a building.
 
-## In the tutorial
+## Trace the example · 25 minutes
 
-Use the experiment steps above to record a prediction and a controlled comparison.
-In the two-hour tutorial, work through the small example, implement the key change in
-your own planner, and finish with tests and an explanation.
+Inspect a blocked connection. Name both endpoints and the highlighted building, then inspect the legal-route table.
 
-On the ten-node sub-graph of the kitchen's block (kitchen, depot merge point, six
-intersections, houses #03 and #05), list the available candidate routes and compute their costs
-by hand; then check them. Find an edge whose endpoints are legal but whose segment
-passes through a building, and explain why that proposed edge must be excluded. Draw the task state diagram including
-delivery and return.
+## Implement and compare · 55 minutes
 
-## Afterwards
+Add the edge times for each available route on paper. Use the published graph to check every directed edge. Reject the blocked proposal; the browser does not edit the canonical graph.
 
-A one-page problem definition, a hand-computed route table, a task state diagram and one
-geometric counterexample.
+The practice pack is linked under “My experiment record”. Browser presets demonstrate the teacher's framework; your local student runner must call the functions you complete.
+
+## Check and explain · 25 minutes
+
+Write one route-cost table, the task-phase sketch and a geometric counterexample. Check a reverse direction separately.
+
+**What to keep:** A1: problem definition and legal-edge reasoning. These tutorial records are ungraded preparation for the assignment.
+
+## Optional extension
+
+Try a geometrically clear proposal that is still absent from the graph. Explain why “clear” does not add a legal edge.

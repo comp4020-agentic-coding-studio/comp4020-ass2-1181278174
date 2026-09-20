@@ -1,5 +1,5 @@
 ---
-title: "Why did it return cost 5, not 4?"
+title: "Reopen a better route"
 description: "An admissible but inconsistent heuristic on a four-edge graph: predict, trace, find the bug, fix re-expansion, then compare h = 0 with a legal heuristic."
 week: 3
 date: 2027-03-10
@@ -11,27 +11,30 @@ spec:
   - "your heuristic has a unit, and it is the unit of the cost"
 ---
 
-## This week's question
+## This week's task
 
-The heuristic never overestimates; why can an implementation still return a worse route?
+**Model:** S→A=3, S→B=1, B→A=1, A→G=2; h(B)=3, other h=0. Symbolic costs; no energy.
 
-## Before the tutorial
+## Before you start · 15 minutes
 
-Four edges: S→A 3, S→B 1, B→A 1, A→G 2, with h(S)=0, h(A)=0, h(B)=3, h(G)=0. Before
-running anything: does h overestimate anywhere? If CLOSED is never reopened, which path
-comes back?
+Read W3. Predict the cost with reopening disabled. Check h(B) against the true B→G cost and against cost(B,A)+h(A).
 
-## In the tutorial
+## Trace the example · 25 minutes
 
-Use the experiment steps above to record a prediction and a controlled comparison.
-In the two-hour tutorial, work through the small example, implement the key change in
-your own planner, and finish with tests and an explanation.
+Allow reopening and compare cost 5 with 4. Inspect the step where B reaches A more cheaply.
 
-Predict, trace, locate the bug, fix re-expansion, then change the graph so the same bug
-appears on a different structure. On the same graph compare h = 0 with a legal heuristic
-on cost, expansions and time. Put your own h in strategy slot 1.
+## Implement and compare · 55 minutes
 
-## Afterwards
+Extend mySearch so a better g can reopen an expanded node. Keep the old counterexample as a regression test and compare h=0 on exactly the same graph.
 
-A* reusing your week-2 loop, the counterexample and its regression test, the heuristic's
-justification and a small comparison table.
+The practice pack is linked under “My experiment record”. Browser presets demonstrate the teacher's framework; your local student runner must call the functions you complete.
+
+## Check and explain · 25 minutes
+
+Record the inconsistent edge, the changed parent and returned path. State the conditions on the heuristic separately from the conditions on the implementation.
+
+**What to keep:** A1: A*, heuristic justification and regression tests. These tutorial records are ungraded preparation for the assignment.
+
+## Optional extension
+
+Edit the micrograph in the advanced inputs to construct another admissible-but-inconsistent case. Then compare expansions on the canonical map.

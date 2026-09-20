@@ -1,5 +1,5 @@
 ---
-title: "The swaps stop; 720 permutations do not"
+title: "Compare swaps with all 720"
 description: "Implement a swap improver, find where it stops, and measure its exact gap against all 720 permutations."
 week: 6
 date: 2027-03-31
@@ -11,26 +11,30 @@ spec:
   - "\"no further improvement\" is never written as \"optimal\" in your report"
 ---
 
-## This week's question
+## This week's task
 
-Keep swapping pairs; is the final plan optimal?
+**Model:** Editable symbolic jobs A–F first. The canonical #01–#06 case is a separate experiment with real flight costs.
 
-## Before the tutorial
+## Before you start · 15 minutes
 
-Start from the earliest-deadline sequence of the six orders. Predict whether best-
-improvement pairwise swaps will reach the global optimum, and what you would need to see
-to be sure either way.
+Read W6. Predict what a full scan of 15 pair swaps proves and what it cannot prove.
 
-## In the tutorial
+## Trace the example · 25 minutes
 
-Use the experiment steps above to record a prediction and a controlled comparison.
-In the two-hour tutorial, work through the small example, implement the key change in
-your own planner, and finish with tests and an explanation.
+Inspect the starting swap result (48,55), then check all 720 sequences. The exact result is (46,51); explain the two-unit lateness gap.
 
-Implement a swap improver that prints every accepted move with the objective before and
-after. Find where it stops, check the final neighbourhood item by item, then use the enumerator to measure the exact gap. On the canonical flight case the gap is zero. Use the Lab’s editable six-job symbolic example to demonstrate a local optimum that is not global. Tidy your A1 search and scheduling code.
+## Implement and compare · 55 minutes
 
-## Afterwards
+Complete mySwaps using your timetable and the declared comparator. Log every accepted move and stop only after a full scan finds no strict improvement.
 
-The swap improver, a single-drone comparison report, a local-optimum counterexample and
-a full A1 draft.
+The practice pack is linked under “My experiment record”. Browser presets demonstrate the teacher's framework; your local student runner must call the functions you complete.
+
+## Check and explain · 25 minutes
+
+Check the final neighbourhood and retain the exact benchmark. Repeat on the canonical case and report its zero gap without claiming swaps always find an optimum.
+
+**What to keep:** A1: local search, exact comparison and the complete draft. These tutorial records are ungraded preparation for the assignment.
+
+## Optional extension
+
+Edit a ready time in the six-job table and repeat the entire comparison from a fresh initial state.

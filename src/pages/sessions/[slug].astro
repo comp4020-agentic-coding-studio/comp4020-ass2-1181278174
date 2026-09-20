@@ -26,8 +26,11 @@ const { Content } = await render(session);
 >
   <p><strong>{formatCourseDate(session.data.date)}</strong></p>
   <WeekNavigation week={session.data.week} kind="sessions" />
-  <LabWorkspace week={session.data.week} />
-  <Content />
+  <details class="tutorial-guide">
+    <summary>Two-hour tutorial: preparation, coding and checks</summary>
+    <Content />
+  </details>
+  <LabWorkspace week={session.data.week} guided />
   <SpecList spec={session.data.spec}>
     What you bring to the session. Written so a reader can tell whether it has
     been met without asking you.
@@ -35,3 +38,10 @@ const { Content } = await render(session);
   <TeachingTeam teachers={session.data.teachers} />
   <RelatedContent entry={session} collections={graphCollections} />
 </ContentLayout>
+
+<style>
+  .tutorial-guide { padding: .75rem 1rem; border: 1px solid var(--at-border); margin-block: 1rem; }
+  .tutorial-guide summary { cursor: pointer; font-weight: 600; }
+  :global(body:has(.tutorial-guide) h1) { font-size: clamp(1.8rem, 3vw, 2.8rem); }
+  :global(body:has(.tutorial-guide) [data-lab-heading]) { font-size: 1.35rem; margin-block: .4rem; }
+</style>

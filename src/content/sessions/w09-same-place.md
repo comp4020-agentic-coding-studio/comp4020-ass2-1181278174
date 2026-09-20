@@ -1,5 +1,5 @@
 ---
-title: "The conflict in the corridor"
+title: "Clear the corridor"
 description: "Mark the conflict between two independent trajectories, complete the reservation query, and show the spatial-visited bug at the waiting point."
 week: 9
 date: 2027-04-21
@@ -11,28 +11,30 @@ spec:
   - "you can say which waits are legal and what each one costs"
 ---
 
-## This week's question
+## This week's task
 
-Why can single-drone routes on the same map still not be flown together?
+**Model:** A heading to #13 and B returning; corridor capacity one. The live intervals use seconds after A takes off; the P@3 exercise is separate.
 
-## Before the tutorial
+## Before you start · 15 minutes
 
-A drone reaches P, the corridor's west waiting point, at second 3; P→G takes 2 seconds
-and is reserved for [0,6). Before running: is (P,4) the same state as (P,3)? When can
-the drone enter, and where does it wait?
+Read W9 or its deck. Calculate the overlap of [87,112) and [107,132) before running.
 
-## In the tutorial
+## Trace the example · 25 minutes
 
-Use the experiment steps above to record a prediction and a controlled comparison.
-In the two-hour tutorial, work through the small example, implement the key change in
-your own planner, and finish with tests and an explanation.
+Let A wait for B and check that A enters at 112. Compare arrival and hover energy; then try the detour using the arrangement selector.
 
-Mark the conflict between two independent trajectories in the corridor (#13 and a drone
-coming the other way). Complete the reservation query. Step through (P,3)→(P,4)→… at the
-waiting point and show the spatial-visited bug. Fix by hand with waiting or a detour
-first; do not reach for the full multi-drone algorithm yet.
+## Implement and compare · 55 minutes
 
-## Afterwards
+Complete the half-open interval query in myNeighbours. Switch to the symbolic waiting case and trace P@3→P@4→P@5→P@6→G@8. Show what a place-only visited key would discard.
 
-A conflict validation function, a reservation table, a state definition and a
-deduplication counterexample.
+The practice pack is linked under “My experiment record”. Browser presets demonstrate the teacher's framework; your local student runner must call the functions you complete.
+
+## Check and explain · 25 minutes
+
+Test [0,6) against [5,7) and against [6,8). Explain the waiting point, interval boundary and energy model.
+
+**What to keep:** A2: conflict definition and reservation filtering. These tutorial records are ungraded preparation for the assignment.
+
+## Optional extension
+
+Propose another reservation window and predict how long A waits before using it in the local exercise.

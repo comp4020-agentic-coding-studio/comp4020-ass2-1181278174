@@ -1,5 +1,5 @@
 ---
-title: "The two routes to #07"
+title: "Keep the route home"
 description: "Ridge or contour: complete the budget and dominance checks, show what single-label pruning loses, confirm by enumeration."
 week: 4
 date: 2027-03-17
@@ -11,29 +11,30 @@ spec:
   - "you can state the assumptions under which the dominance rule holds"
 ---
 
-## This week's question
+## This week's task
 
-The fastest route runs out of battery; can we declare the order undeliverable?
+**Model:** #07 on the canonical map, one L drone, loaded outward/service/unloaded return and a 15% reserve. The small label example uses separate teaching units.
 
-## Before the tutorial
+## Before you start · 15 minutes
 
-Use the lecture’s symbolic version of #07: ridge S→A→Q gives label (4,7), contour
-S→B→Q gives (6,3), and the return adds (2,2), written as (time, energy). Usable energy
-is 8 teaching units; these are separate from the live map’s seconds and kJ. Before running: which route is faster, which is cheaper, and
-does either dominate the other at Q?
+Read W4. Calculate 95−14.25=80.75 kJ usable energy. Predict whether the faster candidate can finish the complete trip.
 
-## In the tutorial
+## Trace the example · 25 minutes
 
-Use the experiment steps above to record a prediction and a controlled comparison.
-In the two-hour tutorial, work through the small example, implement the key change in
-your own planner, and finish with tests and an explanation.
+Try keeping only the fastest label. Restore the starting example and explain why the slower label must survive. Inspect both complete candidates and the elevation profile.
 
-Implement the budget and dominance checks in your label-search module.
-Run the wrong version that keeps only the fastest label per node first and explain what
-it lost. Confirm by enumerating both routes. Connect to the ledger and watch loaded
-outbound, unloaded return and service consumption.
+## Implement and compare · 55 minutes
 
-## Afterwards
+Complete dominates and withinBudget in strategies.mjs. Use the preset code as a contract, then test incomparable labels and the exact reserve boundary. Trace one retained prefix through service and return.
 
-The resource-extension and label-filter functions, two feasibility counterexamples and a
-full-task record.
+The practice pack is linked under “My experiment record”. Browser presets demonstrate the teacher's framework; your local student runner must call the functions you complete.
+
+## Check and explain · 25 minutes
+
+Export a baseline and changed record. Give full-trip seconds, energy and reserve; identify the lost feasible route. Do not call the order impossible because one rule pruned it.
+
+**What to keep:** A1: resource labels, full-task checks and a failure explanation. These tutorial records are ungraded preparation for the assignment.
+
+## Optional extension
+
+Switch to H and repeat. Compare algorithms within a fixed drone type; comparing L with H changes the model.

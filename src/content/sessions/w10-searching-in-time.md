@@ -1,5 +1,5 @@
 ---
-title: "Neighbours, reservations, two priorities"
+title: "Change the planning priority"
 description: "Complete neighbour generation and reservation filtering, compare two priorities, and add a failed-reservation rollback test."
 week: 10
 date: 2027-04-28
@@ -11,27 +11,30 @@ spec:
   - "added waiting changes energy, delivery and return time together in your results"
 ---
 
-## This week's question
+## This week's task
 
-Does the choice of which drone to plan first change what the others can find?
+**Model:** Two complete tasks with synchronised loading, fixed ready times, energy reserve and whole corridor intervals.
 
-## Before the tutorial
+## Before you start · 15 minutes
 
-Two drones want the corridor in opposite directions at nearly the same time. Predict
-what changes if drone B is planned before drone A: who waits, for how long, and whether
-either can still meet its promised time.
+Read W10. Predict who waits under A-first and B-first; do not assume either priority is better.
 
-## In the tutorial
+## Trace the example · 25 minutes
 
-Use the experiment steps above to record a prediction and a controlled comparison.
-In the two-hour tutorial, work through the small example, implement the key change in
-your own planner, and finish with tests and an explanation.
+Plan B before A. Inspect both tasks and their resource intervals, then compare ground waiting with airborne waiting.
 
-In the provided skeleton complete neighbour generation and reservation filtering.
-Compare two priorities (strategy slot 5); check that added waiting changes energy,
-delivery and return together. Add one failed-reservation rollback test.
+## Implement and compare · 55 minutes
 
-## Afterwards
+Complete myNeighbours and use it in the supplied state-search driver. Test legal move/wait successors and blocked crossings. Use the full reference evaluator to check the fleet comparison separately.
 
-The key cooperative-search functions, results under two priorities, and notes on budget
-and failure classes.
+The practice pack is linked under “My experiment record”. Browser presets demonstrate the teacher's framework; your local student runner must call the functions you complete.
+
+## Check and explain · 25 minutes
+
+Add a failed-reservation rollback test. Record priority, budget, delivery, return and energy. Explain why one priority failing does not establish joint impossibility.
+
+**What to keep:** A2: space-time search, priorities and rollback evidence. These tutorial records are ungraded preparation for the assignment.
+
+## Optional extension
+
+Change a requested departure while holding the priority fixed. Label the changed initial condition.
