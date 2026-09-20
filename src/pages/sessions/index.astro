@@ -6,13 +6,15 @@ import { sessionLabels, siteConfig } from "../../site-config";
 
 <ContentLayout
   title={sessionLabels.plural}
-  description={`The twelve-week teaching schedule: what happens in each ${sessionLabels.singular.toLowerCase()}, what to prepare, and what leaves the room.`}
+  description={`Twelve Wednesday ${sessionLabels.plural.toLowerCase()}: what to predict before, what happens in the two hours, and what you leave with.`}
   {...siteConfig}
 >
   <p>
-    The internal collection and URL stay <code>sessions</code>. Set the visible
-    singular and plural names once in <code>src/site-config.ts</code> and use
-    the language your course deserves everywhere readers see it.
+    Two hours each, the same shape every week: predict and compute by hand, derive or
+    trace a small example, implement and compare, then test and explain. Every tutorial
+    opens on its own with its case loaded, and later weeks are never locked behind earlier
+    ones. The lines under each page's spec are what you should be able to do by the end
+    of it.
   </p>
   <SessionsGrid />
 </ContentLayout>
