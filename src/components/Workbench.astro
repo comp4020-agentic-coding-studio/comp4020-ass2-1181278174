@@ -2,6 +2,7 @@
 // One week's workbench instance. Rendered with its result at build time; the
 // script below recomputes in the browser when a control changes, using the
 // same case module.
+import { withBase } from "astro-theme-university/url";
 import { caseByKey, caseFor, renderControls } from "../workbench/cases";
 
 interface Props {
@@ -24,6 +25,7 @@ const id = `wb-${key ?? `w${week}`}`;
   <div class="wb-controls" set:html={renderControls(def, state, week, id)} />
   <div class="wb-view" set:html={view.html} />
   <p class="wb-status" aria-live="polite">{view.status.replace("computed in your browser", "computed when this page was built")}</p>
+  {week > 0 && !Astro.url.pathname.includes("/lab/") && <p class="wb-lab"><a href={withBase(`/lab/#lab-w${week}`)}>Open in the lab, with every other week</a></p>}
 </section>
 
 <script>
@@ -34,9 +36,10 @@ const id = `wb-${key ?? `w${week}`}`;
     const def = caseByKey(root.dataset.case ?? "");
     if (!def) return;
     let state = JSON.parse(root.dataset.state ?? "null") ?? def.initial(week);
-    // A deep link carries the state: ?wb=<json>. Every change writes it back,
-    // so a state reached by hand can be handed to someone as a link.
-    const fromUrl = new URL(location.href).searchParams.get("wb");
+    // A deep link carries the state: ?wb-<case>=<json>. Every change writes it
+    // back, so a state reached by hand can be handed to someone as a link.
+    const param = `wb-${root.dataset.case}`;
+    const fromUrl = new URL(location.href).searchParams.get(param);
     if (fromUrl) {
       try { state = { ...state, ...JSON.parse(fromUrl) }; } catch { /* not ours; ignore */ }
     }
@@ -53,7 +56,7 @@ const id = `wb-${key ?? `w${week}`}`;
       status.textContent = out.status;
       root.dataset.state = JSON.stringify(state);
       const url = new URL(location.href);
-      url.searchParams.set("wb", JSON.stringify(state));
+      url.searchParams.set(param, JSON.stringify(state));
       history.replaceState(history.state, "", url);
       if (focusId) controls.querySelector<HTMLElement>(`[data-control="${focusId}"]`)?.focus();
     };
@@ -106,6 +109,7 @@ const id = `wb-${key ?? `w${week}`}`;
   .wb-table tr.wb-bad td { background: rgba(185, 60, 30, 0.12); }
   .wb-table tr.wb-good td { background: rgba(60, 140, 60, 0.12); }
   .wb-status { font-size: 0.85rem; color: var(--at-text-secondary, #6b6154); margin-block: 0.5rem 0; }
+  .wb-lab { margin-block: 0.5rem 0; font-size: 0.95rem; }
   .minimap { display: block; width: 100%; max-height: 380px; background: var(--at-bg, #fffdf8); border: 1px solid var(--at-border, #d9d2c3); border-radius: 0.35rem; }
   .minimap-small { max-height: 220px; }
   .mm-bg { fill: transparent; }

@@ -34,7 +34,7 @@ const VIEWPORTS = [
 // The pages a marker is likely to open, one of each kind.
 const PAGES = [
   { name: "home", path: "/" },
-  { name: "home-wait", path: "/?wb=" + encodeURIComponent('{"arrangement":"wait"}') },
+  { name: "home-wait", path: "/?wb-corridor=" + encodeURIComponent('{"arrangement":"wait"}') },
   { name: "lectures", path: "/lectures/" },
   { name: "tutorials", path: "/sessions/" },
   { name: "assessments", path: "/assessments/" },
@@ -43,12 +43,12 @@ const PAGES = [
   { name: "tutorial-w02", path: "/sessions/w02-dijkstra/" },
   { name: "tutorial-w03", path: "/sessions/w03-a-star/" },
   // the same page with the reopen switch on, set through the deep link: proves the browser recomputed
-  { name: "tutorial-w03-reopened", path: "/sessions/w03-a-star/?wb=" + encodeURIComponent('{"graph":"four","heuristic":"example","reopen":true,"shown":-1}') },
+  { name: "tutorial-w03-reopened", path: "/sessions/w03-a-star/?wb-search=" + encodeURIComponent('{"graph":"four","heuristic":"example","reopen":true,"shown":-1}') },
   { name: "tutorial-w04", path: "/sessions/w04-back-with-battery/" },
-  { name: "tutorial-w04-wrong", path: "/sessions/w04-back-with-battery/?wb=" + encodeURIComponent('{"drone":"L","fastestOnly":true}') },
+  { name: "tutorial-w04-wrong", path: "/sessions/w04-back-with-battery/?wb-labels=" + encodeURIComponent('{"drone":"L","fastestOnly":true}') },
   { name: "tutorial-w05", path: "/sessions/w05-many-orders/" },
   { name: "tutorial-w06", path: "/sessions/w06-one-swap/" },
-  { name: "tutorial-w06-720", path: "/sessions/w06-one-swap/?wb=" + encodeURIComponent('{"rule":"enumerate"}') },
+  { name: "tutorial-w06-720", path: "/sessions/w06-one-swap/?wb-timetable=" + encodeURIComponent('{"rule":"enumerate"}') },
   { name: "tutorial-w07", path: "/sessions/w07-which-drone/" },
   { name: "tutorial-w08", path: "/sessions/w08-charging-pads/" },
   { name: "tutorial-w09", path: "/sessions/w09-same-place/" },
@@ -58,6 +58,7 @@ const PAGES = [
   { name: "assignment-2", path: "/assessments/assignment-2/" },
   { name: "people", path: "/people/" },
   { name: "policies", path: "/policies/" },
+  { name: "lab", path: "/lab/" },
   { name: "deck-w9", path: "/decks/same-place/" },
 ] as const;
 

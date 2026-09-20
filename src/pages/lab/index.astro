@@ -1,0 +1,85 @@
+---
+// The lab: every week's workbench on one page, opened in order by the
+// semester slider, with the worked-example record underneath. Each
+// instance is the same component the tutorial page shows; the slider only
+// hides and reveals.
+import ContentLayout from "astro-theme-university/layouts/ContentLayout.astro";
+import Record from "../../components/Record.astro";
+import Workbench from "../../components/Workbench.astro";
+import { siteConfig } from "../../site-config";
+import { caseFor } from "../../workbench/cases";
+
+const weeks = Array.from({ length: 12 }, (_, i) => i + 1).filter((w) => caseFor(w));
+const titles: Record<number, string> = {
+  1: "Legal edges on the kitchen's block",
+  2: "Dijkstra, stepped",
+  3: "A* and the reopen switch",
+  4: "The two routes to #07",
+  5: "Six orders, one drone",
+  6: "Swaps against 720 permutations",
+  7: "Which drone takes which order",
+  8: "Two charging pads",
+  9: "Two shortest routes, one corridor",
+  10: "Planned first, planned around",
+  11: "Three levels on twenty orders",
+  12: "The twenty-order replay",
+};
+---
+
+<ContentLayout
+  title="Lab"
+  description="Every week's workbench on one page. Drag the semester slider to open the weeks in order; each instance is live, and its state is in the link."
+  {...siteConfig}
+>
+  <p>
+    The same kitchen, the same twenty orders, the same hill, twelve weeks of methods. Each instance
+    below is the workbench from that week's tutorial, already run. Drag the slider to open the
+    semester week by week, or jump to a week. Anything you set is written into the page's link;
+    copy the link to keep the state or hand it to someone.
+  </p>
+
+  <div class="lab-slider">
+    <label for="lab-week"><strong>Weeks open:</strong> 1 to <output id="lab-week-out" for="lab-week">4</output></label>
+    <input type="range" id="lab-week" min="1" max="12" value="4" step="1" list="lab-weeks" />
+    <datalist id="lab-weeks">{weeks.map((w) => <option value={w} label={`W${w}`} />)}</datalist>
+    <p class="lab-jump" aria-label="Jump to a week">
+      {weeks.map((w) => <a href={`#lab-w${w}`} data-lab-jump={w}>W{w}</a>)}
+    </p>
+  </div>
+
+  <div class="lab-weeks">
+    {weeks.map((w) => (
+      <div class="lab-week" id={`lab-w${w}`} data-lab-week={w} hidden={w > 4}>
+        <Workbench week={w} title={`Week ${w}: ${titles[w]}`} />
+      </div>
+    ))}
+  </div>
+
+  <Record />
+</ContentLayout>
+
+<script>
+  document.addEventListener("astro:page-load", () => {
+    const range = document.querySelector<HTMLInputElement>("#lab-week");
+    const out = document.querySelector<HTMLOutputElement>("#lab-week-out");
+    if (!range || !out) return;
+    const apply = (n: number) => {
+      out.value = String(n);
+      for (const el of document.querySelectorAll<HTMLElement>("[data-lab-week]")) el.hidden = Number(el.dataset.labWeek) > n;
+    };
+    const fromHash = Number(location.hash.replace("#lab-w", ""));
+    if (fromHash >= 1 && fromHash <= 12) { range.value = String(fromHash); }
+    apply(Number(range.value));
+    range.addEventListener("input", () => apply(Number(range.value)));
+    for (const a of document.querySelectorAll<HTMLAnchorElement>("[data-lab-jump]")) {
+      a.addEventListener("click", () => { range.value = a.dataset.labJump!; apply(Number(range.value)); });
+    }
+  });
+</script>
+
+<style>
+  .lab-slider { position: sticky; top: 0; z-index: 2; background: var(--at-bg, #fffdf8); padding: 0.75rem 0; border-bottom: 1px solid var(--at-border, #d9d2c3); margin-bottom: 1rem; }
+  .lab-slider input[type="range"] { width: 100%; max-width: 40rem; display: block; margin: 0.4rem 0; }
+  .lab-jump { display: flex; flex-wrap: wrap; gap: 0.35rem 0.8rem; margin: 0.25rem 0 0; font-size: 0.95rem; }
+  .lab-week { scroll-margin-top: 6rem; }
+</style>
