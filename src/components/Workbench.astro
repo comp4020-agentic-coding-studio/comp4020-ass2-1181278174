@@ -59,8 +59,9 @@ const id = `wb-${key ?? `w${week}`}`;
       const url = new URL(location.href);
       url.searchParams.set(param, JSON.stringify(state));
       history.replaceState(history.state, "", url);
-      if (focusId) controls.querySelector<HTMLElement>(`[data-control="${focusId}"]`)?.focus();
+      if (focusId) root.querySelector<HTMLElement>(focusId)?.focus();
     };
+    const selector = (el: HTMLElement) => `[data-control="${el.dataset.control}"]${el.dataset.value !== undefined ? `[data-value="${el.dataset.value}"]` : ""}`;
     if (fromUrl) update({ id: "" });
 
     // The map is drawn for a 560 px column at build time. In a narrower column
@@ -80,17 +81,19 @@ const id = `wb-${key ?? `w${week}`}`;
     let timer: ReturnType<typeof setTimeout> | undefined;
     window.addEventListener("resize", () => { clearTimeout(timer); timer = setTimeout(refit, 200); }, { signal });
 
-    controls.addEventListener("click", (ev) => {
+    // Controls sit in the control row or inside the result (a plan editor's
+    // move buttons, a per-row select); both reach the same update.
+    root.addEventListener("click", (ev) => {
       const b = (ev.target as HTMLElement).closest<HTMLElement>("button[data-control]");
-      if (!b) return;
+      if (!b || b.hasAttribute("disabled")) return;
       if (b.dataset.codeFrom) {
-        const ta = controls.querySelector<HTMLTextAreaElement>(`textarea[data-code-for="${b.dataset.codeFrom}"]`);
-        update({ id: b.dataset.control!, value: ta?.value ?? "" }, b.dataset.control);
-      } else update({ id: b.dataset.control! }, b.dataset.control);
+        const ta = root.querySelector<HTMLTextAreaElement>(`textarea[data-code-for="${b.dataset.codeFrom}"]`);
+        update({ id: b.dataset.control!, value: ta?.value ?? "" }, selector(b));
+      } else update({ id: b.dataset.control!, value: b.dataset.value }, selector(b));
     }, { signal });
-    controls.addEventListener("change", (ev) => {
+    root.addEventListener("change", (ev) => {
       const s = (ev.target as HTMLElement).closest<HTMLSelectElement | HTMLInputElement>("select[data-control], input[data-control]");
-      if (s) update({ id: s.dataset.control!, value: s.value }, s.dataset.control);
+      if (s) update({ id: s.dataset.control!, value: s.value }, selector(s));
     }, { signal });
   }
 
@@ -135,6 +138,11 @@ const id = `wb-${key ?? `w${week}`}`;
   .wb-code { flex-basis: 100%; }
   .wb-code textarea { display: block; width: 100%; max-width: 40rem; font-family: var(--font-roboto-mono, monospace); font-size: 0.9rem; padding: 0.4rem; margin-block: 0.3rem; }
   .wb-error { color: #b93c1e; }
+  .wb-editor td { vertical-align: middle; }
+  .wb-editor select { font: inherit; padding: 0.15rem 0.3rem; }
+  button.wb-move { padding: 0.1rem 0.45rem; line-height: 1.4; }
+  button.wb-move[disabled] { opacity: 0.35; cursor: default; }
+  .wb-moves { white-space: nowrap; }
   .map-figure { margin: 0.75rem 0 1rem; }
   .minimap { display: block; width: 100%; height: auto; border: 1px solid var(--at-border, #d9d2c3); border-radius: 0.35rem; }
   .minimap-small { max-width: 360px; background: var(--at-bg, #fffdf8); }
