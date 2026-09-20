@@ -51,7 +51,9 @@ export interface LabConfig {
     drone: "L" | "H";
     method: string;
     diagnostic: boolean;
-    arrangement: "both" | "wait" | "detour";
+    arrangement: "both" | "wait" | "detour" | "custom";
+    corridorDelay?: number;
+    corridorRoute?: "pass" | "detour";
     candidate?: number;
     sequence: string[];
     assignment?: Assignment;

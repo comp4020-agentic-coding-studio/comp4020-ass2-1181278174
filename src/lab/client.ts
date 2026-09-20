@@ -114,7 +114,7 @@ export function mountWorkspace(root: HTMLElement) {
     }
     function readInputs() {
         const copy = structuredClone(config);
-        for (const el of content.querySelectorAll<HTMLInputElement | HTMLSelectElement>('[data-field]')) {
+        for (const el of content.querySelectorAll<HTMLInputElement | HTMLSelectElement>('[data-field]:enabled')) {
             const key = el.dataset.field!;
             let value: unknown = el.type === 'checkbox' ? (el as HTMLInputElement).checked : el.type === 'number' ? (el.value === '' ? undefined : Number(el.value)) : el.value;
             (copy as unknown as Record<string, unknown>)[key] = value;
@@ -677,6 +677,11 @@ export function mountWorkspace(root: HTMLElement) {
                 draw();
                 dirty();
                 await execute();
+            }
+            else if (el.dataset.field === 'arrangement') {
+                const fields = q<HTMLFieldSetElement>('[data-corridor-custom]');
+                fields.hidden = fields.disabled = el.value !== 'custom';
+                dirty();
             }
             else if (el.dataset.field === 'method') {
                 config.method = el.value;

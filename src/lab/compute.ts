@@ -284,18 +284,22 @@ function corridorRun(r: LabRun) {
     const bStart = ac.start - 20 - bc.start, B = pathMovements(m, type, back, bStart, 0), window = B.find(e => e.resource === 'corridor')!;
     const wait = Math.max(0, window.end - ac.start);
     let A = rawA;
-    if (c.arrangement === 'detour')
+    const detour = c.arrangement === 'detour' || c.arrangement === 'custom' && c.corridorRoute === 'detour';
+    const delay = c.arrangement === 'custom' ? c.corridorDelay ?? 0 : 0;
+    if (detour)
         A = pathMovements(m, type, search({ ...g, neighbours: (id) => g.neighbours(id).filter(n => !m.edges.find(e => e.id === n.edge)?.resource) }, m.kitchen, order.node).path!, 0, order.weight);
     if (c.arrangement === 'wait')
         A = rawA.flatMap(e => e === ac ? [{ kind: 'hover' as const, from: e.from, to: e.from, start: e.start, end: e.start + wait, energy: hoverEnergy(type, wait) }, { ...e, start: e.start + wait, end: e.end + wait }] : [{ ...e, start: e.start + (e.start >= ac.start ? wait : 0), end: e.end + (e.start >= ac.start ? wait : 0) }]);
-    const conflict = c.arrangement === 'both' && ac.start < window.end && window.start < ac.end;
+    if (delay) A = [{ kind: 'ground-wait', from: m.kitchen, to: m.kitchen, start: 0, end: delay, energy: 0 }, ...A.map(e => ({ ...e, start: e.start + delay, end: e.end + delay }))];
+    const crossing = A.find(e => e.resource === 'corridor');
+    const conflict = !!crossing && crossing.start < window.end && window.start < crossing.end;
     const events: FlightEvent[] = [...A.map((e, i) => ({ ...e, id: 'A' + i, drone: 'A', order: order.id, phase: 'out' as const })), ...B.map((e, i) => ({ ...e, id: 'B' + i, drone: 'B', order: order.id, phase: 'back' as const }))];
     r.scene = { legOnly: true, map: m, orders: [order], routes: [route('A', `A · ${c.arrangement}`, A.filter(e => e.kind === 'move').map(e => e.from).concat(A.at(-1)!.to)), { ...route('B', 'B · returning', back, 1), dashed: true }], events };
     r.status = conflict ? 'diagnostic' : 'verified';
     r.assumptions = ['Two individual flight legs: loaded A outbound, unloaded B returning', 'Corridor capacity one; half-open intervals', 'This case checks the shared passage, not a complete delivery schedule'];
-    r.summary = conflict ? `Conflict on [${Math.max(ac.start, window.start)}, ${Math.min(ac.end, window.end)}): both drones occupy the corridor.` : c.arrangement === 'wait' ? `A hovers ${wait} s at ${ac.from} and enters when B leaves. Hover energy is charged.` : 'A takes a legal route around the corridor. Compare the longer flight and its energy with waiting.';
+    r.summary = conflict ? `Conflict on [${Math.max(crossing!.start, window.start)}, ${Math.min(crossing!.end, window.end)}): both drones occupy the corridor.` : c.arrangement === 'wait' ? `A hovers ${wait} s at ${ac.from} and enters when B leaves. Hover energy is charged.` : c.arrangement === 'custom' ? `A waits ${delay} s on the ground at the kitchen, then ${detour ? 'takes the legal detour around the pass' : 'flies through the ridge pass'}. The corridor intervals do not overlap. Ground waiting adds no hover energy.` : 'A takes a legal route around the corridor. Compare the longer flight and its energy with waiting.';
     addMetrics(r, [['A arrival (s)', A.at(-1)!.end], ['A hover (s)', c.arrangement === 'wait' ? wait : 0], ['A energy (J)', A.reduce((v, e) => v + e.energy, 0)], ['Corridor check', conflict ? 'conflict' : 'passed']]);
-    r.timeline = events.filter(e => e.resource || e.kind === 'hover').map(e => ({ id: e.id, lane: e.resource ?? 'A hover', start: e.start, end: e.end, label: `${e.drone} ${e.kind}`, kind: e.kind, selection: { kind: 'move', id: e.id } }));
-    r.tables = [table('corridor', 'The whole occupancy interval', ['Drone', 'From', 'To', 'Start', 'End', 'Energy (J)'], events.filter(e => e.resource || e.kind === 'hover').map(e => ({ id: e.id, values: [e.drone, e.from, e.to, e.start, e.end, e.energy], selection: { kind: 'move', id: e.id }, tone: conflict ? 'bad' : 'good' })), true)];
+    r.timeline = events.filter(e => e.resource || e.kind === 'hover' || e.kind === 'ground-wait').map(e => ({ id: e.id, lane: e.resource ?? (e.kind === 'ground-wait' ? 'A ground wait' : 'A hover'), start: e.start, end: e.end, label: `${e.drone} ${e.kind}`, kind: e.kind, selection: { kind: 'move', id: e.id } }));
+    r.tables = [table('corridor', 'The whole occupancy interval', ['Drone', 'From', 'To', 'Start', 'End', 'Energy (J)'], events.filter(e => e.resource || e.kind === 'hover' || e.kind === 'ground-wait').map(e => ({ id: e.id, values: [e.drone, e.from, e.to, e.start, e.end, e.energy], selection: { kind: 'move', id: e.id }, tone: conflict && e.resource === 'corridor' ? 'bad' : 'good' })), true)];
     r.trace = events.map(e => ({ id: e.id, title: `${e.drone}: ${e.from} → ${e.to}`, node: e.from, tick: e.start, energy: e.energy, detail: `${e.kind} [${e.start},${e.end}), ${e.energy} J${e.resource ? `, resource ${e.resource}` : ''}.` }));
 }

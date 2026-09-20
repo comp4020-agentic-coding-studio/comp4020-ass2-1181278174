@@ -19,7 +19,15 @@ export function parseConfig(value: unknown, fallbackWeek = 4): LabConfig {
         }
     requireInput(lessons[week].cases.some(x => x.id === c.caseId), "This case does not belong to the selected week.");
     requireInput(["L", "H"].includes(c.drone), "Choose a known drone type.");
-    requireInput(["both", "wait", "detour"].includes(c.arrangement), "Unknown corridor arrangement.");
+    requireInput(["both", "wait", "detour", "custom"].includes(c.arrangement), "Unknown corridor arrangement.");
+    if (value.corridorDelay !== undefined) {
+        requireInput(whole(value.corridorDelay, 0, 600), "Use a whole-second corridor delay from 0 to 600.");
+        c.corridorDelay = value.corridorDelay;
+    }
+    if (value.corridorRoute !== undefined) {
+        requireInput(["pass", "detour"].includes(value.corridorRoute), "Choose the pass or detour route.");
+        c.corridorRoute = value.corridorRoute;
+    }
     requireInput(["fifo", "edf", "manual", "swaps", "exact", "enumerate", "equal-counts", "greedy", "independent", "reserved", "feedback", "reference"].includes(c.method), "Unknown planning method.");
     for (const key of ["diagnostic", "includeWaits"] as const)
         if (value[key] !== undefined) {
