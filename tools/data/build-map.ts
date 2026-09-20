@@ -7,10 +7,10 @@
 
 import { writeFileSync } from "node:fs";
 import type { Building, MapData, MapEdge, MapNode, Order, OrdersData } from "../../src/data/schema.ts";
+import { hill as terrainHeight } from "../../src/data/terrain.ts";
 
 const SEED = 3969;
 const WORLD = { width: 2000, height: 2000, summit: [1240, 1460] as [number, number], summitHeight: 120 };
-const SIGMA = 650; // metres; the hill's spread
 const GRID = 7;
 const SPACING = 300;
 const MARGIN = 100;
@@ -33,12 +33,7 @@ function mulberry32(seed: number): () => number {
 const rnd = mulberry32(SEED);
 const rand = (lo: number, hi: number) => lo + (hi - lo) * rnd();
 const r1 = (v: number) => Math.round(v * 10) / 10;
-const KNOB = 45; // metres the hilltop rises above the gaussian within KNOB_R of the summit
-const KNOB_R = 200;
-const hill = (x: number, y: number) => {
-  const d = Math.hypot(x - WORLD.summit[0], y - WORLD.summit[1]);
-  return WORLD.summitHeight * Math.exp(-(d * d) / (2 * SIGMA * SIGMA)) + KNOB * Math.max(0, 1 - d / KNOB_R);
-};
+const hill = (x: number, y: number) => terrainHeight(WORLD, x, y); // the shape lives in src/data/terrain.ts
 const dist = (a: MapNode, b: MapNode) => Math.hypot(a.x - b.x, a.y - b.y);
 
 // ---- nodes -----------------------------------------------------------------
