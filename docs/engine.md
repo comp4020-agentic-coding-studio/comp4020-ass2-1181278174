@@ -210,5 +210,3 @@ Symbolic examples retain their separate units. Search and candidate budgets are 
 exhausting one is distinct from exhausting a neighbourhood or proving no solution. The
 twenty-order reference is recomputed and checked, not claimed to be globally optimal.
 
-See `lab-rebuild-verification.md` for reproduced results, the checker mutation test and
-runtime limits. No canonical data file or pinned hash changed in this revision.

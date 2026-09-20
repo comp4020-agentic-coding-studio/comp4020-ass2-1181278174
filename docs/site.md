@@ -411,21 +411,7 @@ keyboard orbit buttons; `prefers-reduced-motion`; disposal on `astro:before-swap
 automatic load on the phone (tap the poster); total ≤ 1.2 MB. One missing and 3D is a
 deduction.
 
-## 7. Revision — 20 September 2026
-
-The owner requested implementation of the site and map review. The delivery sequence and
-acceptance criteria are in `improvement-plan.md`. For this revision the main map is a
-responsive 2D teaching view, with direction arrows, named landmarks, a route legend and
-endpoint framing; W4 pairs it with an elevation profile. Full WebGL scenes remain a later
-extension. The Lab selects one week at a time. Weekly prediction and explanation records
-can be saved locally and exported alongside the computed result and configuration.
-
-## 8. Lab rebuild — 21 September 2026
-
-The owner requested larger changes because the weekly Labs still did not match the
-original design, then authorised implementation of `lab-redesign-plan.md`. This revision
-supersedes the 3D deferral and separate weekly demonstrations in §7. The implementation
-and measured acceptance results are recorded in `lab-rebuild-verification.md`.
+## 7. Shared implementation
 
 `LabWorkspace.astro` now provides the shared home, tutorial and semester workspace. The
 Lab mounts one active experiment, with three modes, cumulative capabilities and saved

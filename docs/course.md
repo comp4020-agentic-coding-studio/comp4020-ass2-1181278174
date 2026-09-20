@@ -657,15 +657,15 @@ continuous accumulation toward a final project borrows from How to Make (Almost)
 - S8: [Calling Bullshit — Syllabus](https://callingbullshit.org/syllabus.html)
 - S9: [How to Make (Almost) Anything — 2025](https://fab.cba.mit.edu/classes/863.25/)
 
-## Revision — 21 September 2026: teaching alignment
+## Teaching alignment
 
-The owner authorised the course review plan. The W1 demonstration uses the existing
+The W1 demonstration uses the existing
 ten-node block and its two computed legal alternatives; the canonical graph is not
 edited to manufacture another route. W7 begins with A and B (L) and D (H); W8
 introduces the five-drone fleet with shared pads. Symbolic and canonical cases remain
 separate. Exact enumeration is explicitly requested and reports its finite-domain
 guarantee. The course revision adds worked lectures and guided tutorials before the
-full workspace. See `course-review-and-next-plan.md` for the accepted sequence.
+full workspace.
 
 ## Local implementation boundary — 21 September 2026
 

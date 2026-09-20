@@ -1,7 +1,6 @@
 # Visual scene and replay contract — 21 September 2026
 
-This implements Plan B from `course-review-and-next-plan.md`, starting with W4 and then
-using the same scene on the existing seven 3D pages. Assets are made in Blender; Three.js
+The seven 3D pages share one scene. Assets are made in Blender; Three.js
 places them and animates the computed events. Keep the current render resolution and lighting.
 
 ## Space and assets

@@ -156,23 +156,14 @@ never dressed up as a development incident.
 - [COMP4020 Assessment](https://comp.anu.edu.au/courses/comp4020-agentic-coding-studio/topics/assessment/)
 - [COMP4020 AI use and academic integrity](https://comp.anu.edu.au/courses/comp4020-agentic-coding-studio/topics/ai-use-and-integrity/)
 
-## 9. Local rebuild verification — 21 September 2026
 
-The larger Lab implementation and its acceptance evidence are in
-`lab-rebuild-verification.md`. A measured 120-candidate feedback computation took about
-427 ms, exceeding §2's 100 ms Worker threshold. Runs now use a terminable worker inside
-an opaque-origin iframe with a policy that blocks connections and external scripts.
-The browser checks tested both restrictions against a reachable local server. Custom
-functions have an eight-second timeout; other runs have a 45-second timeout, explicit
-algorithm budgets, progress and cancellation. Stale responses cannot replace newer input.
+## 9. Computation and practice-pack gates
 
-The site's live examples use the shared engine. The downloadable offline practice pack
-contains seven baseline strategy functions, tests and separately labelled unfinished
-search/neighbourhood exercises. Import reviews data and source without executing it;
-full plans are independently checked and derived metrics are recomputed.
+Runs use a terminable worker in an opaque-origin iframe. Custom functions have an
+eight-second timeout; other runs have a 45-second timeout, explicit algorithm budgets,
+progress and cancellation. Stale responses cannot replace newer input.
 
-Run `pnpm check`, then the two `scripts/check-lab-*.mjs` browser scripts against the local
-preview for the Lab acceptance gates. Those scripts return a failing exit status for
-failed assertions. `pnpm check:evidence` remains the submission evidence gate. This
-revision was verified locally; hosting, public visibility and submission remain separate
-delivery actions requiring the owner's instruction.
+The offline practice pack contains baseline strategies, tests and unfinished student
+exercises. Import reviews data and source without executing it; complete plans are
+independently checked and derived metrics recomputed. Verify the extracted pack without
+repository dependencies. Keep browser screenshots and acceptance output outside `docs/`.

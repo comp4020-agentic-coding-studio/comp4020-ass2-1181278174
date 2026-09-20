@@ -14,20 +14,5 @@ tests and the deployed site are the evidence.
 The working rules for the agent are in `CLAUDE.md` at the repository root. The process record
 is `docs/moments.md` and `PROCESS.md`.
 
-The Lab rebuild against the original design is recorded in
-[`lab-redesign-plan.md`](lab-redesign-plan.md). It preserves the gaps found before the
-rebuild, twelve weekly activities and staged acceptance gates. Implementation and local
-verification are recorded in [`lab-rebuild-verification.md`](lab-rebuild-verification.md);
-the dated revisions in `site.md`, `engine.md` and `delivery.md` describe the resulting
-contracts. Local acceptance does not establish that the hosted site has been updated.
-
-The course-content review and the separate visual-model plan are in
-[`course-review-and-next-plan.md`](course-review-and-next-plan.md). The course revision
-acceptance record is [`course-revision-verification.md`](course-revision-verification.md).
-[`course-process-notes.md`](course-process-notes.md) gives factual evidence and questions
-for the owner's own process account.
-
-The Blender models, roads and event replay are documented in
-[`visual-model-contract.md`](visual-model-contract.md). The completed Plan B stages,
-measurements and reproduction steps are in
-[`visual-replay-verification.md`](visual-replay-verification.md).
+The presentation contract for the shared models and event replay is in
+`visual-model-contract.md`.
