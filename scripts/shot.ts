@@ -17,7 +17,8 @@ import { setTimeout as sleep } from "node:timers/promises";
 import { gitOrigin, resolveDeployment } from "./pages-base.ts";
 
 const OUT = "docs/screenshots";
-const PORT = 4173;
+// SHOT_PORT picks another port when 4173 is taken by a preview of some other checkout.
+const PORT = Number(process.env.SHOT_PORT ?? 4173);
 const { base } = resolveDeployment(process.env, gitOrigin);
 const BASE = `http://localhost:${PORT}${base.replace(/\/$/, "")}`;
 const LIBS = join(homedir(), "chromium-libs/root/usr/lib/x86_64-linux-gnu");
