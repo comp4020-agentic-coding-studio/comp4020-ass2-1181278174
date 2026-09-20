@@ -5,6 +5,8 @@ import RelatedContent from "astro-course-university/components/RelatedContent.as
 import SpecList from "astro-course-university/components/SpecList.astro";
 import ContentLayout from "astro-theme-university/layouts/ContentLayout.astro";
 import TeachingTeam from "../../components/TeachingTeam.astro";
+import Workbench from "../../components/Workbench.astro";
+import { caseFor } from "../../workbench/cases";
 import { formatCourseDate } from "../../lib/dates";
 import { graphCollections, sessionLabels, siteConfig } from "../../site-config";
 
@@ -23,6 +25,7 @@ const { Content } = await render(session);
   {...siteConfig}
 >
   <p><strong>{formatCourseDate(session.data.date)}</strong></p>
+  {caseFor(session.data.week) && <Workbench week={session.data.week} />}
   <Content />
   <SpecList spec={session.data.spec}>
     What you bring to the session. Written so a reader can tell whether it has

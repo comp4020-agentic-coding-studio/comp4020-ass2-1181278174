@@ -1,0 +1,116 @@
+---
+// One week's workbench instance. Rendered with its result at build time; the
+// script below recomputes in the browser when a control changes, using the
+// same case module.
+import { caseFor, renderControls } from "../workbench/cases";
+
+interface Props {
+  week: number;
+}
+const { week } = Astro.props;
+const def = caseFor(week);
+if (!def) throw new Error(`no workbench case for week ${week}`);
+const state = def.initial(week);
+const caption = def.caption(week);
+const view = def.render(state, week);
+const id = `wb-w${week}`;
+---
+
+<section class="workbench" data-week={week} data-state={JSON.stringify(state)} aria-labelledby={`${id}-title`}>
+  <h2 id={`${id}-title`}>This week's workbench</h2>
+  <p class="wb-caption"><strong>This week's decision:</strong> {caption.decision} <strong>What it breaks:</strong> {caption.breaks}</p>
+  <div class="wb-controls" set:html={renderControls(def, state, week, id)} />
+  <div class="wb-view" set:html={view.html} />
+  <p class="wb-status" aria-live="polite">{view.status.replace("computed in your browser", "computed when this page was built")}</p>
+</section>
+
+<script>
+  import { caseFor, renderControls } from "../workbench/cases";
+
+  function wire(root: HTMLElement, signal: AbortSignal) {
+    const week = Number(root.dataset.week);
+    const def = caseFor(week);
+    if (!def) return;
+    let state = JSON.parse(root.dataset.state ?? "null") ?? def.initial(week);
+    // A deep link carries the state: ?wb=<json>. Every change writes it back,
+    // so a state reached by hand can be handed to someone as a link.
+    const fromUrl = new URL(location.href).searchParams.get("wb");
+    if (fromUrl) {
+      try { state = { ...state, ...JSON.parse(fromUrl) }; } catch { /* not ours; ignore */ }
+    }
+    const controls = root.querySelector<HTMLElement>(".wb-controls")!;
+    const view = root.querySelector<HTMLElement>(".wb-view")!;
+    const status = root.querySelector<HTMLElement>(".wb-status")!;
+    const id = `wb-w${week}`;
+
+    const update = (action: { id: string; value?: string }, focusId?: string) => {
+      state = def.apply(state, action);
+      const out = def.render(state, week);
+      view.innerHTML = out.html;
+      controls.innerHTML = renderControls(def, state, week, id);
+      status.textContent = out.status;
+      root.dataset.state = JSON.stringify(state);
+      const url = new URL(location.href);
+      url.searchParams.set("wb", JSON.stringify(state));
+      history.replaceState(history.state, "", url);
+      if (focusId) controls.querySelector<HTMLElement>(`[data-control="${focusId}"]`)?.focus();
+    };
+    if (fromUrl) update({ id: "" });
+
+    controls.addEventListener("click", (ev) => {
+      const b = (ev.target as HTMLElement).closest<HTMLElement>("button[data-control]");
+      if (b) update({ id: b.dataset.control! }, b.dataset.control);
+    }, { signal });
+    controls.addEventListener("change", (ev) => {
+      const s = (ev.target as HTMLElement).closest<HTMLSelectElement>("select[data-control]");
+      if (s) update({ id: s.dataset.control!, value: s.value }, s.dataset.control);
+    }, { signal });
+  }
+
+  let aborter: AbortController | null = null;
+  document.addEventListener("astro:page-load", () => {
+    aborter?.abort();
+    aborter = new AbortController();
+    for (const root of document.querySelectorAll<HTMLElement>(".workbench[data-week]")) wire(root, aborter.signal);
+  });
+  document.addEventListener("astro:before-swap", () => aborter?.abort());
+</script>
+
+<style is:global>
+  .workbench { margin-block: 1.5rem 2.5rem; padding: 1rem 1.25rem; border: 1px solid var(--at-border, #d9d2c3); border-radius: 0.5rem; background: var(--at-bg-alt, #f7f3ea); }
+  .workbench h2 { margin-top: 0; }
+  .wb-caption { margin-block: 0.25rem 1rem; }
+  .wb-controls { display: flex; flex-wrap: wrap; gap: 0.5rem 0.75rem; align-items: center; margin-block: 0.5rem 1rem; }
+  .wb-control { font: inherit; }
+  button.wb-control { padding: 0.45rem 0.9rem; border: 1px solid var(--at-primary, #b97d1c); border-radius: 0.35rem; background: transparent; color: inherit; cursor: pointer; }
+  button.wb-primary { background: var(--at-primary, #b97d1c); color: #fff; }
+  .wb-control select { font: inherit; padding: 0.3rem 0.4rem; }
+  .wb-summary { font-size: 1.05rem; }
+  .wb-table { overflow-x: auto; margin-block: 0.75rem; }
+  .wb-table table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  .wb-table caption { text-align: left; font-weight: 600; padding-block: 0.25rem; }
+  .wb-table th, .wb-table td { padding: 0.3rem 0.5rem; border-bottom: 1px solid var(--at-border, #d9d2c3); text-align: left; vertical-align: top; }
+  .wb-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+  .wb-table tr.wb-bad td { background: rgba(185, 60, 30, 0.12); }
+  .wb-table tr.wb-good td { background: rgba(60, 140, 60, 0.12); }
+  .wb-status { font-size: 0.85rem; color: var(--at-text-secondary, #6b6154); margin-block: 0.5rem 0; }
+  .minimap { display: block; width: 100%; max-height: 380px; background: var(--at-bg, #fffdf8); border: 1px solid var(--at-border, #d9d2c3); border-radius: 0.35rem; }
+  .minimap-small { max-height: 220px; }
+  .mm-bg { fill: transparent; }
+  .mm-building { fill: #6b6154; opacity: 0.35; }
+  .mm-tower { opacity: 0.7; }
+  .mm-edge { fill: none; stroke: #b3a993; stroke-linecap: round; }
+  .mm-corridor { stroke: #b97d1c; stroke-dasharray: 18 12; }
+  .mm-route { fill: none; stroke: #2b2520; stroke-linecap: round; stroke-linejoin: round; }
+  .mm-route.route-chosen { stroke: #2f7d32; }
+  .mm-route.route-fastest { stroke: #b93c1e; stroke-dasharray: 22 12; }
+  .mm-node { fill: #fffdf8; stroke: #2b2520; stroke-width: 3; }
+  .mm-marked { fill: #2b2520; }
+  .mm-open { stroke: #b97d1c; stroke-width: 6; }
+  .mm-onpath { stroke: #2f7d32; }
+  .mm-kitchen, .mm-summit { fill: #b97d1c; }
+  .mm-label { fill: #2b2520; font-family: inherit; }
+  .mm-nodelabel { fill: #fffdf8; font-weight: 700; }
+  .mm-node.mm-marked + .mm-nodelabel { fill: #fffdf8; }
+  .minimap-small .mm-node:not(.mm-marked) + .mm-nodelabel { fill: #2b2520; }
+</style>

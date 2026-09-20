@@ -74,7 +74,7 @@ export class Searcher {
 
   constructor(
     private readonly graph: WeightedGraph,
-    private readonly start: string,
+    start: string,
     private readonly goal: string,
     options: SearchOptions = {},
   ) {
