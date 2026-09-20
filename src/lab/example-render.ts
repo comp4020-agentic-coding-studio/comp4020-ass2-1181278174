@@ -1,12 +1,17 @@
+import { stageForWeek } from '../data/hill-stops';
+import { withBase } from 'astro-theme-university/url';
 import { lessons, type LabRun } from './model';
-import { basePath, esc, mapSvg, tableHtml, timelineHtml } from './render';
+import { esc, mapSvg, tableHtml, timelineHtml } from './render';
 import { placeName, placeText } from './places';
 import { teachingActions } from './teaching';
 import { replayBounds, replayIssues } from './replay-inspection';
 import { lessonEvidence } from './lesson-evidence';
 import { metricComparison } from './comparison';
 
-const button=(action:string,label:string,extra='')=>`<button type="button" data-example-action="${action}" ${extra}>${label}</button>`;
+const button=(action:string,label:string,extra='')=>{
+  const classes=extra.match(/class="([^"]*)"/)?.[1]??'';
+  return `<button type="button" class="at-button ${classes.includes('lab-primary')?'':'at-button--outline'} ${classes}" data-example-action="${action}" ${extra.replace(/class="[^"]*"/,'')}>${label}</button>`;
+};
 export const exampleIntros:Record<number,string>={
   1:'Dinner #03 goes from the kitchen to Home 03. Compare two legal routes with a shortcut through a building.',
   2:'S is the start and G is the destination. The numbers on the arrows are travel costs. Find the cheapest route.',
@@ -32,12 +37,12 @@ export function exampleHtml(r:LabRun,baseline:LabRun,mode='start') {
   const selectedRows=week===1?[...(r.tables.find(t=>t.id==='routes')?.rows??[]),...(r.tables.find(t=>t.id==='connections')?.rows.filter(x=>x.values[1]==='Building intersection').slice(0,1)??[])]:week===4?(r.tables.find(t=>t.id==='candidates')?.rows.filter((x,i)=>i===0||x.tone==='good').slice(0,2)??[]):[];
   const primary=r.tables.find(t=>t.primary)??r.tables[0];
   const map=r.scene?`<section class="example-visual"><div class="example-mapbar"><strong>${week===1?'Kitchen block':'Slop Hill · terrain & routes'}</strong>${exampleHas3D(r)?button('toggle-map','Open 3D','aria-pressed="false"'):''}</div><div class="example-canvas-area"><div class="lab-map" data-map-host>${mapSvg(r.scene).replaceAll('tabindex="0"','').replaceAll('role="button"','role="img"')}</div><div class="lab-scene" data-scene-host hidden></div></div><p class="example-map-key">${week===1?'A and B reach Home 03. Pink marks the inspected connection.':'Colour bands show ground elevation. The marked passage runs between two towers; its rule allows one drone at a time. Height shown at 3× scale.'}</p></section>`:'';
-  return `<header class="example-heading"><p class="example-mobile-line">W${week} · ${mobileDecisions[week]}</p><div><span class="lab-eyebrow">WEEK ${String(week).padStart(2,'0')} / THIS WEEK’S DECISION</span><h2>${esc(lessons[week].question)}</h2><p>${esc(exampleIntros[week])}</p></div>${hasMap?button('expand','Expand view','class="example-expand" aria-expanded="false"'):''}</header>
+  return `<header class="example-heading" data-stage="${stageForWeek(week)}"><h2 class="example-mobile-line">W${week} · ${mobileDecisions[week]}</h2><div><span class="lab-eyebrow">Week ${week} · This week’s decision</span><h2>${esc(lessons[week].question)}</h2><p>${esc(exampleIntros[week])}</p></div>${hasMap?button('expand','Expand view','class="example-expand" aria-expanded="false"'):''}</header>
   <section class="example-result" aria-label="Computed result"><div class="example-result-heading"><span class="example-badge ${r.status}">${r.status==='verified'?'Checks passed':r.status==='budget'?'Budget reached':r.status==='diagnostic'?'Diagnostic case':r.plan?'Incomplete plan':'No route found'}</span><p>${esc(placeText(r.summary))}</p></div><div class="example-metrics">${r.metrics.slice(0,3).map(m=>`<div><span>${esc(m.label)}</span><strong>${esc(m.value)}</strong></div>`).join('')}</div>${mode==='start'?'':metricComparison(baseline,r)}<p class="example-provenance">Computed from this case · ${r.elapsed} ms · ${esc(r.engine)} · ${esc(r.input.caseId)}</p></section>
   <div class="example-decision"><div class="example-options">${button('change',mode==='start'?esc(action.action):'Restore starting case',`class="lab-primary" data-next="${mode==='start'?'change':'start'}" aria-pressed="${mode!=='start'}"`)}</div><span role="status" data-example-status>${mode==='start'?'Starting case is ready.':'Changed case recomputed.'}</span></div>
   <div class="example-stage lesson-week-${week}">${hasMap?map:''}${figures}</div>
 
-  <details class="example-tools"><summary>Explore the evidence, replay or open full Lab</summary><p><a data-open-lab href="${basePath()}lab/#lab-w${week}">Open full Lab ↗</a> for editable inputs, strategy code and saved comparisons.</p><p>${esc(action.observe)}</p>${week===11?button('reserved','Coordinate routes only'):''}
+  <details class="example-tools"><summary>Explore the evidence, replay or open full Lab</summary><p><a data-open-lab href="${withBase(`/lab/#lab-w${week}`)}">Open full Lab ↗</a> for editable inputs, strategy code and saved comparisons.</p><p>${esc(action.observe)}</p>${week===11?button('reserved','Coordinate routes only'):''}
     ${!hasMap?map:''}
     <div class="example-inspection-tools">${selectedRows.map((row,i)=>button('inspect',week===1?(row.id.startsWith('route')?`Route ${row.values[0]}`:'Blocked shortcut'):(i===0?'Fastest candidate':'Candidate within battery'),`data-id="${esc(row.id)}"`)).join('')}${r.scene&&week!==12?`<label>Inspect a delivery<select data-example-order>${r.scene.orders.map(o=>`<option value="${o.id}">${o.id} → ${esc(placeName(o.node))}</option>`).join('')}</select></label>`:''}<div data-example-camera hidden>${button('overview',week===1?'Whole block':'Reset view')}${week===1?button('top','Top view'):button('destination','Locate home')}</div></div>
     ${week===12?'':`<section class="example-selection" aria-live="polite"><h3 data-example-selection>Read the example above</h3><p data-example-detail>${esc(action.observe)}</p></section>`}<div data-example-technical></div><p data-example-live></p>

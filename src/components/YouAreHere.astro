@@ -1,0 +1,40 @@
+---
+import { withBase } from 'astro-theme-university/url';
+import { hillStops } from '../data/hill-stops';
+import { canonical, defaultConfig } from '../lab/model';
+import { runExperiment } from '../lab/compute';
+import { mapSvg, mapPoint } from '../lab/render';
+interface Props { week: number }
+const { week } = Astro.props;
+const stop = hillStops[week - 1];
+const scene = { map: canonical.map, orders: canonical.orders, events: [], routes: [] };
+const corridor = canonical.map.edges.find(e => e.resource === 'corridor')!;
+const caseScene=[1,4].includes(week) ? runExperiment(defaultConfig(week)).scene : undefined;
+const ids = week === 12 ? canonical.map.nodes.map(n => n.id)
+  : week === 4 ? caseScene!.routes.flatMap(r => r.displayPath ?? r.path)
+  : [5,6].includes(week) ? [canonical.map.kitchen, ...canonical.orders.slice(0,6).map(o => o.node)]
+  : [9,10,11].includes(week) ? [corridor.from, corridor.to, stop.node]
+  : week === 1 ? caseScene!.focusNodes!
+  : [stop.node];
+const points = ids.map(id => canonical.map.nodes.find(n => n.id === id)!);
+const left=Math.max(0,Math.min(...points.map(n=>n.x))-140), right=Math.min(canonical.map.world.width,Math.max(...points.map(n=>n.x))+140);
+const bottom=Math.max(0,Math.min(...points.map(n=>n.y))-140), top=Math.min(canonical.map.world.height,Math.max(...points.map(n=>n.y))+140);
+const [x,y]=mapPoint(scene,left,top), [x2,y2]=mapPoint(scene,right,bottom);
+const bounds=`<rect data-case-bounds x="${x}" y="${y}" width="${x2-x}" height="${y2-y}" fill="var(--stage-color)" fill-opacity=".16" stroke="var(--stage-color)" stroke-width="8" rx="10"/>`;
+// The full-size map's controls become a single linked overview here.
+const svg=mapSvg(scene).replaceAll('tabindex="0"','').replaceAll('role="button"','').replace('role="group"','aria-hidden="true"').replace('</svg>',bounds+'</svg>');
+---
+<a class="you-are-here" data-stage={stop.stage} href={withBase('/#hill')} aria-label={`You are here: W${week}, ${stop.title}. Return to the hill.`}>
+  <span><strong>You are here</strong><small>W{week} · {stop.title}</small></span>
+  <span class="mini-map" set:html={svg} />
+</a>
+<style>
+  .you-are-here { display: flex; flex-direction: column; width: 200px; max-width: 100%; gap: .3rem; border-left: 3px solid var(--stage-color); padding-left: .65rem; color: var(--stage-color); text-decoration: none; }
+  .you-are-here:hover strong { text-decoration: underline; }
+  .you-are-here strong { font-size: .85rem; }
+  .you-are-here small { display: block; font-size: .68rem; line-height: 1.4; margin-top: .15rem; }
+  .mini-map { border: 1px solid var(--at-border); border-radius: .2rem; overflow: hidden; color-scheme: light; }
+  .mini-map :global(svg) { display: block; width: 100%; height: auto; }
+  .mini-map :global(text) { display: none; }
+  @media(max-width:600px) { .you-are-here { width: 140px; padding-left: .4rem; } }
+</style>

@@ -1,3 +1,4 @@
+import { stageForWeek } from '../data/hill-stops';
 import { metricComparison } from './comparison';
 import { canonical, defaultConfig, fingerprint, lessons, type LabConfig, type LabRun, type Selection, type SlotKey } from './model.ts';
 import { parseConfig } from './input.ts';
@@ -604,7 +605,7 @@ export function mountWorkspace(root: HTMLElement) {
     } }, { signal });
     content.addEventListener('input', event => {
         const el = event.target as HTMLInputElement;
-        if(el.matches('[data-week-slider]')){const week=Number(el.value);q('[data-semester-label]').textContent=`W${week} · ${lessons[week].adds}`;el.setAttribute('aria-valuetext',`Week ${week}: ${lessons[week].title}`);}
+        if(el.matches('[data-week-slider]')){const week=Number(el.value);q('.lab-semester-control').dataset.stage=stageForWeek(week);q('[data-semester-label]').textContent=`W${week} · ${lessons[week].adds}`;el.setAttribute('aria-valuetext',`Week ${week}: ${lessons[week].title}`);}
         else if (el.matches('[data-time-slider]')) {
             stopPlayback();
             updateTime(Number(el.value));

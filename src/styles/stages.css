@@ -10,3 +10,7 @@
 [data-stage="order"] { --stage-color: var(--stage-order); }
 [data-stage="fleet"] { --stage-color: var(--stage-fleet); }
 [data-stage="corridor"] { --stage-color: var(--stage-corridor); }
+
+/* Small supporting headings need text contrast, rather than the display-title gold. */
+.related-content h2 { color: var(--at-text-secondary); }
+.at-heading-anchor { opacity: 1; color: var(--at-text-secondary); text-decoration: underline; }

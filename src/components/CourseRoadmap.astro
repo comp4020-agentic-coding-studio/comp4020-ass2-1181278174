@@ -2,15 +2,16 @@
 import { getPublishedCollection } from "astro-course-university/content";
 import { withBase } from "astro-theme-university/url";
 import { stages, learning } from "../workbench/learning";
+import { stageForWeek } from "../data/hill-stops";
 const { compact = false } = Astro.props;
 const lectures = await getPublishedCollection("lectures"), sessions = await getPublishedCollection("sessions");
 ---
 <div class:list={["course-roadmap", { "roadmap-compact": compact }]}>
-  {stages.map((stage) => <section class="course-stage">
+  {stages.map((stage) => <section class="course-stage" data-stage={stageForWeek(stage.start)}>
     <h2><span>W{stage.start}{stage.end !== stage.start ? `–${stage.end}` : ""}</span> {stage.title}</h2>
     <p>{stage.outcome}</p>
     {compact ? <a href={withBase(`/sessions/${sessions.find((s) => s.data.week === stage.start)!.id}/`)}>Explore this stage →</a> :
-      <ol start={stage.start}>{Array.from({ length: stage.end - stage.start + 1 }, (_, i) => stage.start + i).map((week) => <li>
+      <ol start={stage.start}>{Array.from({ length: stage.end - stage.start + 1 }, (_, i) => stage.start + i).map((week) => <li data-stage={stageForWeek(week)}>
         <div><strong>Week {week} · {learning[week].title}</strong><p>{learning[week].model}</p></div>
         <nav aria-label={`Week ${week} materials`}><a href={withBase(`/lectures/${lectures.find((l) => l.data.week === week)!.id}/`)}>Lecture</a><a href={withBase(`/sessions/${sessions.find((s) => s.data.week === week)!.id}/`)}>Tutorial</a><a href={withBase(`/lab/#lab-w${week}`)}>Lab</a></nav>
       </li>)}</ol>}
@@ -19,14 +20,14 @@ const lectures = await getPublishedCollection("lectures"), sessions = await getP
 <style>
   .course-roadmap { margin-block: 1.5rem; }
   .course-stage { border-top: 1px solid var(--at-border); padding-block: 1.1rem; }
-  .course-stage h2 { margin: 0; font-size: 1.3rem; }
+  .course-stage h2 { color: var(--stage-color); border-left: 4px solid var(--stage-color); padding-left: .7rem; margin: 0; font-size: 1.3rem; }
   .course-stage h2 span { display: inline-block; color: var(--at-text-secondary); font-size: 0.9rem; margin-right: 0.6rem; }
   .course-stage p { margin: 0.4rem 0; }
   .course-stage ol { list-style: none; padding: 0; margin-bottom: 0; }
-  .course-stage li { display: flex; justify-content: space-between; gap: 1rem; border-top: 1px solid var(--at-border); padding-block: 0.85rem; }
+  .course-stage li { border-left: 3px solid var(--stage-color); padding-left: .7rem; display: flex; justify-content: space-between; gap: 1rem; border-top: 1px solid var(--at-border); padding-block: 0.85rem; }
   .course-stage li p { font-size: 0.85rem; color: var(--at-text-secondary); }
   .course-stage nav { display: flex; flex-wrap: wrap; align-content: center; gap: 0.4rem 0.9rem; flex-shrink: 0; }
   .roadmap-compact { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 1.5rem; }
   .roadmap-compact .course-stage p { font-size: 0.95rem; }
-  @media (max-width: 600px) { .course-stage li { flex-direction: column; gap: 0.4rem; } .roadmap-compact { grid-template-columns: 1fr; } }
+  @media (max-width: 600px) { .course-stage li { border-left: 3px solid var(--stage-color); padding-left: .7rem; flex-direction: column; gap: 0.4rem; } .roadmap-compact { grid-template-columns: 1fr; } }
 </style>

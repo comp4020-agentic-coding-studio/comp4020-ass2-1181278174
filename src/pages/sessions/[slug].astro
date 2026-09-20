@@ -1,4 +1,5 @@
 ---
+import YouAreHere from "../../components/YouAreHere.astro";
 import WeekNavigation from "../../components/WeekNavigation.astro";
 import { render } from "astro:content";
 import { getPublishedCollection } from "astro-course-university/content";
@@ -24,8 +25,10 @@ const { Content } = await render(session);
   description={session.data.description}
   {...siteConfig}
 >
-  <p><strong>{formatCourseDate(session.data.date)}</strong></p>
-  <WeekNavigation week={session.data.week} kind="sessions" />
+  <div class="tutorial-location-row">
+    <div><p><strong>{formatCourseDate(session.data.date)}</strong></p><WeekNavigation week={session.data.week} kind="sessions" /></div>
+    <YouAreHere week={session.data.week} />
+  </div>
   <details class="tutorial-guide">
     <summary>Two-hour tutorial: preparation, coding and checks</summary>
     <Content />
@@ -40,6 +43,9 @@ const { Content } = await render(session);
 </ContentLayout>
 
 <style>
+  .tutorial-location-row { display: grid; grid-template-columns: minmax(0,1fr) 200px; align-items: center; gap: 1.5rem; }
+  @media(max-width:600px) { .tutorial-location-row { grid-template-columns: minmax(0,1fr) 140px; gap: .6rem; font-size: .8rem; } }
+
   .tutorial-guide { padding: .75rem 1rem; border: 1px solid var(--at-border); margin-block: 1rem; }
   .tutorial-guide summary { cursor: pointer; font-weight: 600; }
   :global(body:has(.tutorial-guide) h1) { font-size: clamp(1.8rem, 3vw, 2.8rem); }
