@@ -69,7 +69,7 @@ derived on small symbolic graphs; each one names the place on Slop Hill it corre
 | Element | Scope |
 |---|---|
 | Space | About 2 km × 2 km, called Slop Hill. It is a real hill: about 120 m from the kitchen to the top. Fictional; no real residents or business. |
-| Map | A finite directed graph with 3D coordinates, real polyline segments and named resources. Buildings decide which connections are legal. Edge time comes from length and drone speed; edge energy comes from length, payload and climb, and uphill costs more than downhill of the same length. |
+| Map | A finite directed graph with 3D coordinates, real polyline segments and named resources. Buildings decide which connections are legal. Edge time comes from length and drone speed; edge energy comes from length, payload and climb, dearer per metre of rise the steeper the edge, and uphill costs more than downhill of the same length. The hilltop house is reached by a short steep track or a long gentle spiral. |
 | Depot | A ghost kitchen at the foot of the hill: delivery only, no dine-in, twenty dishes in one evening. Every task starts and ends there. |
 | Orders | #01–#20, fixed and published in week 1, each with a ready time, a weight and a promised delivery time. Each stage uses a fixed subset: W1–W4 use #07 (the W1 block graph also has #03 and #05); A1 and W5–W6 use #01–#06; W7–W8 use #01–#09 plus #20; W9–W12 use all twenty. |
 | One order per flight | A drone carries one order, delivers, returns. "Many orders" means repeated departures, not one flight to several houses. |

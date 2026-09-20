@@ -29,18 +29,21 @@ subset or a view of them. The table below lists what the model depends on and wh
 are fixed. Values marked *to be set* are calibrated against a reference run before the data
 is released, and published here with their range and source when they are.
 
-| Parameter | Value or range | Status |
+| Parameter | Value | Status |
 |---|---|---|
-| Area | About 2 km × 2 km; about 120 m from the kitchen to the hilltop | fixed |
-| Depot | The kitchen at the foot of the hill; every task starts and ends there | fixed |
-| Orders | #01–#20; ready time, weight, promised time | to be set; the roles of #07, #13 and #20 are fixed |
-| Drone types | L and H: speed, payload, battery | to be set; #20 exceeds L's payload |
-| Energy | Level flight per metre; climb per metre of rise; descent per metre of drop; hover per tick; loading and service | to be set; uphill always costs more than downhill of the same length |
-| Charging pads | Two; effective rate; turnaround time | two fixed; rate and turnaround to be set |
-| Time | Integer ticks; tick length published with each scenario | to be set |
-| Evening | 18:00–21:00 ready and delivery; one evaluation cut-off | to be set |
+| Area | 2 km × 2 km; a hill of 120 m with a 45 m knob at the top; the summit house at 165 m; the kitchen at the foot | fixed |
+| Streets | 51 nodes, 148 directed edges; a ridge with the corridor (298 m) as its only crossing on rows 2–4; the detour around the ridge is 1 607 m, 5.4 times the corridor | fixed |
+| Hilltop | A track of 173 m rising 43 m (grade 0.25) and a spiral of 531 m rising 51 m (grade 0.10) | fixed |
+| Orders | #01–#20, numbered by ready time, 18:00–20:11; #07 at the summit, promised 25 minutes after ready; #13 across the corridor; #20 3.5 kg; the others 0.3–1.4 kg | fixed |
+| Type L | 12 m/s; climb 3.0 m/s; payload 1.5 kg; battery 95 kJ; cruise 120 W plus 15 % per kg; climb power 300 W; lift 60 J per metre of rise, times (1 + 20 × grade); hover 100 W | fixed |
+| Type H | 8 m/s; climb 2.0 m/s; payload 4 kg; battery 250 kJ; cruise 200 W plus 8 % per kg; climb power 500 W; lift 90 J/m, times (1 + 20 × grade); hover 220 W | fixed |
+| Fleet | A, B, C are type L; D, E are type H | fixed |
+| Charging pads | Two; a full charge takes 1 200 s; turnaround 60 s | fixed |
+| Time | Ticks of 1 s; loading 60 s; service 45 s; evening 18:00–21:00; evaluation cut-off 21:30 | fixed |
+| Reserve | 15 % of the battery must remain on landing | fixed |
 | Objective | Total lateness, then all-returned time, then total energy, in that order | fixed |
-| Design target | A complete feasible baseline exists for the normal batch; the reference method delivers at least N orders on time | N to be set |
+| Calibrated facts | A light drone can fly #01–#06. For #07 its fastest round trip (447 s, 84.7 kJ) is over its 80.75 kJ budget, so a slower, cheaper one (472 s, 80.4 kJ) is flown. Every order can be flown by some type; #20 only by H; H reaches all twenty; L cannot reach #14. | checked by the repository's tests |
+| Design target | A complete feasible baseline exists for the normal batch and the reference method delivers at least N orders on time | N to be set when the fleet planner exists |
 
 If the data does not meet the design target, the data changes, not the promise.
 

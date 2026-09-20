@@ -10,11 +10,15 @@ The map is a finite directed graph. An edge carries its real polyline and its co
 resource. All layers use one set of metric coordinates; a course entity is never identified by
 a visual grid index. Axis conversion for models happens once, at the asset interface.
 
-Slop Hill has elevation. Edge time comes from length and drone speed. Edge energy comes from
-length, payload and climb; an uphill edge costs more than a downhill edge of the same length.
-Time is the primary search cost; energy is a resource label. Both are produced by the
-canonical data generation step, and planning, ledger, reservations and replay read the same
-values.
+Slop Hill has elevation. Edge time is the cruise time, length over speed, or longer when the
+rise over the drone's maximum climb rate exceeds it. Edge energy is cruise power (scaled by
+payload) for the cruise time, climb power for any time the climb limit adds, and lift for the
+rise — dearer per metre of rise the steeper the edge, by a factor (1 + gradeFactor × grade).
+Descent adds nothing and refunds nothing, so an uphill edge always costs more than a downhill
+edge of the same length, and a short steep route can be faster yet dearer than a long gentle
+one. Time is the primary search cost; energy is a resource label. Both are computed in
+`src/engine/graph.ts` from the map and the fleet, and planning, ledger, reservations and
+replay read the same values.
 
 Time is in integer ticks; every scenario publishes its tick length, and seconds are the
 display unit. Non-integer physical durations are converted to ticks in the data generation
@@ -160,15 +164,18 @@ their sha256 is pinned in `spec/`. Every weekly case is a subset or view of thes
 parameter table is public on the policies page with a value, a range and a source for every
 entry; any "course-set" parameter appears in the policies page's simulation-boundary section.
 
-| Parameter | Value or range | Status |
+| Parameter | Value | Status |
 |---|---|---|
-| Area | About 2 km × 2 km; about 120 m from the kitchen to the hilltop; the kitchen is the depot | set |
-| Route graph | Node count, edge count, corridor location, polyline segments | to build |
-| Orders | #01–#20 with ready time, weight, promised time | to build; the roles of #07, #13, #20 are set |
-| Drone types | L and H: speed, payload, battery | to set; #20 must exceed L's payload |
-| Energy | Level flight per metre, climb per metre of rise, descent per metre of drop, hover per tick, loading and service | to set |
-| Charging pads | 2; effective rate; turnaround time | 2 set; the rest to set |
-| Window | 18:00–21:00 ready and delivery; one evaluation cut-off | to set |
-| Design target | The normal batch has a complete feasible baseline; the reference method delivers at least N orders on time (N pinned in `spec/` after calibration) | to verify |
+| Area | 2 km × 2 km; a gaussian hill of 120 m with a 45 m knob at the top; the summit house at 165 m; the kitchen at the foot, 9 m | set |
+| Route graph | 51 nodes, 148 directed edges; a jittered 7 × 7 street grid, thinned; a ridge between columns 2 and 3 on rows 2–4 with the corridor (298 m, resource `corridor`) as its only crossing; detour 1 607 m, 5.4× | set, `pnpm data` |
+| Hilltop | A track of 173 m rising 43 m (grade 0.25) from the nearest street, and a spiral of 531 m rising 51 m (grade 0.10) from the next | set |
+| Orders | #01–#20, numbered by ready time from 18:00:08 to 20:11; #07 at the summit, promised +25 min; #13 across the corridor (detour 508 m longer); #20 3.5 kg at s-6-5; others 0.3–1.4 kg | set |
+| Type L | 12 m/s; climb 3.0 m/s; payload 1.5 kg; battery 95 kJ; cruise 120 W (+15 %/kg); climb power 300 W; lift 60 J/m; gradeFactor 20; hover 100 W | set, `pnpm calibrate` |
+| Type H | 8 m/s; climb 2.0 m/s; payload 4 kg; battery 250 kJ; cruise 200 W (+8 %/kg); climb power 500 W; lift 90 J/m; gradeFactor 20; hover 220 W | set, `pnpm calibrate` |
+| Fleet | A, B, C of type L; D, E of type H | set |
+| Rules | Reserve 15 % of the battery; loading 60 s; service 45 s; turnaround 60 s; full charge in 1 200 s; tick 1 s; evening 18:00–21:00 (ticks 0–10 800); cut-off 21:30 (12 600) | set |
+| Resources | corridor capacity 1; pads capacity 2 | set |
+| Calibrated facts | A light drone can fly #01–#06. For #07 the light drone's fastest round trip (447 s, 84.7 kJ) is over its 80.75 kJ budget and a slower, cheaper one (472 s, 80.4 kJ) is chosen. Every order can be flown by some type; #20 only by H, on payload; H reaches all twenty; L is out of range for #14. | held by `spec/calibration.test.ts` |
+| Design target | The normal batch has a complete feasible baseline and the reference method delivers at least N on time | to verify once the fleet planner exists; N then pinned |
 
 If the data does not meet the design target, the data changes, not the promise.
