@@ -57,7 +57,7 @@ export function mountScene(host: HTMLElement, data: SceneData, onSelect: (node: 
     }
     const routeObjects: {order?: string; object: THREE.Object3D}[] = [];
     for (const r of data.routes) {
-        const points = routePoints(data,r.path).map(p=>to3(p.x,p.y,p.z+12));
+        const points = routePoints(data,r.displayPath??r.path).map(p=>to3(p.x,p.y,p.z+12));
         if (points.length < 2) continue;
         const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(points), r.dashed
             ? new THREE.LineDashedMaterial({color:r.color,dashSize:18,gapSize:14,depthTest:false})
@@ -91,11 +91,13 @@ export function mountScene(host: HTMLElement, data: SceneData, onSelect: (node: 
         label('RIDGE · short, steep', 1260, 1315, terrainHeight(1260,1315)+30);
         label('CONTOUR · longer, gentler', 1490, 1610, terrainHeight(1490,1610)+30);
     }
-    label('CORRIDOR · 1', (ca.x + cb.x) / 2, (ca.y + cb.y) / 2, (ca.z + cb.z) / 2 + 55);
+    const corridorLabel=label('CORRIDOR · 1', (ca.x + cb.x) / 2, (ca.y + cb.y) / 2, (ca.z + cb.z) / 2 + 55);
+    const passage=new THREE.Mesh(new THREE.BoxGeometry(Math.hypot(cb.x-ca.x,cb.y-ca.y),75,55),new THREE.MeshBasicMaterial({color:'#c79726',transparent:true,opacity:.15,depthWrite:false}));
+    passage.position.copy(to3((ca.x+cb.x)/2,(ca.y+cb.y)/2,(ca.z+cb.z)/2+20)); passage.rotation.y=Math.atan2(cb.y-ca.y,cb.x-ca.x); scene.add(passage);
     for (const o of data.orders) {
         const n = nodes.get(o.node)!;
-        const marker = new THREE.Mesh(new THREE.CylinderGeometry(9, 9, 26, 12), new THREE.MeshStandardMaterial({ color: '#007f78' }));
-        marker.position.copy(to3(n.x, n.y, n.z + 24));
+        const marker = new THREE.Mesh(new THREE.RingGeometry(13, 18, 20), new THREE.MeshBasicMaterial({ color: '#007f78', side: THREE.DoubleSide }));
+        marker.rotation.x=-Math.PI/2; marker.position.copy(to3(n.x, n.y, n.z + 2));
         marker.userData.node = n.id;
         clickable.push(marker);
         scene.add(marker);
@@ -140,11 +142,15 @@ export function mountScene(host: HTMLElement, data: SceneData, onSelect: (node: 
         const p = item.point.clone().project(camera);
         item.el.hidden = p.z > 1 || p.z < -1 || Math.abs(p.x) > 1 || Math.abs(p.y) > 1;
         const w = item.el.offsetWidth, h = item.el.offsetHeight, x = Math.max(w/2+6, Math.min(host.clientWidth-w/2-6, (p.x+1)/2*host.clientWidth));
-        let y = (1 - p.y) / 2 * renderer.domElement.clientHeight;
-        for (let pass = 0; pass < 6; pass++)
-            if (placed.some(a => Math.abs(a.x - x) < (a.w + w) / 2 + 4 && Math.abs(a.y - y) < Math.max(a.h, h) + 4))
-                y -= h + 7;
-        placed.push({ x, y, w, h });
+        const baseY=Math.max(h/2+8,Math.min(renderer.domElement.clientHeight-h/2-8,(1-p.y)/2*renderer.domElement.clientHeight));
+        let y=baseY, fitted=false;
+        for(let pass=0;pass<12;pass++) {
+            y=baseY+(pass===0?0:Math.ceil(pass/2)*(h+7)*(pass%2?-1:1));
+            if(y<h/2+6||y>renderer.domElement.clientHeight-h/2-6) continue;
+            if(!placed.some(a=>Math.abs(a.x-x)<(a.w+w)/2+4&&Math.abs(a.y-y)<(a.h+h)/2+5)) { fitted=true; break; }
+        }
+        item.el.hidden ||= !fitted;
+        if(!item.el.hidden) placed.push({x,y,w,h});
         item.el.style.left = x + 'px';
         item.el.style.top = y + 'px';
     } };
@@ -203,6 +209,9 @@ export function mountScene(host: HTMLElement, data: SceneData, onSelect: (node: 
             caption.el.dataset.drone=state.drone; caption.el.dataset.phase=state.phase; caption.el.dataset.parcel=String(state.parcel);
             if(followed===state.drone) { const delta=point.clone().sub(controls.target); controls.target.copy(point); camera.position.add(delta); controls.update(); }
         }
+        const occupants=data.events.filter(e=>e.resource==='corridor'&&e.start<=t&&t<e.end);
+        passage.material.color.set(occupants.length>1?'#c23838':occupants.length?'#de9b19':'#c79726'); passage.material.opacity=occupants.length>1?.4:.15;
+        corridorLabel.textContent=occupants.length>1?'CORRIDOR · CONFLICT':`CORRIDOR · ${occupants.map(e=>e.drone).join(', ')||'free'}`;
         const charging=padSchedule(data).filter(p=>p.event.start<=t&&t<p.event.end);
         padLabels.forEach((el,i)=>{ const owner=charging.find(p=>p.pad===i)?.event.drone; el.textContent=`PAD ${i+1} · ${owner?'charging '+owner:'free'}`; });
         render();
@@ -217,7 +226,7 @@ export function mountScene(host: HTMLElement, data: SceneData, onSelect: (node: 
     }).catch(()=>{ if (!disposed) host.dataset.models='fallback'; });
     size();
     layers(!!data.focusNodes,false);
-    view(data.focusNodes ? 'kitchen' : data.orders.length === 1 && data.orders[0].id === '#07' ? 'mission' : 'overview');
+    view(data.focusNodes ? 'kitchen' : data.legOnly || data.orders.length === 2 ? 'corridor' : data.orders.length === 1 && data.orders[0].id === '#07' && host.clientWidth>=500 ? 'mission' : 'overview');
     time(0);
     return { view, select, time, layers, follow, dispose() { disposed=true; resize.disconnect(); controls.dispose(); renderer.domElement.removeEventListener('pointerdown', onDown); renderer.domElement.removeEventListener('pointerup', onClick); release(scene); if (assetSource) release(assetSource); textures.forEach(t => t.dispose()); renderer.dispose(); renderer.forceContextLoss(); renderer.domElement.remove(); overlay.remove(); } };
 }

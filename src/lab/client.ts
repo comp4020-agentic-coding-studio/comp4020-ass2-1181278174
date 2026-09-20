@@ -5,6 +5,7 @@ import { startRun } from './runner.ts';
 import { basePath, esc, mapPoint, tableHtml, workspaceHtml } from './render.ts';
 import { sourceFor } from './strategies.ts';
 import { demonstrationInput } from './teaching';
+import { replayIssues, resourceReadout, skipIdle, waitReason, waits, type ReplayIssue } from './replay-inspection';
 import { fleetAt, routePoints } from './replay.ts';
 type Archive = {
     name: string;
@@ -37,6 +38,7 @@ export function mountWorkspace(root: HTMLElement) {
     let config = structuredClone(run.input), draft = false, request = 0, active: ReturnType<typeof startRun> | undefined, scene: ReturnType<typeof import('./scene.ts')['mountScene']> | undefined, sceneLoading = false, sceneGeneration = 0;
     let storage: StorageData = { version: 2, weeks: {}, notes: {}, archive: [] }, tableId = '', page = 0, filter = '', selected: Selection | undefined, traceIndex = -1, time = 0, prefer2D = false, playing = false, raf = 0, lastFrame = 0;
     let network=!!run.scene?.focusNodes, allRoutes=false, focusedOrder=run.scene?.routes.find(r=>r.order)?.order;
+    let issues=replayIssues(run);
     const content = root.querySelector<HTMLElement>('[data-workspace-content]')!;
     const q = <T extends HTMLElement = HTMLElement>(selector: string) => content.querySelector<T>(selector)!;
     try {
@@ -60,7 +62,7 @@ export function mountWorkspace(root: HTMLElement) {
     const disposeScene = () => { sceneGeneration++; sceneLoading = false; scene?.dispose(); scene = undefined; };
     function draw() { const opened = new Set([...content.querySelectorAll('details[open]')].map(d => d.querySelector('summary')?.textContent)); stopPlayback(); disposeScene(); content.innerHTML = workspaceHtml({ ...run, input: config }, semester, compact, guided); content.querySelectorAll('details').forEach(d => { if (opened.has(d.querySelector('summary')?.textContent))
         d.open = true; }); tableId = (run.tables.find(t => t.primary) ?? run.tables[0]).id; page = 0; filter = ''; selected = undefined; traceIndex = -1; time = 0; for (const el of content.querySelectorAll<HTMLTextAreaElement>('[data-note]'))
-        el.value = storage.notes[`${config.week}:${el.dataset.note}`] ?? ''; network=!!run.scene?.focusNodes; allRoutes=false; focusedOrder=run.scene?.routes.find(r=>r.order)?.order; recordUi(); updateLayers(); updateTime(0); if (wants3D())
+        el.value = storage.notes[`${config.week}:${el.dataset.note}`] ?? ''; issues=replayIssues(run); network=!!run.scene?.focusNodes; allRoutes=false; focusedOrder=run.scene?.routes.find(r=>r.order)?.order; recordUi(); updateLayers(); updateTime(0); if (wants3D())
         void enable3D(); }
     function wants3D() { return !prefer2D && !!run.scene && [1, 4, 9, 10, 12].includes(config.week) && matchMedia('(min-width: 900px)').matches && !matchMedia('(prefers-reduced-motion: reduce)').matches; }
     async function enable3D() {
@@ -90,6 +92,7 @@ export function mountWorkspace(root: HTMLElement) {
             q('[data-action="map-3d"]').setAttribute('aria-pressed', 'true');
             q('[data-action="map-2d"]').setAttribute('aria-pressed', 'false');
             updateLayers(); scene.time(time);
+            q<HTMLButtonElement>('[data-action="follow"]').disabled=matchMedia('(prefers-reduced-motion: reduce)').matches || !run.scene.events.length;
         }
         catch (e) {
             host.hidden = true;
@@ -263,7 +266,7 @@ export function mountWorkspace(root: HTMLElement) {
             path = [n.id];
         }
         const order = run.scene?.orders.find(o=>o.id===selection.id || o.node===selection.id)?.id ?? event?.order;
-        if (order) { focusedOrder=order; updateLayers(); }
+        if (order) { focusedOrder=order; updateLayers(); if(q('[data-action="follow"]')?.getAttribute('aria-pressed')==='true') scene?.follow(run.scene?.events.find(e=>e.order===order)?.drone); }
         if (selection.kind === 'task' && run.scene)
             path = run.scene.routes.find(r => r.order === selection.id)?.path;
         if (event) {
@@ -303,16 +306,37 @@ export function mountWorkspace(root: HTMLElement) {
         const states = fleetAt(run.scene, t), layer = content.querySelector('[data-map-drones]');
         if (layer)
             layer.innerHTML = states.map(s => { const [x, y] = mapPoint(run.scene!, s.position.x, s.position.y); return `<g transform="translate(${x},${y})"><circle r="9" fill="#273d37" stroke="white" stroke-width="2"/><text x="-4" y="4" fill="white" font-size="11">${esc(s.drone)}</text></g>`; }).join('');
-        const current = selected?.kind === 'task' ? states.filter(s => s.event.order === selected!.id) : states;
+        const matching = selected?.kind === 'task' ? states.filter(s => s.event.order === selected!.id) : states;
+        const current = matching.length ? matching : states;
+        const resources=q('[data-resource-state]'); if(resources) resources.textContent=resourceReadout(run.scene,t);
+        const clash=run.scene.events.filter(e=>e.resource==='corridor'&&e.start<=t&&t<e.end).length>1;
+        content.querySelector('[data-corridor]')?.setAttribute('stroke',clash?'#c23838':'#c79726');
         const out = q('[data-live-position]');
         if (out)
             out.textContent = current.slice(0, 5).map(s => { const type = canonical.fleet.types.find(t => t.id === (run.scene!.droneTypes?.[s.drone] ?? config.scenario.drones.find(d => d.id === s.drone)?.type ?? 'L'))!; return `${s.drone} · ${s.event.order}: ${s.phase}, ${Math.round(s.position.z)} m elevation, ${Math.round(type.batteryJ - s.energyUsed)} J remaining${s.parcel ? ', carrying parcel' : ', no parcel'}${s.pad !== undefined && s.pad >= 0 ? ', pad '+(s.pad+1) : ''}`; }).join(' | ');
+        const status=q('[data-replay-state]'); if(status) status.textContent=(!matching.length&&selected?.kind==='task'?`${selected.id} has no current event at ${Math.round(t)} s. Fleet: `:'')+current.map(s=>`${s.drone} · ${s.event.order}: ${s.phase}${s.parcel ? ' · parcel aboard' : ''}`).join(' | ');
     }
-    function animate(now: number) { if (!playing)
-        return; const max = Number(q<HTMLInputElement>('[data-time-slider]').max), speed = Number(q<HTMLSelectElement>('[data-speed]').value); time = Math.min(max, time + (lastFrame ? now - lastFrame : 0) / 1000 * speed); lastFrame = now; updateTime(time); if (time >= max)
+    function showIssue(issue: ReplayIssue) {
         stopPlayback();
-    else
-        raf = requestAnimationFrame(animate); }
+        if(issue.order) select({kind:'task',id:issue.order});
+        else if(issue.event) select({kind:'move',id:issue.event});
+        updateTime(issue.tick);
+        q('[data-replay-note]').textContent=issue.detail;
+        const taskDetail=run.tables.find(t=>t.id==='tasks')?.rows.find(r=>r.id===issue.order)?.detail;
+        q('[data-selection-title]').textContent=issue.resource?`${issue.resource} issue`:issue.order??'Run issue';
+        q('[data-selection-detail]').textContent=issue.detail+(taskDetail?' '+taskDetail:'');
+        if(issue.resource==='corridor') { scene?.follow(); scene?.view('corridor'); q('[data-action="follow"]')?.setAttribute('aria-pressed','false'); }
+    }
+    function animate(now: number) {
+        if(!playing) return;
+        const max=Number(q<HTMLInputElement>('[data-time-slider]').max), speed=Number(q<HTMLSelectElement>('[data-speed]').value);
+        let next=Math.min(max,time+(lastFrame?now-lastFrame:0)/1000*speed); lastFrame=now;
+        if(run.scene&&q<HTMLInputElement>('[data-skip-idle]')?.checked) next=Math.min(max,skipIdle(run.scene,next));
+        const issue=q<HTMLInputElement>('[data-pause-issue]')?.checked?issues.find(i=>i.tick>time&&i.tick<=next):undefined;
+        if(issue) { showIssue(issue); return; }
+        updateTime(next);
+        if(time>=max) stopPlayback(); else raf=requestAnimationFrame(animate);
+    }
     function editBoard(id: string, delta: number, migrate?: string) {
         saveNotes();
         readInputs();
@@ -430,8 +454,20 @@ export function mountWorkspace(root: HTMLElement) {
                 if (action === 'layer-network') network=!network; else allRoutes=!allRoutes;
                 updateLayers();
             }
-            else if (action === 'camera')
-                scene?.view(target.dataset.camera!);
+            else if (action === 'camera') {
+                scene?.follow(); scene?.view(target.dataset.camera!); q('[data-action="follow"]')?.setAttribute('aria-pressed','false');
+            }
+            else if (action === 'follow') {
+                const enabled=target.getAttribute('aria-pressed')!=='true';
+                target.setAttribute('aria-pressed',String(enabled));
+                const drone=run.scene?.events.find(e=>e.order===focusedOrder)?.drone??run.scene?.events[0]?.drone;
+                scene?.follow(enabled?drone:undefined);
+            }
+            else if (action === 'first-issue' && issues.length) showIssue(issues[0]);
+            else if (action === 'next-wait' && run.scene) {
+                const list=waits(run.scene), wait=list.find(e=>e.start>time)??list[0];
+                if(wait) { stopPlayback(); select({kind:'move',id:wait.id}); q('[data-replay-note]').textContent=waitReason(run.scene,wait); }
+            }
             else if (action === 'play') {
                 if (playing)
                     stopPlayback();

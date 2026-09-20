@@ -106,6 +106,7 @@ export interface Route {
     label: string;
     path: string[];
     color: string;
+    displayPath?: string[];
     dashed?: boolean;
     diagnostic?: boolean;
     order?: string;

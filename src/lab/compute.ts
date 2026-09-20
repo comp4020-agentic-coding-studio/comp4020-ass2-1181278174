@@ -116,7 +116,7 @@ function labelsRun(r: LabRun, s: Strategies) {
         else
             events.push({ id: leg.kind, drone: 'A', order: order.id, phase: leg.kind as 'load' | 'service', kind: leg.kind === 'service' ? 'hover' : 'ground-wait', from: node, to: node, start: leg.start, end: leg.end, energy: leg.energy });
     }
-    const routes: Route[] = candidates.slice(0, 12).map((x, i) => ({ ...route('candidate' + i, `${i} · ${i === 0 ? 'fastest' : x === p.chosen ? 'selected contour' : 'alternative'} · ${x.time}s / ${round(x.energy / 1000)}kJ${x.energy > p.budget ? ' · over budget' : ''}`, [...pathOf(x.out), ...pathOf(x.back).slice(1)], i), color: x.energy > p.budget ? '#bb4f2b' : '#007f78' }));
+    const routes: Route[] = candidates.slice(0, 12).map((x, i) => ({ ...route('candidate' + i, `${i} · ${i === 0 ? 'fastest' : x === p.chosen ? 'selected contour' : 'alternative'} · ${x.time}s / ${round(x.energy / 1000)}kJ${x.energy > p.budget ? ' · over budget' : ''}`, [...pathOf(x.out), ...pathOf(x.back).slice(1)], i), displayPath: pathOf(x.out), color: x.energy > p.budget ? '#bb4f2b' : '#007f78' }));
     if (p.chosen)
         routes.push({ ...route('return', 'Selected return · unloaded', pathOf(p.chosen.back), 2), dashed: true });
     if (!p.chosen && correct.chosen)

@@ -54,7 +54,14 @@ export function fleetAt(scene: SceneData, tick: number) {
     });
 }
 export function routePoints(scene: SceneData, path: string[]) {
-    return path.flatMap((id, i) => { const n = scene.map.nodes.find(n => n.id === id); if (!n)
-        return []; if (!i)
-        return [{ x: n.x, y: n.y, z: n.z }]; const previous = scene.map.nodes.find(n => n.id === path[i - 1])!, edge = scene.map.edges.find(e => e.from === previous.id && e.to === id); return edge ? edge.polyline.slice(1).map(([x, y], j) => ({ x, y, z: previous.z + (n.z - previous.z) * (j + 1) / (edge.polyline.length - 1) })) : [{ x: n.x, y: n.y, z: n.z }]; });
+    return path.flatMap((id,i)=>{
+        const n=scene.map.nodes.find(n=>n.id===id); if(!n) return [];
+        if(!i) return [{x:n.x,y:n.y,z:n.z}];
+        const previous=scene.map.nodes.find(n=>n.id===path[i-1])!;
+        const edge=scene.map.edges.find(e=>e.from===previous.id&&e.to===id);
+        if(!edge) return [{x:n.x,y:n.y,z:n.z}];
+        const lengths=edge.polyline.slice(1).map((p,j)=>Math.hypot(p[0]-edge.polyline[j][0],p[1]-edge.polyline[j][1]));
+        const total=lengths.reduce((a,b)=>a+b,0); let distance=0;
+        return edge.polyline.slice(1).map(([x,y],j)=>{distance+=lengths[j];return {x,y,z:previous.z+(n.z-previous.z)*(total?distance/total:0)};});
+    });
 }

@@ -23,3 +23,4 @@
 .lab-guided .lab-heading h2{font-size:1.35rem}.lab-guided .lab-mode-b>.lab-demo{order:1}.lab-guided .lab-mode-b>.lab-compare{order:1}
 .lab-guided .lab-concept h3{font-size:1.1rem;max-width:100%}.lab-guided .lab-search-graph text{font-size:28px}
 .lab-layers{display:flex;gap:.45rem;align-items:center;flex-wrap:wrap;margin-block:.65rem}.lab-layers button[aria-pressed="true"]{background:#214d43;color:white}.lab-layers span{font-size:.8rem;color:#40584e}.lab-playback select{min-width:5rem}
+.lab-playback label:has(input[type="checkbox"]){display:inline-flex;align-items:center;gap:.35rem;font-size:.8rem}.lab-playback input[type="checkbox"]{width:auto;margin:0}.lab-replay-state{font-weight:600}.lab-resource-state,.lab-replay-note{font-size:.8rem;line-height:1.5}.lab-replay-note:not(:empty){border-left:3px solid #ad7418;padding-left:.6rem}.lab-replay-note:empty{display:none}
