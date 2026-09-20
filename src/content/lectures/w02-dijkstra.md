@@ -30,4 +30,4 @@ generated.
 ## Where it goes next
 
 The same search loop takes a heuristic in week 3 and searches space-time states in week
-10. Use the labelled map and result tables to connect the calculation to the hill.
+10.

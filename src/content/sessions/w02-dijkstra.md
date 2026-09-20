@@ -34,4 +34,4 @@ effective expansions and queue operations; animation steps are not algorithm sta
 ## Afterwards
 
 A runnable Dijkstra, parent-pointer reconstruction, four test classes and a short
-correctness note. Use the labelled map and result tables to connect the calculation to the hill.
+correctness note.

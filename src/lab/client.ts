@@ -193,7 +193,9 @@ export function mountWorkspace(root: HTMLElement) {
         config = storage.weeks[week] ? parseConfig(storage.weeks[week]) : defaultConfig(week);
         if (!storage.weeks[week]) {
             const previous = run.input;
-            config.scenario = structuredClone(previous.scenario);
+            // Keep the named weekly fleet unless the learner deliberately edits it.
+            if (fingerprint(previous.scenario) !== fingerprint(defaultConfig(previous.week).scenario))
+                config.scenario = structuredClone(previous.scenario);
             for (const key of Object.keys(config.strategies) as SlotKey[])
                 if (previous.strategies[key].mode !== 'preset')
                     config.strategies[key] = structuredClone(previous.strategies[key]);
@@ -605,6 +607,12 @@ export function mountWorkspace(root: HTMLElement) {
         catch (e) {
             message('Cannot open input link: ' + (e as Error).message, true);
         }
+    }
+    else if (semester && new URLSearchParams(location.search).get('assignment') === '1') {
+        config = defaultConfig(6);
+        config.caseId = 'canonical-six';
+        draw();
+        void execute();
     }
     else if (semester && initialWeek >= 1 && initialWeek <= 12 && initialWeek !== config.week)
         void switchWeek(initialWeek);

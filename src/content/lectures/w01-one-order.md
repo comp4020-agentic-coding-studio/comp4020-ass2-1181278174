@@ -28,4 +28,4 @@ complete and return to depot are different events.
 
 ## Where it goes next
 
-The graph, the task identities and the units are shared by every later method. The tutorial pairs the computed results with a labelled map; week 4 also includes the route elevation profile.
+The graph, the task identities and the units are shared by every later method.

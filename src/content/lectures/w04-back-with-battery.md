@@ -30,4 +30,4 @@ E_used ≤ E_start − E_reserve on the whole trip, not the outbound leg alone.
 ## Where it goes next
 
 Scheduling in week 5 uses the full-task costs this week returns; later, waiting must
-consume time and energy too. The tutorial pairs the computed results with a labelled map; week 4 also includes the route elevation profile.
+consume time and energy too.

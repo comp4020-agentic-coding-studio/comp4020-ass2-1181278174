@@ -34,4 +34,4 @@ on cost, expansions and time. Put your own h in strategy slot 1.
 ## Afterwards
 
 A* reusing your week-2 loop, the counterexample and its regression test, the heuristic's
-justification and a small comparison table. Use the labelled map and result tables to connect the calculation to the hill.
+justification and a small comparison table.

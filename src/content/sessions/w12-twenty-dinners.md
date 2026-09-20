@@ -34,4 +34,4 @@ write your personal explanation.
 
 ## Afterwards
 
-A2's code, plan, per-order and resource records, comparison tables and your explanation. The tutorial pairs the computed results with a labelled map; week 4 also includes the route elevation profile.
+A2's code, plan, per-order and resource records, comparison tables and your explanation.

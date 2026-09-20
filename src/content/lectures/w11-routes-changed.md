@@ -30,4 +30,4 @@ were done in.
 
 ## Where it goes next
 
-All code goes into A2; no new mechanism after this week. Use the labelled map and result tables to connect the calculation to the hill.
+All code goes into A2; no new mechanism after this week.

@@ -33,4 +33,4 @@ after. Find where it stops, check the final neighbourhood item by item, then use
 ## Afterwards
 
 The swap improver, a single-drone comparison report, a local-optimum counterexample and
-a full A1 draft. Use the labelled map and result tables to connect the calculation to the hill.
+a full A1 draft.

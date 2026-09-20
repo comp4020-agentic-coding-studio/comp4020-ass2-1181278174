@@ -36,4 +36,4 @@ outbound, unloaded return and service consumption.
 ## Afterwards
 
 The resource-extension and label-filter functions, two feasibility counterexamples and a
-full-task record. The tutorial pairs the computed results with a labelled map; week 4 also includes the route elevation profile.
+full-task record.

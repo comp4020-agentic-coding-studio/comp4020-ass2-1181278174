@@ -28,4 +28,4 @@ you cannot support.
 
 ## Where it goes next
 
-Nothing new this week; everything from the semester is in use. The tutorial pairs the computed results with a labelled map; week 4 also includes the route elevation profile.
+Nothing new this week; everything from the semester is in use.

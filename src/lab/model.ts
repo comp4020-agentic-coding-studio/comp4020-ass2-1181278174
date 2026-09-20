@@ -210,7 +210,7 @@ export function defaultConfig(week = 4): LabConfig {
         method: week === 5 ? "fifo" : week === 6 ? "swaps" : week === 7 ? "equal-counts" : week === 12 ? "reference" : "greedy",
         diagnostic: week === 3, arrangement: "both", sequence: [], requestedDepartures: {}, routeCandidates: {},
         strategies: { h: strategy(week === 3 ? "example" : "zero"), dominates: strategy("pareto"), withinBudget: strategy("reserve"), orderKey: strategy("edf"), objective: strategy("course"), assignCost: strategy("completion"), priority: strategy("drone") },
-        scenario: { pads: 2, drones: structuredClone(canonical.fleet.drones), addedOrders: [], closures: [] }, jobs: structuredClone(symbolicJobs), graph: structuredClone(microEdges), heuristic: { S: 0, A: 0, B: 3, G: 0 }, maxCandidates: 120, maxExpansions: 10000, includeWaits: false,
+        scenario: { pads: 2, drones: structuredClone(week === 7 ? canonical.fleet.drones.filter(d => ["A", "B", "D"].includes(d.id)) : canonical.fleet.drones), addedOrders: [], closures: [] }, jobs: structuredClone(symbolicJobs), graph: structuredClone(microEdges), heuristic: { S: 0, A: 0, B: 3, G: 0 }, maxCandidates: 120, maxExpansions: 10000, includeWaits: false,
     };
 }
 export function worldFor(config: LabConfig): World {

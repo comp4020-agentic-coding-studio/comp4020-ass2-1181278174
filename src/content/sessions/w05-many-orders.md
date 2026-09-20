@@ -35,4 +35,4 @@ changes" counterexample.
 ## Afterwards
 
 A single-drone timetable function, a per-order ledger, two baseline results and an
-objective definition. Use the labelled map and result tables to connect the calculation to the hill.
+objective definition.

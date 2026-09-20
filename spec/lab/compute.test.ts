@@ -27,7 +27,8 @@ describe('all twelve runnable teaching stages', () => {
     it('enumerates a real counterexample to swap optimality', () => {
         const r = runExperiment(defaultConfig(6));
         expect(r.objective?.lateness).toBe(48);
-        expect(r.comparisons?.at(-1)?.value).toBe('46, 51, 0');
+        const exact = defaultConfig(6); exact.method = 'exact';
+        expect(runExperiment(exact).comparisons?.at(-1)?.value).toBe('46, 51, 0');
     });
     it('runs the exact-enumeration selector on both models', () => {
         for (const caseId of ['six-jobs', 'canonical-six']) {

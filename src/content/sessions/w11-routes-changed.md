@@ -33,4 +33,4 @@ coordination only; assignment with cost feedback allowed. Select bounded feedbac
 
 ## Afterwards
 
-A linked-improvement record, three same-condition comparisons and one failure analysis. Use the labelled map and result tables to connect the calculation to the hill.
+A linked-improvement record, three same-condition comparisons and one failure analysis.

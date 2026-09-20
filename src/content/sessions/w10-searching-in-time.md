@@ -34,4 +34,4 @@ delivery and return together. Add one failed-reservation rollback test.
 ## Afterwards
 
 The key cooperative-search functions, results under two priorities, and notes on budget
-and failure classes. The tutorial pairs the computed results with a labelled map; week 4 also includes the route elevation profile.
+and failure classes.

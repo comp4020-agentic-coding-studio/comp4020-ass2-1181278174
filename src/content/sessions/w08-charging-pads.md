@@ -31,4 +31,4 @@ Select the two-drone, one-pad case and calculate its queue by hand. Then use the
 ## Afterwards
 
 A hand-computed charging timetable, capacity tests, a cross-drone dependence note and
-the first full A2 plan. Use the labelled map and result tables to connect the calculation to the hill.
+the first full A2 plan.

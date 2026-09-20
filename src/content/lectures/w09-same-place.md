@@ -30,4 +30,4 @@ interval is not a real-world separation standard.
 ## Where it goes next
 
 The state, queue and resource judgements of weeks 2 to 4 are unified into one search in
-week 10. The tutorial pairs the computed results with a labelled map; week 4 also includes the route elevation profile.
+week 10.

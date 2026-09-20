@@ -40,7 +40,7 @@ const { Content } = await render(assessment);
   <aside class="assessment-resources" aria-label="Assignment practice resources">
     <h2>Start with a reproducible experiment</h2>
     <p>{assessment.id === "assignment-1" ? "Use W3 for the search counterexample, W4 for the return budget, and W5–W6 for your six-order plan." : "Use W8 for charging, W9–W10 for reservations, and W11–W12 for joint evaluation."}</p>
-    <p><a href={withBase(`/lab/#lab-w${assessment.id === "assignment-1" ? 6 : 11}`)}>Open the relevant Lab →</a></p>
+    <p><a href={withBase(assessment.id === "assignment-1" ? "/lab/?assignment=1#lab-w6" : "/lab/#lab-w11")}>Open the relevant Lab →</a></p>
     <ul>
       <li><a href={withBase("/practice/scenario.json")} download>Download canonical scenario (JSON)</a></li>
       <li><a href={withBase("/practice/lab-practice.zip")} download>Download runnable practice pack: functions, skeletons and tests</a></li>

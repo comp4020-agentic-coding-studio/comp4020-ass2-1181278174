@@ -35,4 +35,4 @@ first; do not reach for the full multi-drone algorithm yet.
 ## Afterwards
 
 A conflict validation function, a reservation table, a state definition and a
-deduplication counterexample. The tutorial pairs the computed results with a labelled map; week 4 also includes the route elevation profile.
+deduplication counterexample.

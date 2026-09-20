@@ -16,7 +16,8 @@ test('priority preserves every ready task',()=>{
 test('the symbolic swap optimum is not global',()=>{
   const run=runExperiment(defaultConfig(6));
   assert.equal(run.objective.lateness,48);
-  assert.equal(run.comparisons.at(-1).value,'46, 51, 0');
+  const input=defaultConfig(6);input.method='exact';
+  assert.equal(runExperiment(input).comparisons.at(-1).value,'46, 51, 0');
 });
 test('reference output is independently checkable, and tampering fails',()=>{
   const run=runExperiment(defaultConfig(12));

@@ -165,10 +165,10 @@ Use the provided model to check whole edges; students do not write a geometry li
 the outbound and return legs cannot simply be reversed without checking edge direction;
 delivery complete and return to depot are different events.
 
-**Tutorial.** On the eight-node sub-graph of the kitchen's block (kitchen, depot merge point,
-four intersections, houses #03 and #05), list three candidate routes; compute costs by hand,
+**Tutorial.** On the ten-node sub-graph of the kitchen's block (kitchen, depot merge point,
+six intersections, houses #03 and #05), list the available candidate routes; compute costs by hand,
 then check them in the workbench. Find an edge whose endpoints are legal but whose segment
-passes through a building, and fix the graph. Draw the task state diagram including delivery
+passes through a building, and explain why that proposed edge must be excluded. Draw the task state diagram including delivery
 and return.
 
 **Output and mastery.** A one-page problem definition, a hand-computed route table, a task
@@ -656,3 +656,13 @@ continuous accumulation toward a final project borrows from How to Make (Almost)
 - S7: [CMU Eberly Center — Learning Principles](https://www.cmu.edu/teaching/principles/learning.html)
 - S8: [Calling Bullshit — Syllabus](https://callingbullshit.org/syllabus.html)
 - S9: [How to Make (Almost) Anything — 2025](https://fab.cba.mit.edu/classes/863.25/)
+
+## Revision — 21 September 2026: teaching alignment
+
+The owner authorised the course review plan. The W1 demonstration uses the existing
+ten-node block and its two computed legal alternatives; the canonical graph is not
+edited to manufacture another route. W7 begins with A and B (L) and D (H); W8
+introduces the five-drone fleet with shared pads. Symbolic and canonical cases remain
+separate. Exact enumeration is explicitly requested and reports its finite-domain
+guarantee. The course revision adds worked lectures and guided tutorials before the
+full workspace. See `course-review-and-next-plan.md` for the accepted sequence.
