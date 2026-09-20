@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "types": [
+    {
+      "id": "L",
+      "label": "light",
+      "speed": 12,
+      "maxClimb": 1.5,
+      "payloadKg": 1.5,
+      "batteryJ": 60000,
+      "cruiseW": 120,
+      "payloadFactor": 0.15,
+      "climbW": 300,
+      "liftJPerM": 40,
+      "hoverW": 100
+    },
+    {
+      "id": "H",
+      "label": "heavy",
+      "speed": 8,
+      "maxClimb": 1.0,
+      "payloadKg": 4,
+      "batteryJ": 150000,
+      "cruiseW": 200,
+      "payloadFactor": 0.08,
+      "climbW": 500,
+      "liftJPerM": 70,
+      "hoverW": 220
+    }
+  ],
+  "drones": [
+    { "id": "A", "type": "L" },
+    { "id": "B", "type": "L" },
+    { "id": "C", "type": "L" },
+    { "id": "D", "type": "H" },
+    { "id": "E", "type": "H" }
+  ]
+}

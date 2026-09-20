@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "tick": { "seconds": 1 },
+  "evening": { "start": "18:00", "end": "21:00", "cutoff": "21:30", "endTick": 10800, "cutoffTick": 12600 },
+  "reserveFraction": 0.15,
+  "loadingTicks": 60,
+  "serviceTicks": 45,
+  "turnaroundTicks": 60,
+  "chargeTicks": 1200,
+  "resources": {
+    "corridor": { "capacity": 1 },
+    "pads": { "capacity": 2 }
+  },
+  "objective": ["lateness", "allReturned", "energy"]
+}
