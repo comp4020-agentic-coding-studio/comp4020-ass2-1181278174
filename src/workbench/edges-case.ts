@@ -86,9 +86,10 @@ export const edgesCase: CaseDef<EdgesState> = {
     const line: [number, number][] = [[a.x, a.y], [b.x, b.y]];
     const blocked = blockedBy(line, map.buildings);
     parts.push(minimap(map, {
-      routes: [...routes.map((r, i) => ({ path: r.path, cls: i === 0 ? "route-chosen" : "route-found", label: r.name })), { path: [prop.from, prop.to], cls: blocked.length ? "route-fastest" : "route-proposal", label: `the connection checked: ${placeName(prop.from)} → ${placeName(prop.to)}` }],
+      routes: [...routes.map((r, i) => ({ path: r.path, cls: i === 0 ? "route-chosen" : i === 1 ? "route-b" : "route-c", label: r.name })), { path: [prop.from, prop.to], cls: blocked.length ? "route-fastest" : "route-proposal", label: `the connection checked: ${placeName(prop.from)} → ${placeName(prop.to)}` }],
       orders: orders.filter((o) => o.node === goal || o.node === orders[4].node),
       box: BOX,
+      blocked: blocked.map((x) => x.id),
       ariaLabel: `The kitchen's block: the three candidate routes to ${orders[2].id} and the straight connection ${placeName(prop.from)} → ${placeName(prop.to)} being checked.`,
     }));
     parts.push(`<p class="wb-summary"><strong>${esc(placeName(prop.from))} → ${esc(placeName(prop.to))}:</strong> ${blocked.length ? `not a legal edge — it passes through ${blocked.map((x) => buildingName(x.id)).join(" and ")}. Both endpoints are street corners; the line between them is not a street.` : "no building in the way. It could be a street; it is not one on this map, so it is not an edge either."}</p>`);

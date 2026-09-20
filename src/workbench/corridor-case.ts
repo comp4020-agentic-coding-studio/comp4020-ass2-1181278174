@@ -139,6 +139,7 @@ export const corridorCase: CaseDef<CorridorState> = {
     parts.push(minimap(map, {
       routes: [{ path: B.path, cls: "route-fastest", label: "B, flying back" }, { path: o.aPath, cls: o.ok ? "route-chosen" : "route-found", label: `A, ${o.label}` }],
       orders: [order],
+      waits: o.wait ? [{ node: A.path.find((n, i) => corridorEdges.some((e) => e.from === n && e.to === A.path[i + 1]))!, label: `A hovers ${o.wait} s` }] : [],
       box: [200, 400, 1500, 1500],
       ariaLabel: `The ridge and the corridor. B's route back is dashed; A's route out to ${order.id} is solid: ${o.label}.`,
     }));

@@ -66,6 +66,7 @@ const titles: Record<number, string> = {
     const apply = (n: number) => {
       out.value = String(n);
       for (const el of document.querySelectorAll<HTMLElement>("[data-lab-week]")) el.hidden = Number(el.dataset.labWeek) > n;
+      window.dispatchEvent(new Event("resize")); // newly shown weeks draw their map at the column width
     };
     const fromHash = Number(location.hash.replace("#lab-w", ""));
     if (fromHash >= 1 && fromHash <= 12) { range.value = String(fromHash); }

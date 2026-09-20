@@ -30,6 +30,7 @@ const id = `wb-${key ?? `w${week}`}`;
 
 <script>
   import { caseByKey, renderControls } from "../workbench/cases";
+  import { mapWidth, setMapWidth } from "../workbench/minimap";
 
   function wire(root: HTMLElement, signal: AbortSignal) {
     const week = Number(root.dataset.week);
@@ -61,6 +62,23 @@ const id = `wb-${key ?? `w${week}`}`;
       if (focusId) controls.querySelector<HTMLElement>(`[data-control="${focusId}"]`)?.focus();
     };
     if (fromUrl) update({ id: "" });
+
+    // The map is drawn for a 560 px column at build time. In a narrower column
+    // (a phone) the same case is drawn again at the column's width, so the
+    // labels keep their size; the URL and the state do not change.
+    const refit = () => {
+      const w = view.clientWidth;
+      if (!w) return;
+      const target = Math.min(560, w - 2);
+      if (Math.abs(target - mapWidth()) < 24) return;
+      setMapWidth(target);
+      const out = def.render(state, week);
+      view.innerHTML = out.html;
+      status.textContent = out.status;
+    };
+    refit();
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    window.addEventListener("resize", () => { clearTimeout(timer); timer = setTimeout(refit, 200); }, { signal });
 
     controls.addEventListener("click", (ev) => {
       const b = (ev.target as HTMLElement).closest<HTMLElement>("button[data-control]");
@@ -117,8 +135,12 @@ const id = `wb-${key ?? `w${week}`}`;
   .wb-code { flex-basis: 100%; }
   .wb-code textarea { display: block; width: 100%; max-width: 40rem; font-family: var(--font-roboto-mono, monospace); font-size: 0.9rem; padding: 0.4rem; margin-block: 0.3rem; }
   .wb-error { color: #b93c1e; }
-  .minimap { display: block; width: 100%; max-height: 380px; background: var(--at-bg, #fffdf8); border: 1px solid var(--at-border, #d9d2c3); border-radius: 0.35rem; }
-  .minimap-small { max-height: 220px; }
+  .map-figure { margin: 0.75rem 0 1rem; }
+  .minimap { display: block; width: 100%; height: auto; border: 1px solid var(--at-border, #d9d2c3); border-radius: 0.35rem; }
+  .minimap-small { max-width: 360px; background: var(--at-bg, #fffdf8); }
+  .map-legend { display: flex; flex-wrap: wrap; gap: 0.3rem 1.1rem; font-size: 0.9rem; margin-top: 0.45rem; }
+  .map-legend i { display: inline-block; width: 1.6rem; border-top: 3px solid var(--c, #2b2520); vertical-align: middle; margin-right: 0.4rem; }
+  .map-key { font-size: 0.8rem; color: var(--at-text-secondary, #6b6154); margin: 0.3rem 0 0; }
   .mm-bg { fill: transparent; }
   .mm-building { fill: #6b6154; opacity: 0.35; }
   .mm-tower { opacity: 0.7; }
