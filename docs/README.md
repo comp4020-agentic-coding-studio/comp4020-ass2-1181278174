@@ -13,3 +13,7 @@ tests and the deployed site are the evidence.
 
 The working rules for the agent are in `CLAUDE.md` at the repository root. The process record
 is `docs/moments.md` and `PROCESS.md`.
+
+The proposed rebuild of the Lab against the original design is in
+[`lab-redesign-plan.md`](lab-redesign-plan.md). It records current gaps, the twelve weekly
+activities and staged acceptance gates; it is a proposal, not a completed feature list.
