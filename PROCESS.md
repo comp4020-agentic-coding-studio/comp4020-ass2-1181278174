@@ -95,8 +95,8 @@ the finished opening and the separate hill page came back on the last morning
 ([`10da0a5`](https://github.com/comp4020-agentic-coding-studio/comp4020-ass2-1181278174/commit/10da0a5)).
 
 I used `pnpm check` for types, the production build (including axe and links) and the spec,
-then browser checks for interaction. On the submitted commit that is 190 passing tests and
-38 pages through axe and the link checker; the browser checks cover import/export, replay,
+then browser checks for interaction. On the submitted commit that is 204 passing tests and
+39 pages through axe and the link checker; the browser checks cover import/export, replay,
 keyboard interaction and the WebGL fallback at 1920×1080 and 390×844
 ([`1328c4d`](https://github.com/comp4020-agentic-coding-studio/comp4020-ass2-1181278174/commit/1328c4d)).
 Disabling the independent checker's energy comparison made the tampering regression fail;
