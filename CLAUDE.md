@@ -224,3 +224,13 @@ and exits), and headless Chromium exits 0 on a refused connection, writing a bla
 
 **How it was measured.** 2026-09-21: `curl` against the port got no response while the
 capture reported success.
+
+### The template's own tests go red once the starter images are replaced
+
+**What is true.** `scripts/check-evidence.test.ts` copies the starter images out of the
+working tree to prove the gate rejects them. Replace or delete those images, as the gate
+requires, and three of its cases fail. CI runs `pnpm test:template` in the `check` job;
+`deploy` does not depend on it.
+
+**How it was measured.** 2026-09-21: `pnpm test:template` fails three cases naming
+`card.png`, `hero-home.avif` and `idris-fenn.avif` while `pnpm check` is green.
