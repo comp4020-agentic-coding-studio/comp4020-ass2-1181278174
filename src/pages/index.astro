@@ -7,6 +7,7 @@ import heroImage from "../assets/images/hero-home.avif";
 import HomeCorridor from "../components/HomeCorridor.astro";
 import SemesterTimeline from "../components/SemesterTimeline.astro";
 import { courseMeta } from "../course-config";
+import { tutorialMarking } from "../lib/assessment-plan";
 import { sessionLabels, siteConfig } from "../site-config";
 ---
 
@@ -20,6 +21,18 @@ import { sessionLabels, siteConfig } from "../site-config";
   <ul class="course-tags" aria-label="Course tags">
     {courseMeta.tags.map((tag) => <li>{tag}</li>)}
   </ul>
+
+  <section class="learning-outcomes" aria-labelledby="learning-outcomes-title">
+    <h2 id="learning-outcomes-title">Learning outcomes</h2>
+    <p>By the end of this course, you will be able to:</p>
+    <ol>
+      <li>Model a delivery task as a weighted graph, implement Dijkstra and A*, and explain when their results are optimal.</li>
+      <li>Check a complete delivery against payload, energy and reserve limits, including service and the flight home.</li>
+      <li>Build and improve delivery schedules that account for ready times, deadlines, different drones and shared charging pads.</li>
+      <li>Coordinate flights using timed reservations and space-time search, then update the schedule when route costs change.</li>
+      <li>Compare algorithms under the same conditions, reproduce an experiment, and explain failures and the limits of your evidence.</li>
+    </ol>
+  </section>
 
   <section id="hill" aria-labelledby="home-corridor-title">
     <h2 id="home-corridor-title">One decision to try now</h2>
@@ -54,17 +67,32 @@ import { sessionLabels, siteConfig } from "../site-config";
     not it — every number here is a teaching setting, and the policies page says so.
   </p>
 
-  <h2>How it is assessed</h2>
-  <p>
-    Two individual assignments. Assignment 1 (40%, due Friday of week 7) is a single-drone
-    planner: correct search, the full round trip with energy, and a justified order for six
-    deliveries. Assignment 2 (60%, due Friday of week 12) extends it to five drones, two
-    charging pads and the shared corridor, and has to show that route cost really feeds back
-    into the schedule. Weekly tutorials are not graded; they are where the two assignments
-    get built.
-  </p>
-
-  <SemesterTimeline />
+  <SemesterTimeline
+    title="How the course runs"
+    introduction={`${courseMeta.code} runs in ${courseMeta.session}, ${courseMeta.year}, over ${tutorialMarking.weeks} teaching weeks.`}
+  >
+    <div slot="overview" class="course-rhythm">
+      <p>
+        Each week pairs a <strong>one-hour Monday lecture</strong> with a <strong>two-hour Wednesday tutorial</strong>.
+        The lecture develops the model and
+        algorithm; the tutorial asks you to predict, try a small case and explain what
+        happened. Finish your implementation, tests and reports outside class.
+      </p>
+      <p>
+        In weeks 1–6, you build the search and single-drone schedule used in <strong>Assignment 1</strong>.
+        In weeks 7–12, you extend that work to fleet
+        assignment, shared resources and coordinated flights for <strong>Assignment 2</strong>.
+        Both assignments are individual and assess your code, validation and explanation.
+      </p>
+      <p>
+        <strong>Every tutorial counts towards your grade.</strong> All {tutorialMarking.weeks} sessions
+        contribute equally to the tutorial component through attendance and lab
+        participation. The timeline brings those weekly sessions together with the
+        assignment weights, release dates and deadlines. Select a lecture, tutorial or
+        assignment to open its page.
+      </p>
+    </div>
+  </SemesterTimeline>
 
   <section class="home-next" aria-labelledby="home-next-title">
   <h2 id="home-next-title">Where to go next</h2>
@@ -88,6 +116,12 @@ import { sessionLabels, siteConfig } from "../site-config";
 <style>
   #hill :global(.home-corridor nav a) { color: #785500; }
   .home-next :global(.at-card-title) { color: var(--stage-order); }
+  .learning-outcomes h2 { margin-top: 0; }
+  .learning-outcomes ol { padding-left: 1.4rem; }
+  .learning-outcomes li { padding-left: .3rem; margin-block: .65rem; }
+  .learning-outcomes li::marker { color: var(--stage-order); font-weight: 600; }
+  .course-rhythm { margin-block: 1rem 1.5rem; }
+  .course-rhythm p { margin-block: 0 1rem; }
 
   .course-tags {
     display: flex;

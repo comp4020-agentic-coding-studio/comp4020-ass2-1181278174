@@ -4,6 +4,12 @@ import { withBase } from 'astro-theme-university/url';
 import { stageForWeek } from '../data/hill-stops';
 import { tutorialMarking } from '../lib/assessment-plan';
 
+interface Props { title?: string; introduction?: string }
+const {
+  title = 'Your semester at a glance',
+  introduction = 'Learn on Monday, experiment on Wednesday. Every tutorial counts towards your grade.',
+} = Astro.props;
+
 const lectures = (await getPublishedCollection('lectures')).sort((a, b) => a.data.week - b.data.week);
 const tutorials = await getPublishedCollection('sessions');
 const projects = (await getPublishedCollection('assessments'))
@@ -46,11 +52,12 @@ const stages = [
   <div class="semester-heading">
     <div>
       <p class="semester-kicker">Twelve weeks · five stages</p>
-      <h2 id="semester-title">Your semester at a glance</h2>
+      <h2 id="semester-title">{title}</h2>
     </div>
     <a class="assessment-link" href={withBase('/assessments/')}>Assessment details <span aria-hidden="true">↗</span></a>
   </div>
-  <p class="semester-intro">Learn on Monday, experiment on Wednesday. Every tutorial counts towards your grade.</p>
+  <p class="semester-intro">{introduction}</p>
+  <slot name="overview" />
 
   <div class="assessment-summary">
     <a class="tutorial-summary" href={withBase('/assessments/tutorial-participation/')}>
