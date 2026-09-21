@@ -1,10 +1,12 @@
 ---
 import ContentLayout from 'astro-theme-university/layouts/ContentLayout.astro';
+import { withBase } from 'astro-theme-university/url';
 import LabWorkspace from '../../components/LabWorkspace.astro';
 import Record from '../../components/Record.astro';
 import { siteConfig } from '../../site-config';
 ---
 <ContentLayout title="Lab" description="One continuing workspace: build a route, schedule the dinners and coordinate shared airspace." {...siteConfig}>
+  <p><a href={withBase('/hill/')}>Walk the hill →</a></p>
   <p>Every week's case in one workspace. Pick a week on the slider, press the one change that week asks for, then open <strong>Change inputs</strong> to try your own.</p>
   <LabWorkspace week={4} semester />
   <details><summary>How five model upgrades change the same instance</summary><Record /></details>
