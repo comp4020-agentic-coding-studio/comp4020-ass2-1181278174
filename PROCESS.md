@@ -84,14 +84,15 @@ became a rule in `CLAUDE.md` on `main`: one agent leads, others experiment on br
 and I judge their work against the design before merging
 ([`98edf3b`](https://github.com/comp4020-agentic-coding-studio/comp4020-ass2-1181278174/commit/98edf3b)).
 
-I also tried a custom evening opening and a walk-the-hill week chooser
+The home page's course timeline and the `/hill/` page, a 3D hill you walk with the keyboard
+to reach each week, are there so a student can see the course's shape before reading it. The
+3D walk is my idea of a new way to present teaching material and draw students in; I wanted
+a freer version, but with the time I had it shows only a first step. An early version sat on
+the home page and I took it off, because the reader needed to understand the course first
 ([`877f758`](https://github.com/comp4020-agentic-coding-studio/comp4020-ass2-1181278174/commit/877f758),
-[`27dc796`](https://github.com/comp4020-agentic-coding-studio/comp4020-ass2-1181278174/commit/27dc796)).
-I removed them from the home page because the reader needed to understand the course
-immediately. Restoring the standard layout and making learning outcomes explicit served
-that purpose better than asking the reader to explore the hill first
-([`e88b5d5`](https://github.com/comp4020-agentic-coding-studio/comp4020-ass2-1181278174/commit/e88b5d5),
-[`acc0e27`](https://github.com/comp4020-agentic-coding-studio/comp4020-ass2-1181278174/commit/acc0e27)).
+[`acc0e27`](https://github.com/comp4020-agentic-coding-studio/comp4020-ass2-1181278174/commit/acc0e27));
+the finished opening and the separate hill page came back on the last morning
+([`10da0a5`](https://github.com/comp4020-agentic-coding-studio/comp4020-ass2-1181278174/commit/10da0a5)).
 
 I used `pnpm check` for types, the production build (including axe and links) and the spec,
 then browser checks for interaction. On the submitted commit that is 190 passing tests and
