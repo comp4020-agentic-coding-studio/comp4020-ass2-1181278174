@@ -27,7 +27,7 @@ const tutorials = signs.find(sign => sign.section === 'Tutorials')!.href;
       <p class="home-opening-description">{description}</p>
       <div class="home-opening-actions">
         <div class="home-opening-buttons">
-          <a class="home-opening-button home-opening-walk" href={withBase(lab)}>Walk the hill <span aria-hidden="true">↗</span></a>
+          <a class="home-opening-button home-opening-walk" href={withBase('/hill/')}>Walk the hill <span aria-hidden="true">↗</span></a>
           <a class="home-opening-button home-opening-lab" href={withBase(lab)}>Open the lab <span aria-hidden="true">→</span></a>
         </div>
         <a class="home-opening-weeks" href={withBase(tutorials)}>Twelve weeks <span aria-hidden="true">→</span></a>
