@@ -1,0 +1,38 @@
+---
+import { withBase } from 'astro-theme-university/url';
+import heroImage from '../assets/images/hero-home.avif';
+import { courseMeta } from '../course-config';
+import { signs } from '../data/hill-stops';
+
+const description = courseMeta.description.match(/^[^.!?]+[.!?]/)?.[0] ?? courseMeta.description;
+const lab = signs.find(sign => sign.section === 'Lab')!.href;
+const tutorials = signs.find(sign => sign.section === 'Tutorials')!.href;
+---
+
+<div class="home-opening" data-home-opening>
+  <section class="home-opening-frame" aria-labelledby="home-title">
+    <img
+      class="home-opening-poster"
+      src={heroImage.src}
+      width={heroImage.width}
+      height={heroImage.height}
+      alt="Slop Hill at dusk, with the kitchen below, homes along the hillside and a narrow passage between two towers."
+      fetchpriority="high"
+      decoding="async"
+    />
+    <div class="home-opening-shade" aria-hidden="true"></div>
+    <div class="home-opening-copy">
+      <p class="home-opening-eyebrow">{courseMeta.code} · {courseMeta.title}</p>
+      <h1 id="home-title">{courseMeta.title}</h1>
+      <p class="home-opening-description">{description}</p>
+      <div class="home-opening-actions">
+        <div class="home-opening-buttons">
+          <a class="home-opening-button home-opening-walk" href={withBase(lab)}>Walk the hill <span aria-hidden="true">↗</span></a>
+          <a class="home-opening-button home-opening-lab" href={withBase(lab)}>Open the lab <span aria-hidden="true">→</span></a>
+        </div>
+        <a class="home-opening-weeks" href={withBase(tutorials)}>Twelve weeks <span aria-hidden="true">→</span></a>
+      </div>
+    </div>
+    <p class="home-opening-scroll-hint" aria-hidden="true"><span>↓</span> Scroll</p>
+  </section>
+</div>
