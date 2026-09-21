@@ -38,7 +38,7 @@ export function walkTargets(map: MapData) {
   ];
 }
 
-export function nearbyTarget<T extends { position: Position }>(position: Position, targets: T[], preferred?: T) {
+export function nearbyTarget<T extends { position: Position }>(position: Position, targets: T[], preferred?: T): T | undefined {
   const within = targets.map(target => ({ target, distance: Math.hypot(position.x - target.position.x, position.y - target.position.y) }))
     .filter(candidate => candidate.distance <= OPEN_RADIUS).sort((a, b) => a.distance - b.distance);
   // Shared locations retain the chosen week instead of changing while the camera settles.

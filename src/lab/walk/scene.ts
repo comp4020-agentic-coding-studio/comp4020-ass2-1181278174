@@ -5,7 +5,7 @@ import { loadAssets, release, roadSurface } from '../scene-assets';
 import { sceneScenery, toScene } from '../visual-layout';
 import { terrainHeight } from '../terrain';
 import { projectLabel } from '../scene-labels';
-import type { Position } from './navigation';
+import type { Position, walkTargets } from './navigation';
 
 /** A fixed third-person camera over the same terrain and model set as the Lab. */
 export function createWalkScene(host: HTMLElement, data: SceneData, onRender: () => void) {
@@ -38,6 +38,9 @@ export function createWalkScene(host: HTMLElement, data: SceneData, onRender: ()
   const shadow = new THREE.Mesh(new THREE.RingGeometry(21, 25, 32), new THREE.MeshBasicMaterial({ color: '#f4cf6c', side: THREE.DoubleSide }));
   shadow.rotation.x = -Math.PI / 2; scene.add(shadow);
   const padModels = new THREE.Group(); scene.add(padModels);
+  const glow = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshBasicMaterial({ color: '#ffcf70', transparent: true, opacity: .3, depthWrite: false }));
+  glow.visible = false; scene.add(glow);
+  let highlighted: string | undefined;
   for (let i = 0; i < 2; i++) {
     const pad = new THREE.Mesh(new THREE.CylinderGeometry(20, 20, 3, 24), new THREE.MeshStandardMaterial({ color: '#e5b63b' }));
     const x = kitchen.x + 50 + i * 48;
@@ -49,6 +52,7 @@ export function createWalkScene(host: HTMLElement, data: SceneData, onRender: ()
   function move(point: Position, seconds = 0, snap = false) {
     const elevation = terrainHeight(point.x, point.y), position = new THREE.Vector3(...toScene(point.x, point.y, elevation));
     avatar.position.copy(position).add(new THREE.Vector3(0, 2, 0));
+    host.dataset.avatarHeight = avatar.position.y.toFixed(3);
     shadow.position.copy(position).add(new THREE.Vector3(0, 1, 0));
     desiredLook.copy(position).add(new THREE.Vector3(0, 80, -85));
     desiredCamera.copy(position).add(new THREE.Vector3(0, 430, 570));
@@ -91,6 +95,27 @@ export function createWalkScene(host: HTMLElement, data: SceneData, onRender: ()
   }).catch(() => { if (!disposed) host.dataset.models = 'fallback'; });
   return {
     move,
+    highlight(target?: ReturnType<typeof walkTargets>[number]) {
+      if (target?.key === highlighted) return;
+      highlighted = target?.key; glow.visible = !!target;
+      host.dataset.highlight = target?.node ?? '';
+      host.dataset.highlightPlace = target?.key ?? '';
+      if (target) {
+        const home = scenery.homes.find(house => house.node === target.node);
+        const building = target.node === data.map.kitchen ? scenery.buildings.find(item => item.kind === 'kitchen') : undefined;
+        const pads = target.week === 7 || target.week === 8, corridor = target.week === 9 || target.week === 10;
+        if (pads || corridor) {
+          glow.position.set(...toScene(target.position.x, target.position.y, target.position.z + 2));
+          glow.scale.set(corridor ? 90 : 48, 8, corridor ? 65 : 48);
+        } else if (home) {
+          glow.position.set(...toScene(home.x, home.y, home.z + home.h / 2)); glow.scale.set(home.w + 8, home.h * 3 + 8, home.d + 8);
+        } else if (building) {
+          const x = building.x + building.w / 2, y = building.y + building.d / 2;
+          glow.position.set(...toScene(x, y, terrainHeight(x, y) + building.h / 2)); glow.scale.set(building.w + 8, building.h * 3 + 8, building.d + 8);
+        }
+      }
+      render();
+    },
     project(point: { x: number; y: number; z: number }) {
       return projectLabel(new THREE.Vector3(...toScene(point.x, point.y, point.z + 16)), camera, host.clientWidth, host.clientHeight);
     },

@@ -16,6 +16,7 @@ export function mountWalk(root: HTMLElement) {
   const abort = new AbortController(), { signal } = abort, keys = new Set<string>();
   let scene: ReturnType<typeof createWalkScene> | undefined, position = groundPosition(kitchen);
   let frame = 0, last = 0, generation = 0, loading = false, near = nearbyTarget(position, targets);
+  let hovered: typeof near;
   const moveKeys = new Set(['w', 'a', 's', 'd', 'arrowup', 'arrowleft', 'arrowdown', 'arrowright']);
 
   function project() {
@@ -46,10 +47,17 @@ export function mountWalk(root: HTMLElement) {
     near = nearbyTarget(position, targets, near);
     const index = targets.indexOf(near!);
     anchors.forEach((anchor, i) => { anchor.dataset.near = String(i === index); });
-    hint.textContent = near ? `Enter: open ${near.label}` : 'Walk towards a stop to open its week.';
+    const prompt = near ? `Enter: open ${near.label}` : 'Walk towards a stop to open its week.';
+    if (hint.textContent !== prompt) hint.textContent = prompt;
+    scene?.highlight(hovered ?? near);
     host.dataset.x = position.x.toFixed(2); host.dataset.y = position.y.toFixed(2); host.dataset.elevation = position.z.toFixed(3);
   }
   function stop() { keys.clear(); cancelAnimationFrame(frame); frame = 0; last = 0; }
+  function instruction() {
+    status.textContent = reduced.matches ? 'Motion is reduced. Choose a stop or use the list.'
+      : document.activeElement === surface ? 'W A S D or arrows: walk. Enter: open the nearby stop.'
+      : 'Click the hill or Tab to it, then use W A S D or the arrow keys.';
+  }
   function tick(now: number) {
     if (!scene || reduced.matches || document.hidden) { stop(); return; }
     const seconds = last ? Math.min((now - last) / 1000, .05) : 1 / 60; last = now;
@@ -60,6 +68,7 @@ export function mountWalk(root: HTMLElement) {
   }
   function release() {
     generation++; stop(); scene?.dispose(); scene = undefined; loading = false;
+    hovered = undefined;
     root.dataset.walkReady = 'false'; anchors.forEach(anchor => { anchor.hidden = true; });
     host.dataset.state = 'list';
   }
@@ -75,7 +84,7 @@ export function mountWalk(root: HTMLElement) {
       scene = createWalkScene(host, data, project);
       host.dataset.state = reduced.matches ? 'still' : 'walking';
       position = groundPosition(kitchen); scene.move(position, 0, true); update(); project();
-      status.textContent = reduced.matches ? 'Motion is reduced. Choose a stop or use the list.' : 'Focus the hill, then use W A S D or the arrow keys to walk.';
+      instruction();
     } catch { release(); }
     finally { if (current === generation) loading = false; }
   }
@@ -88,14 +97,27 @@ export function mountWalk(root: HTMLElement) {
     keys.add(key); if (!frame) frame = requestAnimationFrame(tick);
   }, { signal });
   surface.addEventListener('keyup', event => { keys.delete(event.key.toLowerCase()); }, { signal });
-  surface.addEventListener('blur', stop, { signal });
+  surface.addEventListener('pointerdown', event => {
+    if (!(event.target as HTMLElement).closest('a')) surface.focus({ preventScroll: true });
+  }, { signal });
+  surface.addEventListener('focus', instruction, { signal });
+  surface.addEventListener('blur', () => { stop(); instruction(); }, { signal });
+  anchors.forEach((anchor, index) => {
+    const highlight = () => { hovered = targets[index]; scene?.highlight(hovered); };
+    const reset = () => {
+      const focused = anchors.indexOf(document.activeElement as HTMLAnchorElement);
+      hovered = focused >= 0 ? targets[focused] : undefined; scene?.highlight(hovered ?? near);
+    };
+    anchor.addEventListener('focus', highlight, { signal }); anchor.addEventListener('pointerenter', highlight, { signal });
+    anchor.addEventListener('blur', reset, { signal }); anchor.addEventListener('pointerleave', reset, { signal });
+  });
   document.addEventListener('visibilitychange', () => { if (document.hidden) stop(); }, { signal });
   window.addEventListener('blur', stop, { signal });
   desktop.addEventListener('change', () => { void ensure(); }, { signal });
   reduced.addEventListener('change', () => {
     stop(); position = groundPosition(kitchen); scene?.move(position, 0, true); update();
     host.dataset.state = reduced.matches ? 'still' : 'walking';
-    status.textContent = reduced.matches ? 'Motion is reduced. Choose a stop or use the list.' : 'Focus the hill, then use W A S D or the arrow keys to walk.';
+    instruction();
   }, { signal });
   host.addEventListener('webglcontextlost', release, { signal });
   void ensure();

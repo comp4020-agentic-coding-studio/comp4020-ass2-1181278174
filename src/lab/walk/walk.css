@@ -15,13 +15,11 @@ body:has(.hill-walk-page) { --at-content-width: 84rem; }
 .walk-stop[hidden] { display: none; }
 .walk-stop::before { content: ''; display: inline-block; width: .45rem; height: .45rem; margin-right: .35rem; border-radius: 50%; background: currentColor; }
 .walk-stop:hover, .walk-stop:focus-visible { z-index: 3; outline: 3px solid #f4cf6c; outline-offset: 2px; text-decoration: underline; }
-.walk-stop[data-near="true"] { box-shadow: 0 0 0 3px #f4cf6c; }
+.walk-stop[data-near="true"] { box-shadow: 0 0 0 3px #f4cf6c; font-size: .78rem; padding: .45rem .7rem; }
 .walk-leader { position: absolute; left: 50%; top: 100%; height: 1px; background: #fff2cf; transform-origin: left center; pointer-events: none; }
 .walk-readout { position: absolute; pointer-events: none; inset: auto 0 0; padding: 1rem 1.2rem; color: #fffaf1; background: linear-gradient(transparent,#1b252dec 25%); }
 .walk-readout p { margin: 0; font-size: .82rem; }
 .walk-readout p + p { margin-top: .3rem; font-size: .72rem; color: #fff0cd; }
-.walk-focus-hint { display: none; }
-.walk-surface:focus-visible .walk-focus-hint { display: inline; }
 .hill-as-list { margin-top: 1.6rem; }
 .walk-list { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: .55rem 1.3rem; }
 .walk-list li { margin: 0; }

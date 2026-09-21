@@ -20,8 +20,8 @@ const scene = { map, orders: orders.orders, events: [], routes: [], pads: 2 };
           {signs.map(sign => <a hidden class="walk-stop" data-walk-stop href={withBase(sign.href)}>{sign.section} →<span class="walk-leader" data-walk-leader aria-hidden="true"></span></a>)}
         </nav>
         <div class="walk-readout">
-          <p data-walk-prompt>Enter: open Week 2 · Kitchen · Dijkstra</p>
-          <p id="walk-keyboard-help" data-walk-status>Focus the hill, then use W A S D or the arrow keys to walk.</p>
+          <p data-walk-prompt aria-live="polite">Enter: open Week 2 · Kitchen · Dijkstra</p>
+          <p id="walk-keyboard-help" data-walk-status>Click the hill or Tab to it, then use W A S D or the arrow keys.</p>
         </div>
       </div>
     </div>
