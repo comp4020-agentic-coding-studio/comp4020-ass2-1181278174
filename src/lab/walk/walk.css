@@ -10,6 +10,11 @@ body:has(.hill-walk-page) .at-main > h1 { margin-block: .5rem 1rem; }
 [data-walk-ready="true"] .walk-shell { display: block; }
 .walk-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: .8rem 1.2rem; color: #fffaf1; background: #263038; font-size: .8rem; }
 .walk-toolbar button { padding: .45rem .8rem; border: 1px solid #d1c5ac; border-radius: .3rem; background: transparent; color: #fffaf1; font: inherit; cursor: pointer; }
+.walk-actions { display: flex; gap: .6rem; }
+.walk-toolbar .walk-next { color: #302d25; background: #f4cf6c; border-color: #f4cf6c; font-weight: 700; }
+.walk-toolbar button:disabled { opacity: .65; cursor: wait; }
+.walk-drone-label { position: absolute; z-index: 2; transform: translate(-50%, -100%); padding: .25rem .6rem; border: 1px solid #f4cf6c; border-radius: 2rem; color: #fffaf1; background: #263038; font-size: .7rem; pointer-events: none; }
+.walk-drone-label[hidden] { display: none; }
 .walk-surface { position: relative; height: min(55vh, 570px); min-height: 460px; outline-offset: -4px; }
 .walk-surface:focus-visible { outline: 3px solid #f4cf6c; }
 .walk-scene, .walk-stops { position: absolute; inset: 0; }
@@ -52,7 +57,7 @@ body:has(.hill-walk-page) .at-main > h1 { margin-block: .5rem 1rem; }
 .walk-portal-links a:hover { transform: translateX(4px); border-color: var(--stage-color); }
 .walk-departure:empty { display: none; }
 .walk-portal[open] { animation: walk-portal-in 300ms ease-out both; }
-.walk-portal[data-leaving="true"] { animation: walk-portal-out 360ms ease-in both; pointer-events: none; }
+.walk-portal[data-leaving="true"] { animation: walk-portal-out 380ms ease-in both; pointer-events: none; }
 @keyframes walk-portal-in { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
 @keyframes walk-portal-out { to { opacity: 0; transform: translateY(-16px) scale(.98); } }
 @media(max-width:899px) {

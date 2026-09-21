@@ -22,17 +22,18 @@ const scene = { map, orders: orders.orders, events: [], routes: [], pads: 2 };
 ---
 <ContentLayout title="Walk the hill" {...siteConfig}>
   <div class="hill-walk-page" data-walk-root data-walk-ready="false">
-    <p class="walk-intro">From your first route at the kitchen to twenty dinners at the summit. Follow twelve weeks uphill; choose a stop to enter its lecture, tutorial or lab.</p>
+    <p class="walk-intro">From your first route at the kitchen to twenty dinners at the summit. Fly your drone from week to week up the hill, then enter a lecture, tutorial or lab.</p>
     <p class="walk-mobile-note">The list below follows the same course trail. On a desktop with a mouse or trackpad, widen the window to at least 900 px to explore the hill.</p>
     <div class="walk-shell">
-      <div class="walk-toolbar"><span>Kitchen <span aria-hidden="true">↗</span> Summit · twelve weeks</span><button type="button" data-walk-overview>View whole hill</button></div>
+      <div class="walk-toolbar"><span data-walk-journey>Kitchen → Summit · twelve weeks</span><div class="walk-actions"><button type="button" class="walk-next" data-walk-next>Enter Week 1 →</button><button type="button" data-walk-overview>View whole hill</button></div></div>
       <div class="walk-surface" data-walk-surface tabindex="0" role="region" aria-label="Course trail up Slop Hill" aria-describedby="walk-keyboard-help" aria-keyshortcuts="W A S D ArrowUp ArrowLeft ArrowDown ArrowRight Enter">
         <div class="walk-scene" data-walk-scene></div>
+        <span class="walk-drone-label" data-walk-drone hidden>Your drone</span>
         <nav class="walk-stops" aria-label="Course stops">
           {courses.map(course => <a hidden class="walk-stop" data-walk-stop data-stage={course.stage} href={`#week-${course.week}`} aria-label={`Enter Week ${course.week}: ${course.title}`}>W{course.week}<span class="walk-leader" data-walk-leader aria-hidden="true"></span></a>)}
           {projects.map((project, i) => <a hidden class="walk-stop walk-assignment" data-walk-stop data-stage={i === 0 ? 'order' : 'corridor'} href={withBase(`/assessments/${project.id}/`)} aria-label={`Assignment ${i + 1}, ${project.data.weight}%`}>A{i + 1} · {project.data.weight}%<span class="walk-leader" data-walk-leader aria-hidden="true"></span></a>)}
         </nav>
-        <div class="walk-readout"><p data-walk-prompt aria-live="polite">Choose W1 to begin at the kitchen.</p><p id="walk-keyboard-help" data-walk-status>Click a stop, or focus the hill and walk with W A S D. Enter opens the nearby stop.</p></div>
+        <div class="walk-readout"><p data-walk-prompt aria-live="polite">Enter Week 1 to begin at the kitchen.</p><p id="walk-keyboard-help" data-walk-status>Choose a week to fly there, or focus the hill and fly with W A S D. Enter opens the nearby stop.</p></div>
       </div>
       <ol class="walk-stages" aria-label="Five stages up the hill">{stages.map(([stage, weeks, title]) => <li data-stage={stage}><strong>{weeks}</strong><span>{title}</span></li>)}</ol>
     </div>

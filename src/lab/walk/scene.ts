@@ -5,9 +5,9 @@ import { loadAssets, release, roadSurface } from '../scene-assets';
 import { sceneScenery, toScene } from '../visual-layout';
 import { terrainHeight } from '../terrain';
 import { projectLabel } from '../scene-labels';
-import { coursePosition, walkTargets, type Position } from './navigation';
+import { courseFlight, coursePosition, FLIGHT_CLEARANCE, groundPosition, walkTargets, type Position } from './navigation';
 
-/** The course trail reuses the Lab terrain and models, with overview and walking cameras. */
+/** The course trail reuses the Lab terrain and models, with a drone that follows the course uphill. */
 export function createWalkScene(host: HTMLElement, data: SceneData, onRender: () => void) {
   const scene = new THREE.Scene();
   scene.background = new THREE.Color('#353e48');
@@ -33,13 +33,20 @@ export function createWalkScene(host: HTMLElement, data: SceneData, onRender: ()
   }
   scene.add(fallback);
   const kitchen = data.map.nodes.find(node => node.id === data.map.kitchen)!;
-  const avatar = new THREE.Group(), body = new THREE.Mesh(new THREE.BoxGeometry(26, 8, 20), new THREE.MeshStandardMaterial({ color: '#f4cf6c' }));
-  body.position.y = 7; avatar.add(body); scene.add(avatar);
+  const avatar = new THREE.Group(), airframe = new THREE.Group();
+  const body = new THREE.Mesh(new THREE.BoxGeometry(32, 10, 25), new THREE.MeshStandardMaterial({ color: '#f4cf6c' }));
+  airframe.add(body); avatar.add(airframe); scene.add(avatar);
+  for (const x of [-27, 27]) for (const z of [-24, 24]) {
+    const arm = new THREE.Mesh(new THREE.BoxGeometry(6, 5, 60), new THREE.MeshStandardMaterial({ color: '#f4cf6c' }));
+    arm.position.x = x; airframe.add(arm);
+    const rotor = new THREE.Mesh(new THREE.BoxGeometry(26, 2, 4), new THREE.MeshStandardMaterial({ color: '#fffaf1' }));
+    rotor.position.set(x, 7, z); rotor.userData.anchor = 'rotor_' + airframe.children.length; airframe.add(rotor);
+  }
+  const gate = new THREE.Mesh(new THREE.TorusGeometry(57, 3, 8, 64), new THREE.MeshBasicMaterial({ color: '#f4cf6c' }));
+  gate.visible = false; scene.add(gate);
   const shadow = new THREE.Mesh(new THREE.RingGeometry(21, 25, 32), new THREE.MeshBasicMaterial({ color: '#f4cf6c', side: THREE.DoubleSide }));
   shadow.rotation.x = -Math.PI / 2; scene.add(shadow);
   const padModels = new THREE.Group(); scene.add(padModels);
-  const glow = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshBasicMaterial({ color: '#ffcf70', transparent: true, opacity: .3, depthWrite: false }));
-  glow.visible = false; scene.add(glow);
   let highlighted: string | undefined;
   for (let i = 0; i < 2; i++) {
     const pad = new THREE.Mesh(new THREE.CylinderGeometry(20, 20, 3, 24), new THREE.MeshStandardMaterial({ color: '#e5b63b' }));
@@ -64,49 +71,78 @@ export function createWalkScene(host: HTMLElement, data: SceneData, onRender: ()
   const look = new THREE.Vector3(), desiredLook = new THREE.Vector3(), desiredCamera = new THREE.Vector3();
   let disposed = false, source: THREE.Object3D | undefined, first = true, flight = 0;
   let finishFlight: ((completed: boolean) => void) | undefined;
-  let avatarPoint: Position = kitchen;
+  let avatarPoint: Position = kitchen, clearance = FLIGHT_CLEARANCE;
   function render() { if (!disposed) { renderer.render(scene, camera); onRender(); } }
+  function placeDrone(point: Position, lift = FLIGHT_CLEARANCE, moving = false) {
+    const dx = point.x - avatarPoint.x, dy = point.y - avatarPoint.y;
+    if (Math.hypot(dx, dy) > .01) avatar.rotation.y = Math.atan2(dx, -dy);
+    avatarPoint = point; clearance = lift;
+    const ground = groundPosition(point);
+    avatar.position.set(...toScene(point.x, point.y, ground.z + lift));
+    airframe.rotation.x = moving ? -.1 : 0;
+    if (moving) airframe.traverse(object => {
+      if (object.userData.anchor?.startsWith('rotor_')) object.rotation.y = performance.now() * .035;
+    });
+    shadow.position.set(...toScene(point.x, point.y, ground.z + .5));
+    host.dataset.x = point.x.toFixed(2); host.dataset.y = point.y.toFixed(2);
+    host.dataset.elevation = ground.z.toFixed(3); host.dataset.avatarHeight = avatar.position.y.toFixed(3);
+    host.dataset.clearance = lift.toFixed(2);
+  }
+  function followCamera(position: THREE.Vector3) {
+    // Look further down at the summit so the route below stays in view.
+    const summit = Math.max(0, Math.min(1, (terrainHeight(avatarPoint.x, avatarPoint.y) - 80) / 85));
+    desiredLook.copy(position).add(new THREE.Vector3(75, 60 - 160 * summit, -140 + 120 * summit));
+    desiredCamera.copy(position).add(new THREE.Vector3(-140, 290 + 130 * summit, 520));
+    desiredCamera.y = Math.max(desiredCamera.y, terrainHeight(avatarPoint.x - 140, avatarPoint.y - 520) * 3 + 180);
+  }
   function move(point: Position, seconds = 0, snap = false) {
-    avatarPoint = point;
-    const elevation = terrainHeight(point.x, point.y), position = new THREE.Vector3(...toScene(point.x, point.y, elevation));
-    avatar.position.copy(position).add(new THREE.Vector3(0, 2, 0));
-    host.dataset.avatarHeight = avatar.position.y.toFixed(3);
-    shadow.position.copy(position).add(new THREE.Vector3(0, 1, 0));
-    desiredLook.copy(position).add(new THREE.Vector3(0, 80, -85));
-    desiredCamera.copy(position).add(new THREE.Vector3(0, 430, 570));
-    // The camera also clears the ground when walking back down the far side of the hill.
-    desiredCamera.y = Math.max(desiredCamera.y, terrainHeight(point.x, point.y - 570) * 3 + 180);
+    const moving = Math.hypot(point.x - avatarPoint.x, point.y - avatarPoint.y) > .01;
+    gate.visible = false;
+    placeDrone(point, FLIGHT_CLEARANCE, moving); followCamera(avatar.position);
     const blend = snap || first ? 1 : 1 - Math.exp(-seconds * 9);
     camera.position.lerp(desiredCamera, blend); look.lerp(desiredLook, blend);
     camera.lookAt(look); camera.updateMatrixWorld(); first = false; render();
     return camera.position.distanceTo(desiredCamera) > .15 || look.distanceTo(desiredLook) > .15;
   }
   function cancelTravel() {
-    cancelAnimationFrame(flight); flight = 0;
+    cancelAnimationFrame(flight); flight = 0; delete host.dataset.flying;
     finishFlight?.(false); finishFlight = undefined;
   }
-  function travel(point: Position | undefined, duration = 800, enter = false) {
+  function travel(point: Position | undefined, duration?: number, enter = false) {
     cancelTravel();
     const fromCamera = camera.position.clone(), fromLook = look.clone(), fromPoint = { ...avatarPoint };
-    const end = point ? new THREE.Vector3(...toScene(point.x, point.y, terrainHeight(point.x, point.y))) : new THREE.Vector3(0, 120, 0);
-    const endCamera = point ? end.clone().add(new THREE.Vector3(enter ? 100 : 260, enter ? 220 : 420, enter ? 240 : 600)) : new THREE.Vector3(1100, 1100, 1700);
-    const endLook = point ? end.clone().add(new THREE.Vector3(0, 40, 0)) : end;
+    const fromClearance = clearance;
+    const path = point ? courseFlight(data.map, fromPoint, point) : undefined;
+    const milliseconds = duration ?? path?.duration ?? 700;
     const started = performance.now();
+    gate.visible = !!point;
+    if (point) {
+      const gateway = groundPosition({ x: point.x, y: point.y + 90 });
+      gate.position.set(...toScene(gateway.x, gateway.y, gateway.z + FLIGHT_CLEARANCE + 18));
+    }
+    host.dataset.flying = point ? enter ? 'entering' : 'climbing' : 'overview';
     return new Promise<boolean>(resolve => {
       finishFlight = resolve;
       const step = (now: number) => {
         if (disposed) { cancelTravel(); return; }
-        const t = duration ? Math.min(1, (now - started) / duration) : 1;
+        const t = milliseconds ? Math.min(1, (now - started) / milliseconds) : 1;
         const ease = t * t * (3 - 2 * t);
-        camera.position.lerpVectors(fromCamera, endCamera, ease); look.lerpVectors(fromLook, endLook, ease);
-        if (point) {
-          avatarPoint = { x: fromPoint.x + (point.x - fromPoint.x) * ease, y: fromPoint.y + (point.y - fromPoint.y) * ease };
-          const p = new THREE.Vector3(...toScene(avatarPoint.x, avatarPoint.y, terrainHeight(avatarPoint.x, avatarPoint.y)));
-          avatar.position.copy(p).add(new THREE.Vector3(0, 2, 0)); shadow.position.copy(p).add(new THREE.Vector3(0, 1, 0));
+        if (point && path) {
+          const p = enter ? groundPosition({ x: fromPoint.x, y: fromPoint.y + 180 * ease }) : path.at(ease);
+          const lift = enter ? fromClearance + 36 * ease : fromClearance + (FLIGHT_CLEARANCE - fromClearance) * ease;
+          placeDrone(p, lift, t < 1 && milliseconds > 0);
+          followCamera(avatar.position);
+          // Establish the chase view, then travel with the drone instead of leaving it behind.
+          const settle = Math.min(1, t * 4), blend = settle * settle * (3 - 2 * settle);
+          camera.position.lerpVectors(fromCamera, desiredCamera, blend);
+          look.lerpVectors(fromLook, desiredLook, blend);
+        } else {
+          camera.position.lerpVectors(fromCamera, new THREE.Vector3(1100, 1100, 1700), ease);
+          look.lerpVectors(fromLook, new THREE.Vector3(0, 120, 0), ease);
         }
         camera.lookAt(look); camera.updateMatrixWorld(); render();
         if (t < 1) flight = requestAnimationFrame(step);
-        else { flight = 0; finishFlight = undefined; resolve(true); }
+        else { flight = 0; delete host.dataset.flying; finishFlight = undefined; resolve(true); }
       };
       step(started);
     });
@@ -119,7 +155,6 @@ export function createWalkScene(host: HTMLElement, data: SceneData, onRender: ()
   resize.observe(host);
   const width = host.clientWidth, height = host.clientHeight;
   renderer.setSize(width, height); camera.aspect = width / height; camera.updateProjectionMatrix(); move(kitchen, 0, true);
-  camera.position.set(1700, 1900, 2550); look.set(0, 120, 0); camera.lookAt(look); camera.updateMatrixWorld(); render();
   host.dataset.models = 'loading';
   void loadAssets(data).then(assets => {
     if (disposed) { release(assets.source); return; }
@@ -131,10 +166,10 @@ export function createWalkScene(host: HTMLElement, data: SceneData, onRender: ()
       }
     });
     fallback.visible = false; scene.add(assets.scenery);
-    release(avatar); avatar.clear();
-    const model = assets.clone('drone_L'); model.scale.setScalar(26);
+    release(airframe); airframe.clear();
+    const model = assets.clone('drone_L'); model.scale.setScalar(46);
     const bounds = new THREE.Box3().setFromObject(model); model.position.y -= bounds.min.y;
-    avatar.add(model);
+    airframe.add(model);
     release(padModels); padModels.clear();
     for (let i = 0; i < 2; i++) {
       const pad = assets.clone('charging_pad'), x = kitchen.x + 50 + i * 48;
@@ -145,11 +180,13 @@ export function createWalkScene(host: HTMLElement, data: SceneData, onRender: ()
   return {
     move,
     overview: (duration = 800) => travel(undefined, duration),
-    visit: (point: Position, duration = 800, enter = false) => travel(point, duration, enter),
+    visit: (point: Position, duration?: number, enter = false) => travel(point, duration, enter),
+    position: () => groundPosition(avatarPoint),
+    drone: () => ({ ...avatarPoint, z: terrainHeight(avatarPoint.x, avatarPoint.y) + clearance }),
     cancelTravel,
     highlight(target?: ReturnType<typeof walkTargets>[number]) {
       if (target?.key === highlighted) return;
-      highlighted = target?.key; glow.visible = false;
+      highlighted = target?.key;
       for (const [key, marker] of markers) {
         marker.scale.setScalar(key === highlighted ? 1.4 : 1);
         (marker.material as THREE.MeshStandardMaterial).emissiveIntensity = key === highlighted ? 1 : .35;
@@ -157,8 +194,8 @@ export function createWalkScene(host: HTMLElement, data: SceneData, onRender: ()
       host.dataset.highlightPlace = target?.key ?? '';
       render();
     },
-    project(point: { x: number; y: number; z: number }) {
-      return projectLabel(new THREE.Vector3(...toScene(point.x, point.y, point.z + 16)), camera, host.clientWidth, host.clientHeight);
+    project(point: { x: number; y: number; z: number }, offset = 16) {
+      return projectLabel(new THREE.Vector3(...toScene(point.x, point.y, point.z + offset)), camera, host.clientWidth, host.clientHeight);
     },
     dispose() {
       disposed = true; cancelTravel(); resize.disconnect(); release(scene); if (source) release(source);
