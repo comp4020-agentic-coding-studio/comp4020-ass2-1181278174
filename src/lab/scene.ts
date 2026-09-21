@@ -10,7 +10,9 @@ import { terrainScene } from './scene-terrain';
 import { sceneScenery, toScene } from './visual-layout';
 import { blockInspection, fitInspection, readableLine } from './scene-inspection';
 import { flightNetwork, loadAssets, release, roadSurface } from './scene-assets';
-export interface SceneOptions { lighting?: 'day' | 'evening'; labels?: boolean; mode?: 'hub' }
+import { placeLabel, projectLabel, type LabelBox } from './scene-labels';
+import { sceneNavigation } from './scene-navigation';
+export interface SceneOptions { lighting?: 'day' | 'evening'; labels?: boolean; mode?: 'hub'; onManualNavigation?: () => void }
 export function mountScene(host: HTMLElement, data: SceneData, onSelect: (node: string) => void, options: SceneOptions = {}) {
     const evening = options.lighting === 'evening', hub = options.mode === 'hub';
     let afterRender: (() => void) | undefined, cameraFrame = 0, finishCamera: ((done: boolean) => void) | undefined;
@@ -23,10 +25,10 @@ export function mountScene(host: HTMLElement, data: SceneData, onSelect: (node: 
     host.append(renderer.domElement);
     renderer.domElement.setAttribute('aria-label', hub ? 'Slop Hill at dusk. Choose a week or a course sign on the hill, or use the list below.' : '3D Slop Hill; use the named camera buttons and evidence table for keyboard access');
     renderer.domElement.setAttribute('role', 'img');
-    const camera = new THREE.PerspectiveCamera(43, 1, 1, 10000), controls = new OrbitControls(camera, renderer.domElement);
+    const camera = new THREE.PerspectiveCamera(43, 1, 1, 10000), controls = new OrbitControls(camera, hub ? renderer.domElement : host);
     controls.enableDamping = false;
     if(hub) { controls.enableZoom=false; controls.enablePan=false; }
-    controls.minDistance = 170;
+    controls.minDistance = 45;
     controls.maxDistance = 4400;
     controls.maxPolarAngle = Math.PI * .49;
     const to3 = (x: number, y: number, z: number) => new THREE.Vector3(...toScene(x, y, z));
@@ -34,7 +36,9 @@ export function mountScene(host: HTMLElement, data: SceneData, onSelect: (node: 
     const sun = new THREE.DirectionalLight(evening ? 0xffbd77 : 0xfff5dd, evening ? 2.8 : 2.1);
     sun.position.set(-1100, evening ? 550 : 1700, 800);
     scene.add(sun);
-    scene.add(terrainScene(data));
+    const terrain = terrainScene(data); scene.add(terrain);
+    const occluders: THREE.Object3D[] = [];
+    terrain.traverse(o => { if ((o as THREE.Mesh).isMesh) occluders.push(o); });
     const nodes = new Map(data.map.nodes.map(n => [n.id, n]));
     const graph=flightNetwork(data); scene.add(graph); graph.visible=!!data.focusNodes;
     scene.add(roadSurface(data));
@@ -74,19 +78,30 @@ export function mountScene(host: HTMLElement, data: SceneData, onSelect: (node: 
         point: THREE.Vector3;
         node?:string;
         priority?:boolean;
+        leader: SVGLineElement;
     }[] = [];
     const overlay = document.createElement('div');
     overlay.className = 'lab-scene-labels';
     overlay.hidden = options.labels === false;
     host.append(overlay);
+    const leaders = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    leaders.classList.add('lab-scene-leaders'); leaders.setAttribute('aria-hidden', 'true'); overlay.append(leaders);
     function label(text: string, x: number, y: number, z: number, node?: string, priority=false) { const interactive=!!node&&!host.closest('[data-weekly-example]');const el = document.createElement(interactive ? 'button' : 'span'); el.textContent = text; el.className = 'lab-scene-label'; if (interactive) {
         el.setAttribute('type', 'button');
         el.setAttribute('aria-label', 'Inspect ' + text);
-        el.addEventListener('click', () => onSelect(node!));
-    } overlay.append(el); labels.push({ el, point: to3(x, y, z), node, priority }); return el; }
+        el.dataset.sceneNode = node;
+        el.addEventListener('click', event => { if (event instanceof MouseEvent && (hub || event.detail === 0)) onSelect(node!); });
+    }
+    const leader = document.createElementNS('http://www.w3.org/2000/svg', 'line'); leaders.append(leader);
+    overlay.append(el); labels.push({ el, point: to3(x, y, z), node, priority, leader }); return el; }
     const kitchen = nodes.get(data.map.kitchen)!;
-    label('KITCHEN · dispatch', kitchen.x, kitchen.y, kitchen.z + 40, data.map.kitchen);
-    if(!isBlock)label(data.orders.some(o => o.id === '#07') ? 'Home 07 · Hilltop' : 'SUMMIT · 165m', 1240, 1460, 195, data.orders.find(o => o.id === '#07')?.node);
+    const kitchenBuilding = scenery.buildings.find(b => b.kind === 'kitchen');
+    const kx = kitchenBuilding ? kitchenBuilding.x + kitchenBuilding.w / 2 : kitchen.x;
+    const ky = kitchenBuilding ? kitchenBuilding.y + kitchenBuilding.d / 2 : kitchen.y;
+    label('Kitchen · dispatch', kx, ky, terrainHeight(kx, ky) + (kitchenBuilding?.h ?? 10) + 2, data.map.kitchen);
+    const summitHome = scenery.homes.find(h => h.order === '#07');
+    if(!isBlock)label(summitHome ? 'Home 07 · Hilltop' : 'Summit · 165m', summitHome?.x ?? 1240, summitHome?.y ?? 1460,
+        summitHome ? summitHome.z + summitHome.h + 2 : 167, summitHome?.node);
     const corridor = data.map.edges.find(e => e.resource === 'corridor')!;
     const ca = nodes.get(corridor.from)!, cb = nodes.get(corridor.to)!;
     if (data.orders.length === 1 && data.orders[0].id === '#07') {
@@ -96,7 +111,7 @@ export function mountScene(host: HTMLElement, data: SceneData, onSelect: (node: 
     const corridorLabel=isBlock?undefined:label('TOWER PASSAGE · capacity 1', (ca.x + cb.x) / 2, (ca.y + cb.y) / 2, (ca.z + cb.z) / 2 + 16, undefined, true);
     if(!isBlock)for(const tower of data.map.buildings.filter(b=>b.kind==='tower')) {
         const x=tower.x+tower.w/2,y=tower.y+tower.d/2;
-        label(placeName(tower.id),x,y,terrainHeight(x,y)+tower.h+12);
+        label(placeName(tower.id),x,y,terrainHeight(x,y)+tower.h+2);
     }
     const passage=new THREE.Mesh(new THREE.BoxGeometry(Math.hypot(cb.x-ca.x,cb.y-ca.y),75,55),new THREE.MeshBasicMaterial({color:'#c79726',transparent:true,opacity:.15,depthWrite:false}));
     passage.position.copy(to3((ca.x+cb.x)/2,(ca.y+cb.y)/2,(ca.z+cb.z)/2+20)); passage.rotation.y=Math.atan2(cb.y-ca.y,cb.x-ca.x); passage.visible=!isBlock;scene.add(passage);
@@ -107,7 +122,7 @@ export function mountScene(host: HTMLElement, data: SceneData, onSelect: (node: 
         marker.userData.node = n.id;
         clickable.push(marker);
         scene.add(marker);
-        if (o.id !== '#07') { const home=scenery.homes.find(h=>h.node===n.id);label(data.orders.length>3?o.id.slice(1):placeName(n.id),home?.x??n.x,home?.y??n.y,(home?home.z+home.h:n.z)+15,n.id); }
+        if (o.id !== '#07') { const home=scenery.homes.find(h=>h.node===n.id);label(data.orders.length>3?o.id.slice(1):placeName(n.id),home?.x??n.x,home?.y??n.y,(home?home.z+home.h:n.z)+2,n.id); }
     }
     for(const home of scenery.homes) {
         const plot=new THREE.Mesh(new THREE.PlaneGeometry(home.w+8,home.d+8),new THREE.MeshBasicMaterial({color:'#76b8a6',side:THREE.DoubleSide}));
@@ -155,30 +170,33 @@ export function mountScene(host: HTMLElement, data: SceneData, onSelect: (node: 
     const blockFrame=(data.focusNodes??[]).map(id=>{const n=nodes.get(id)!;return to3(n.x,n.y,n.z+12);});
     let selectedPath:string[]=[],inspectionFrame:THREE.Vector3[]=[],topDown=false,autoFrame:{points:THREE.Vector3[];top:boolean}|undefined;
     const inspectionLabels:typeof labels=[];
-    const render = () => { if (disposed) return; renderer.render(scene, camera); host.dataset.drawCalls=String(renderer.info.render.calls); host.dataset.triangles=String(renderer.info.render.triangles); const placed: {
-        x: number;
-        y: number;
-        w: number;
-        h: number;
-    }[] = [];
+    const labelRay = new THREE.Raycaster();
+    let navigation: ReturnType<typeof sceneNavigation> | undefined;
+    const render = () => { if (disposed) return; renderer.render(scene, camera); host.dataset.drawCalls=String(renderer.info.render.calls); host.dataset.triangles=String(renderer.info.render.triangles);
+    const placed: LabelBox[] = [], width = renderer.domElement.clientWidth, height = renderer.domElement.clientHeight;
+    leaders.setAttribute('viewBox', `0 0 ${width} ${height}`);
     const inspectedNodes=new Set(inspectionLabels.map(l=>l.node).filter(Boolean));
     for (const item of [...labels].sort((a,b)=>Number(!!b.priority)-Number(!!a.priority))) {
-        if(!item.priority&&item.node&&inspectedNodes.has(item.node)){item.el.hidden=true;continue;}
-        if(data.orders.length>3&&focusedOrder&&item.el.dataset.drone&&!data.events.some(e=>e.order===focusedOrder&&e.drone===item.el.dataset.drone)){item.el.hidden=true;continue;}
-        const p = item.point.clone().project(camera);
-        item.el.hidden = p.z > 1 || p.z < -1 || Math.abs(p.x) > 1 || Math.abs(p.y) > 1;
-        const w = item.el.offsetWidth, h = item.el.offsetHeight, x = Math.max(w/2+6, Math.min(host.clientWidth-w/2-6, (p.x+1)/2*host.clientWidth));
-        const baseY=Math.max(h/2+8,Math.min(renderer.domElement.clientHeight-h/2-8,(1-p.y)/2*renderer.domElement.clientHeight));
-        let y=baseY, fitted=false;
-        for(let pass=0;pass<12;pass++) {
-            y=baseY+(pass===0?0:Math.ceil(pass/2)*(h+7)*(pass%2?-1:1));
-            if(y<h/2+6||y>renderer.domElement.clientHeight-h/2-6) continue;
-            if(!placed.some(a=>Math.abs(a.x-x)<(a.w+w)/2+4&&Math.abs(a.y-y)<(a.h+h)/2+5)) { fitted=true; break; }
-        }
-        item.el.hidden ||= !fitted;
-        if(!item.el.hidden) placed.push({x,y,w,h});
-        item.el.style.left = x + 'px';
-        item.el.style.top = y + 'px';
+        item.leader.style.display = 'none';
+        if(overlay.hidden || (!item.priority&&item.node&&inspectedNodes.has(item.node))) { item.el.hidden = true; continue; }
+        if(data.orders.length>3&&focusedOrder&&item.el.dataset.drone&&!data.events.some(e=>e.order===focusedOrder&&e.drone===item.el.dataset.drone)) { item.el.hidden = true; continue; }
+        const anchor = projectLabel(item.point, camera, width, height);
+        if (!anchor) { item.el.hidden = true; continue; }
+        const direction = item.point.clone().sub(camera.position);
+        labelRay.set(camera.position, direction.clone().normalize()); labelRay.far = direction.length() - 2;
+        // A roof behind the hill or another building must not label the foreground.
+        if (labelRay.intersectObjects(occluders, false).length) { item.el.hidden = true; continue; }
+        // Keep visible buttons mounted and focusable while replay updates their position.
+        item.el.hidden = false;
+        const position = placeLabel(anchor, item.el.offsetWidth, item.el.offsetHeight,
+            { width, height: height - (navigation ? navigation.toolbar.offsetHeight + 16 : 0) }, placed);
+        item.el.hidden = !position;
+        if (!position) continue;
+        placed.push(position);
+        item.el.style.left = position.x + 'px'; item.el.style.top = position.y + 'px';
+        item.leader.setAttribute('x1', String(position.lineX)); item.leader.setAttribute('y1', String(position.lineY));
+        item.leader.setAttribute('x2', String(anchor.x)); item.leader.setAttribute('y2', String(anchor.y));
+        item.leader.style.display = '';
     }
     afterRender?.();
     if(isBlock) {
@@ -193,18 +211,20 @@ export function mountScene(host: HTMLElement, data: SceneData, onSelect: (node: 
     controls.addEventListener('change', render);
     controls.addEventListener('start',()=>{autoFrame=undefined;});
     const ray = new THREE.Raycaster(), pointer = new THREE.Vector2();
-    let down = { x: 0, y: 0 };
-    const onDown = (e: PointerEvent) => { down = { x: e.clientX, y: e.clientY }; };
-    const onClick = (e: PointerEvent) => { if (Math.hypot(e.clientX - down.x, e.clientY - down.y) > 6)
-        return; const rect = renderer.domElement.getBoundingClientRect(); pointer.set((e.clientX - rect.left) / rect.width * 2 - 1, -(e.clientY - rect.top) / rect.height * 2 + 1); ray.setFromCamera(pointer, camera); const hit = ray.intersectObjects(clickable)[0]; if (hit?.object.userData.node)
+    const onClick = (e: PointerEvent, target: EventTarget | null) => {
+        const label = target instanceof HTMLElement ? target.closest<HTMLElement>('[data-scene-node]') : undefined;
+        if (label?.dataset.sceneNode) { onSelect(label.dataset.sceneNode); return; }
+        const rect = renderer.domElement.getBoundingClientRect(); pointer.set((e.clientX - rect.left) / rect.width * 2 - 1, -(e.clientY - rect.top) / rect.height * 2 + 1); ray.setFromCamera(pointer, camera); const hit = ray.intersectObjects(clickable)[0]; if (hit?.object.userData.node)
         onSelect(hit.object.userData.node); };
-    if(!hub) renderer.domElement.addEventListener('pointerdown', onDown);
-    if(!hub) renderer.domElement.addEventListener('pointerup', onClick);
+    if(!hub) navigation = sceneNavigation(host, renderer.domElement, controls, () => {
+        autoFrame = undefined; followed = undefined; options.onManualNavigation?.();
+    }, () => view(isBlock ? 'block' : 'overview'), onClick);
     function frame(points:THREE.Vector3[],top=false) {
         if(!points.length)return;
         autoFrame={points,top};controls.target.copy(fitInspection(camera,points,top));controls.update();render();
     }
     function view(name: string) {
+        autoFrame = undefined;
         if((name==='destination'||name==='route')&&selectedPath.length) {
             const id=selectedPath.at(-1)==='kitchen'?data.orders.find(o=>selectedPath.includes(o.node))?.node:selectedPath.at(-1),home=scenery.homes.find(h=>h.node===id),node=nodes.get(id??'');
             const points=name==='destination'&&node?[to3(node.x,node.y,node.z+10)]:routePoints(data,selectedPath).map(p=>to3(p.x,p.y,p.z+20));
@@ -267,7 +287,7 @@ export function mountScene(host: HTMLElement, data: SceneData, onSelect: (node: 
     function select(path: string[], blocked: string[] = []) {
         release(highlights);highlights.clear();
         if(selected){scene.remove(selected);release(selected);selected=undefined;}
-        for(const item of inspectionLabels.splice(0)){item.el.remove();labels.splice(labels.indexOf(item),1);}
+        for(const item of inspectionLabels.splice(0)){item.el.remove();item.leader.remove();labels.splice(labels.indexOf(item),1);}
         selectedPath=path;
         host.dataset.selectedPath=path.join('>');host.dataset.selectedBuildings=blocked.filter(id=>data.map.buildings.some(b=>b.id===id)).join(',');
         if(isBlock) {
@@ -293,7 +313,7 @@ export function mountScene(host: HTMLElement, data: SceneData, onSelect: (node: 
         if(home) {
             const marker=new THREE.Mesh(new THREE.RingGeometry(23,28,32),new THREE.MeshBasicMaterial({color:'#df258a',side:THREE.DoubleSide,depthTest:false}));
             marker.rotation.x=-Math.PI/2;marker.position.copy(to3(home.x,home.y,home.z+1));marker.renderOrder=10;highlights.add(marker);
-            const el=label(placeName(home.node)+' · destination',home.x,home.y,home.z+home.h+13,home.node,true);inspectionLabels.push(labels.at(-1)!);el.dataset.inspection='destination';
+            const el=label(placeName(home.node)+' · destination',home.x,home.y,home.z+home.h+2,home.node,true);inspectionLabels.push(labels.at(-1)!);el.dataset.inspection='destination';
         }
         const pts=routePoints(data,path).map(n=>to3(n.x,n.y,n.z+23));
         if(pts.length===1)pts.push(pts[0].clone().add(new THREE.Vector3(0,100,0)));
@@ -342,6 +362,7 @@ export function mountScene(host: HTMLElement, data: SceneData, onSelect: (node: 
             }
         });
         fallback.visible=false; scene.add(assets.scenery);
+        assets.scenery.traverse(o => { if ((o as THREE.Mesh).isMesh) occluders.push(o); });
         pads.children.forEach(pad=>{ pad.visible=false; const model=assets.clone('charging_pad'); model.scale.set(40,40,40); model.position.copy(pad.position); scene.add(model); });
         for (const [id,group] of drones) { release(group); group.clear(); const model=assets.clone(data.droneTypes?.[id]==='H'?'drone_H':'drone_L'); model.scale.setScalar(22); group.add(model); }
         host.dataset.models='loaded'; host.dataset.buildings=String(scenery.buildings.length+scenery.houses.length+scenery.homes.length); time(currentTime);
@@ -350,5 +371,5 @@ export function mountScene(host: HTMLElement, data: SceneData, onSelect: (node: 
     layers(!!data.focusNodes,false);
     view(data.focusNodes ? 'block' : data.legOnly || data.orders.length === 2 ? 'corridor' : data.orders.length === 1 && data.orders[0].id === '#07' && host.clientWidth>=500 ? 'mission' : 'overview');
     time(0);
-    return { view, select, time, layers, follow, project, highlightNode, flyTo, onRender(callback: () => void) { afterRender=callback;render(); }, dispose() { disposed=true; cancelAnimationFrame(cameraFrame); finishCamera?.(false); afterRender=undefined; resize.disconnect(); controls.dispose(); renderer.domElement.removeEventListener('pointerdown', onDown); renderer.domElement.removeEventListener('pointerup', onClick); release(scene); if (assetSource) release(assetSource); textures.forEach(t => t.dispose()); renderer.dispose(); renderer.forceContextLoss(); renderer.domElement.remove(); overlay.remove(); } };
+    return { view, select, time, layers, follow, project, highlightNode, flyTo, onRender(callback: () => void) { afterRender=callback;render(); }, dispose() { disposed=true; cancelAnimationFrame(cameraFrame); finishCamera?.(false); afterRender=undefined; resize.disconnect(); navigation?.dispose(); controls.dispose(); release(scene); if (assetSource) release(assetSource); textures.forEach(t => t.dispose()); renderer.dispose(); renderer.forceContextLoss(); renderer.domElement.remove(); overlay.remove(); } };
 }
