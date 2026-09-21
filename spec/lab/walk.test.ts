@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest';
 import { canonical } from '../../src/lab/model';
-import { advance, groundPosition, nearbyTarget, walkTargets, WALK_SPEED } from '../../src/lab/walk/navigation';
+import { advance, coursePosition, groundPosition, nearbyTarget, walkTargets, WALK_SPEED } from '../../src/lab/walk/navigation';
 import { terrainHeight } from '../../src/lab/terrain';
 import { supportsWalking } from '../../src/lab/walk/availability';
 
@@ -38,17 +38,22 @@ it('normalizes diagonal movement and caps resumed-frame distance', () => {
   expect(advance(origin, new Set(['w', 's']), .05, canonical.map).y).toBe(origin.y);
 });
 
-it('opens a nearby canonical destination and derives corridor and pad positions from the map', () => {
-  const targets = walkTargets(canonical.map), kitchen = canonical.map.nodes.find(node => node.id === canonical.map.kitchen)!;
-  expect(targets).toHaveLength(18);
-  expect(nearbyTarget(targets[1].position, targets)?.week).toBe(2);
-  expect(nearbyTarget(targets[2].position, targets)?.week).toBe(3);
-  expect(nearbyTarget({ x: 1900, y: 100 }, targets)).toBeUndefined();
-  const corridor = canonical.map.edges.find(edge => edge.resource === 'corridor')!;
-  const a = canonical.map.nodes.find(node => node.id === corridor.from)!, b = canonical.map.nodes.find(node => node.id === corridor.to)!;
-  expect((targets[8].position.x + targets[9].position.x) / 2).toBe((a.x + b.x) / 2);
-  expect(targets[8].position.y).toBe((a.y + b.y) / 2);
-  expect(targets[6].position.x).toBe(kitchen.x + 50);
-  expect(targets[7].position.x).toBe(kitchen.x + 98);
-  expect(nearbyTarget(targets[3].position, targets)?.week).toBe(4);
+it('places twelve weeks progressively uphill and keeps only two assignment milestones', () => {
+  const targets = walkTargets(canonical.map), weeks = targets.filter(target => target.week);
+  expect(targets).toHaveLength(14);
+  expect(weeks.map(target => target.week)).toEqual(Array.from({ length: 12 }, (_, i) => i + 1));
+  expect(targets.slice(12).map(target => target.href)).toEqual(['/assessments/assignment-1/', '/assessments/assignment-2/']);
+  for (let i = 1; i < weeks.length; i++) expect(weeks[i].position.z).toBeGreaterThan(weeks[i - 1].position.z);
+  const kitchen = canonical.map.nodes.find(node => node.id === canonical.map.kitchen)!;
+  expect(weeks[0].position.x).toBeCloseTo(kitchen.x);
+  expect(weeks[0].position.y).toBeCloseTo(kitchen.y);
+  expect(weeks[11].position.x).toBe(canonical.map.world.summit[0]);
+  expect(weeks[11].position.y).toBe(canonical.map.world.summit[1]);
+  for (const target of targets) expect(nearbyTarget(target.position, targets)).toBe(target);
+  for (let i = 0; i <= 100; i++) {
+    const point = coursePosition(canonical.map, i / 100);
+    expect(point.z).toBe(terrainHeight(point.x, point.y));
+    expect(point.x).toBeGreaterThan(0); expect(point.x).toBeLessThan(canonical.map.world.width);
+    expect(point.y).toBeGreaterThan(0); expect(point.y).toBeLessThan(canonical.map.world.height);
+  }
 });

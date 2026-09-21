@@ -1,38 +1,68 @@
 ---
 import ContentLayout from 'astro-theme-university/layouts/ContentLayout.astro';
+import { getPublishedCollection } from 'astro-course-university/content';
 import { withBase } from 'astro-theme-university/url';
 import { siteConfig } from '../../site-config';
-import { stops, signs } from '../../data/hill-stops';
+import { stops } from '../../data/hill-stops';
 import map from '../../data/map.json';
 import orders from '../../data/orders.json';
 import '../../lab/walk/walk.css';
+const [lectures, tutorials, assessments] = await Promise.all([
+  getPublishedCollection('lectures'), getPublishedCollection('sessions'), getPublishedCollection('assessments'),
+]);
+const courses = stops.map(stop => {
+  const lecture = lectures.find(entry => entry.data.week === stop.week)!;
+  const tutorial = tutorials.find(entry => entry.data.week === stop.week)!;
+  return { week: stop.week, stage: stop.stage, title: lecture.data.title, description: lecture.data.description,
+    lecture: withBase(`/lectures/${lecture.id}/`), tutorial: withBase(`/sessions/${tutorial.id}/`), lab: withBase(`/lab/#lab-w${stop.week}`) };
+});
+const projects = [1, 2].map(n => assessments.find(entry => entry.id === `assignment-${n}`)!);
+const stages = [['route', 'W1–3', 'Find a route'], ['energy', 'W4', 'Bring it home'], ['order', 'W5–6', 'Plan the orders'], ['fleet', 'W7–8', 'Share the work'], ['corridor', 'W9–12', 'Fly together']];
 const scene = { map, orders: orders.orders, events: [], routes: [], pads: 2 };
 ---
 <ContentLayout title="Walk the hill" {...siteConfig}>
   <div class="hill-walk-page" data-walk-root data-walk-ready="false">
-    <p class="walk-intro">Twelve weeks, one evening: each stop is where that week's case happens. W A S D to walk, Enter to open.</p>
-    <p class="walk-mobile-note">Walking is for a desktop browser; the list below goes to the same places. Use a window at least 900 px wide with a mouse or trackpad to see the 3D scene.</p>
+    <p class="walk-intro">From your first route at the kitchen to twenty dinners at the summit. Follow twelve weeks uphill; choose a stop to enter its lecture, tutorial or lab.</p>
+    <p class="walk-mobile-note">The list below follows the same course trail. On a desktop with a mouse or trackpad, widen the window to at least 900 px to explore the hill.</p>
     <div class="walk-shell">
-      <div class="walk-surface" data-walk-surface tabindex="0" role="region" aria-label="Walk around Slop Hill" aria-describedby="walk-keyboard-help" aria-keyshortcuts="W A S D ArrowUp ArrowLeft ArrowDown ArrowRight Enter">
+      <div class="walk-toolbar"><span>Kitchen <span aria-hidden="true">↗</span> Summit · twelve weeks</span><button type="button" data-walk-overview>View whole hill</button></div>
+      <div class="walk-surface" data-walk-surface tabindex="0" role="region" aria-label="Course trail up Slop Hill" aria-describedby="walk-keyboard-help" aria-keyshortcuts="W A S D ArrowUp ArrowLeft ArrowDown ArrowRight Enter">
         <div class="walk-scene" data-walk-scene></div>
-        <nav class="walk-stops" aria-label="Stops on Slop Hill">
-          {stops.map(stop => <a hidden class="walk-stop" data-walk-stop data-stage={stop.stage} href={withBase(stop.href)} aria-label={`Week ${stop.week} · ${stop.title}`}>W{stop.week} · {stop.title}<span class="walk-leader" data-walk-leader aria-hidden="true"></span></a>)}
-          {signs.map(sign => <a hidden class="walk-stop" data-walk-stop href={withBase(sign.href)}>{sign.section} →<span class="walk-leader" data-walk-leader aria-hidden="true"></span></a>)}
+        <nav class="walk-stops" aria-label="Course stops">
+          {courses.map(course => <a hidden class="walk-stop" data-walk-stop data-stage={course.stage} href={`#week-${course.week}`} aria-label={`Enter Week ${course.week}: ${course.title}`}>W{course.week}<span class="walk-leader" data-walk-leader aria-hidden="true"></span></a>)}
+          {projects.map((project, i) => <a hidden class="walk-stop walk-assignment" data-walk-stop data-stage={i === 0 ? 'order' : 'corridor'} href={withBase(`/assessments/${project.id}/`)} aria-label={`Assignment ${i + 1}, ${project.data.weight}%`}>A{i + 1} · {project.data.weight}%<span class="walk-leader" data-walk-leader aria-hidden="true"></span></a>)}
         </nav>
-        <div class="walk-readout">
-          <p data-walk-prompt aria-live="polite">Enter: open Week 2 · Kitchen · Dijkstra</p>
-          <p id="walk-keyboard-help" data-walk-status>Click the hill or Tab to it, then use W A S D or the arrow keys.</p>
-        </div>
+        <div class="walk-readout"><p data-walk-prompt aria-live="polite">Choose W1 to begin at the kitchen.</p><p id="walk-keyboard-help" data-walk-status>Click a stop, or focus the hill and walk with W A S D. Enter opens the nearby stop.</p></div>
       </div>
+      <ol class="walk-stages" aria-label="Five stages up the hill">{stages.map(([stage, weeks, title]) => <li data-stage={stage}><strong>{weeks}</strong><span>{title}</span></li>)}</ol>
     </div>
+    <dialog class="walk-portal" data-walk-portal aria-labelledby="walk-portal-title">
+      <button type="button" class="walk-back" data-walk-close>← Back to the hill</button>
+      <p class="walk-portal-week" data-portal-week>Week 1 of 12</p>
+      <h2 id="walk-portal-title" tabindex="-1">{courses[0].title}</h2>
+      <p data-portal-description>{courses[0].description}</p>
+      <nav class="walk-portal-links" aria-label="Enter this week">
+        <a href={courses[0].lecture} data-portal-link="lecture"><strong>Lecture <span aria-hidden="true">↗</span></strong><span>Understand the idea</span></a>
+        <a href={courses[0].tutorial} data-portal-link="tutorial"><strong>Tutorial <span aria-hidden="true">↗</span></strong><span>Try it and explain it</span></a>
+        <a href={courses[0].lab} data-portal-link="lab"><strong>Lab <span aria-hidden="true">↗</span></strong><span>Explore this week's experiment</span></a>
+      </nav>
+      <p class="walk-departure" data-walk-departure role="status"></p>
+    </dialog>
     <section class="hill-as-list" aria-labelledby="hill-list-title">
       <h2 id="hill-list-title">The hill as a list</h2>
+      <p>Choose a week, then a lecture, tutorial or lab. The assignments bring each half of the course together.</p>
       <ol class="walk-list">
-        {stops.map(stop => <li data-stage={stop.stage}><a href={withBase(stop.href)}><strong>W{stop.week}</strong><span>{stop.title}</span></a></li>)}
-        {signs.map(sign => <li class="walk-section"><a href={withBase(sign.href)}>{sign.section} →</a></li>)}
+        {courses.map(course => <li data-stage={course.stage} id={`week-${course.week}`}>
+          <details><summary><strong>W{course.week}</strong><span>{course.title}</span></summary>
+            <nav aria-label={`Week ${course.week} resources`}><a href={course.lecture}>Lecture →</a><a href={course.tutorial}>Tutorial →</a><a href={course.lab}>Lab →</a></nav>
+          </details>
+          {course.week === 6 && <a class="walk-milestone" href={withBase('/assessments/assignment-1/')}><strong>Assignment 1 · {projects[0].data.weight}%</strong><span>Bring routes, energy and ordering together →</span></a>}
+          {course.week === 12 && <a class="walk-milestone" href={withBase('/assessments/assignment-2/')}><strong>Assignment 2 · {projects[1].data.weight}%</strong><span>Bring the whole fleet together →</span></a>}
+        </li>)}
       </ol>
     </section>
     <script is:inline type="application/json" data-walk-data set:html={JSON.stringify(scene).replace(/</g, '\u003c')} />
+    <script is:inline type="application/json" data-walk-courses set:html={JSON.stringify(courses).replace(/</g, '\u003c')} />
   </div>
 </ContentLayout>
 <script>

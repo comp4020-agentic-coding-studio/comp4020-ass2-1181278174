@@ -1,10 +1,10 @@
 import type { MapData } from '../../data/schema';
-import { stops, signs } from '../../data/hill-stops';
+import { stops } from '../../data/hill-stops';
 import { terrainHeight } from '../terrain';
 
 export interface Position { x: number; y: number }
 export const WALK_SPEED = 170;
-export const OPEN_RADIUS = 210;
+export const OPEN_RADIUS = 100;
 export const groundPosition = (point: Position) => ({ ...point, z: terrainHeight(point.x, point.y) });
 
 /** Diagonals cover the same distance as straight walking; map edges are hard limits. */
@@ -16,24 +16,25 @@ export function advance(position: Position, keys: ReadonlySet<string>, seconds: 
   return groundPosition({ x: clamp(position.x + x / length * distance, map.world.width), y: clamp(position.y + y / length * distance, map.world.height) });
 }
 
-/** Canonical places define the stops; two weeks at one place stand side by side. */
+/** A course trail climbs the existing hill; it is not a delivery route. */
+export function coursePosition(map: MapData, progress: number) {
+  const kitchen = map.nodes.find(node => node.id === map.kitchen)!;
+  const [sx, sy] = map.world.summit, t = Math.max(0, Math.min(1, progress));
+  const radius = Math.hypot(kitchen.x - sx, kitchen.y - sy) * (1 - t);
+  const angle = Math.atan2(kitchen.y - sy, kitchen.x - sx) + Math.sin(t * Math.PI * 3) * .24;
+  return groundPosition({ x: sx + radius * Math.cos(angle), y: sy + radius * Math.sin(angle) });
+}
+
 export function walkTargets(map: MapData) {
-  const nodes = new Map(map.nodes.map(node => [node.id, node]));
-  const corridor = map.edges.find(edge => edge.resource === 'corridor')!;
-  const a = nodes.get(corridor.from)!, b = nodes.get(corridor.to)!;
   return [
-    ...stops.map(stop => {
-      const node = nodes.get(stop.node)!;
-      const place = stop.week === 9 || stop.week === 10 ? { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }
-        : stop.week === 7 || stop.week === 8 ? { x: node.x + 50 + (stop.week - 7) * 48, y: node.y } : node;
-      const pair = [[2, 3], [4, 12], [5, 6], [9, 10]].find(weeks => weeks.includes(stop.week));
-      const point = { x: place.x + (pair ? pair[0] === stop.week ? -30 : 30 : 0), y: place.y };
-      return { ...stop, key: `week-${stop.week}`, label: `Week ${stop.week} · ${stop.title}`, position: groundPosition(point) };
-    }),
-    ...signs.map((sign, index) => {
-      const kitchen = nodes.get(sign.node)!;
-      return { ...sign, key: `section-${index}`, label: sign.section, week: 0, stage: 'route' as const, title: sign.section,
-        position: groundPosition({ x: kitchen.x + (index - 2.5) * 34, y: kitchen.y - 90 }) };
+    ...stops.map(stop => ({ ...stop, key: `week-${stop.week}`, label: `Week ${stop.week}`,
+      position: coursePosition(map, (stop.week - 1) / 11) })),
+    ...([1, 2] as const).map(assignment => {
+      const point = coursePosition(map, assignment === 1 ? .5 : 1);
+      return { key: `assignment-${assignment}`, week: 0, node: map.kitchen,
+        title: `Assignment ${assignment}`, label: `Assignment ${assignment}`,
+        stage: assignment === 1 ? 'order' as const : 'corridor' as const,
+        href: `/assessments/assignment-${assignment}/`, position: groundPosition({ x: point.x + 105, y: point.y - 25 }) };
     }),
   ];
 }
