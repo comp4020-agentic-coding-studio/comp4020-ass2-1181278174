@@ -22,10 +22,14 @@ const weeks = [
   [home('#13'), '#13 across the corridor', 'w11-routes-changed'],
   [home('#07'), 'Hilltop · twenty dinners', 'w12-twenty-dinners'],
 ];
-export const hillStops = weeks.map(([node, title, slug], i) => ({
+export const stops = weeks.map(([node, title, slug], i) => ({
   week: i + 1, node, stage: stageForWeek(i + 1), title, href: `/sessions/${slug}/`,
 }));
-export const hillSections = [
+export const signs = [
   ['Lectures', '/lectures/'], ['Tutorials', '/sessions/'], ['Assessment', '/assessments/'],
   ['People', '/people/'], ['Policies', '/policies/'], ['Lab', '/lab/'],
 ].map(([section, href]) => ({ section, node: map.kitchen, href }));
+
+// Keep the existing course components on the same shared contract.
+export const hillStops = stops;
+export const hillSections = signs;
