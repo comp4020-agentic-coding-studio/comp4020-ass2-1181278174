@@ -3,6 +3,7 @@ import type { SceneData } from '../model';
 import { advance, groundPosition, nearbyTarget, walkTargets } from './navigation';
 import type { createWalkScene } from './scene';
 import { supportsWalking } from './availability';
+import { createHoverEntry, HOVER_RADIUS } from './hover-entry';
 
 interface CourseWeek { week: number; stage: string; title: string; description: string; lecture: string; tutorial: string; lab: string }
 
@@ -32,6 +33,7 @@ export function mountWalk(root: HTMLElement) {
   let scene: ReturnType<typeof createWalkScene> | undefined, position = groundPosition(kitchen);
   let frame = 0, last = 0, generation = 0, loading = false, near = nearbyTarget(position, targets);
   let hovered: typeof near;
+  const hoverEntry = createHoverEntry();
   const moveKeys = new Set(['w', 'a', 's', 'd', 'arrowup', 'arrowleft', 'arrowdown', 'arrowright']);
 
   function project() {
@@ -71,10 +73,14 @@ export function mountWalk(root: HTMLElement) {
     if (hint.textContent !== prompt) hint.textContent = prompt;
     scene?.highlight(hovered ?? near);
   }
-  function stop() { keys.clear(); cancelAnimationFrame(frame); frame = 0; last = 0; }
+  function stop() {
+    keys.clear(); cancelAnimationFrame(frame); frame = 0; last = 0;
+    hoverEntry.cancel(); delete host.dataset.dwelling;
+    if (scene) update();
+  }
   function instruction() {
     status.textContent = reduced.matches ? 'Motion is reduced. Choose a stop or use the list.'
-      : document.activeElement === surface ? 'W A S D or arrows: fly. Enter: open the nearby stop.'
+      : document.activeElement === surface ? 'W A S D or arrows: fly. Hover over a week for 2 seconds to open it, or press Enter.'
       : 'Click the hill or Tab to it, then use W A S D or the arrow keys.';
   }
   function tick(now: number) {
@@ -82,11 +88,20 @@ export function mountWalk(root: HTMLElement) {
     const seconds = last ? Math.min((now - last) / 1000, .05) : 1 / 60; last = now;
     if (keys.size) { position = advance(position, keys, seconds, data.map); update(); }
     const following = scene.move(position, seconds);
-    frame = keys.size || following ? requestAnimationFrame(tick) : 0;
+    const week = near?.week && Math.hypot(position.x - near.position.x, position.y - near.position.y) <= HOVER_RADIUS ? near.week : undefined;
+    const dwell = hoverEntry.update(week, !keys.size && document.activeElement === surface && !portal.open, now);
+    if (dwell.open) { void select(targets.findIndex(target => target.week === dwell.open), surface, true); return; }
+    if (dwell.remaining) {
+      host.dataset.dwelling = String(week);
+      const prompt = `Opening Week ${week} in ${Math.ceil(dwell.remaining / 1000)}s… Fly away to cancel.`;
+      if (hint.textContent !== prompt) hint.textContent = prompt;
+    } else { delete host.dataset.dwelling; update(); }
+    frame = keys.size || following || dwell.remaining ? requestAnimationFrame(tick) : 0;
     if (!frame) last = 0;
   }
   function release() {
     generation++; transition++; pendingHref = ''; stop(); scene?.dispose(); scene = undefined; loading = false;
+    hoverEntry.reset();
     hovered = undefined; nextButton.disabled = false; portal.close(); delete portal.dataset.leaving; delete root.dataset.walkTransition;
     root.dataset.walkReady = 'false'; anchors.forEach(anchor => { anchor.hidden = true; });
     host.dataset.state = 'list';
@@ -109,9 +124,10 @@ export function mountWalk(root: HTMLElement) {
     finally { if (current === generation) loading = false; }
   }
   const ordinaryClick = (event: MouseEvent) => !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey && event.button === 0;
-  async function select(index: number, trigger?: HTMLElement) {
+  async function select(index: number, trigger?: HTMLElement, arrived = false) {
     if (!scene) return;
     if (!targets[index].week) { await depart(anchors[index].href, index); return; }
+    hoverEntry.dismiss(targets[index].week);
     stop(); const current = ++transition; selected = index; returnFocus = trigger;
     scene.highlight(targets[index]);
     const course = courses.find(course => course.week === targets[index].week)!;
@@ -125,7 +141,7 @@ export function mountWalk(root: HTMLElement) {
     root.dataset.walkTransition = 'approach'; nextButton.disabled = true;
     hint.textContent = `Flying to Week ${course.week}…`;
     journey.textContent = `Kitchen → Summit · flying to Week ${course.week}`;
-    const completed = reduced.matches ? true : await scene.visit(targets[index].position);
+    const completed = arrived || reduced.matches ? true : await scene.visit(targets[index].position);
     if (!completed || current !== transition || signal.aborted) return;
     delete root.dataset.walkTransition; nextButton.disabled = false;
     position = scene.position();
@@ -143,7 +159,7 @@ export function mountWalk(root: HTMLElement) {
     let completed = true;
     if (scene && !reduced.matches) {
       if (!targets[index].week) completed = await scene.visit(targets[index].position);
-      if (completed && current === transition) completed = await scene.visit(targets[index].position, 950, true);
+      if (completed && current === transition) completed = await scene.visit(scene.position(), 950, true);
     }
     if (completed && current === transition && !signal.aborted) void navigate(href);
   }
