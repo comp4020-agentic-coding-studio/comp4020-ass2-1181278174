@@ -11,16 +11,19 @@ const tutorials = signs.find(sign => sign.section === 'Tutorials')!.href;
 
 <div class="home-opening" data-home-opening>
   <section class="home-opening-frame" aria-labelledby="home-title">
-    <img
-      class="home-opening-poster"
-      src={heroImage.src}
-      width={heroImage.width}
-      height={heroImage.height}
-      alt="Slop Hill at dusk, with the kitchen below, homes along the hillside and a narrow passage between two towers."
-      fetchpriority="high"
-      decoding="async"
-    />
+    <div class="home-opening-landscape">
+      <img
+        class="home-opening-poster"
+        src={heroImage.src}
+        width={heroImage.width}
+        height={heroImage.height}
+        alt="Slop Hill at dusk, with the kitchen below, homes along the hillside and a narrow passage between two towers."
+        fetchpriority="high"
+        decoding="async"
+      />
+    </div>
     <div class="home-opening-shade" aria-hidden="true"></div>
+    <div class="home-opening-dimmer" aria-hidden="true"></div>
     <div class="home-opening-copy">
       <p class="home-opening-eyebrow">{courseMeta.code} · {courseMeta.title}</p>
       <h1 id="home-title">{courseMeta.title}</h1>
@@ -43,27 +46,49 @@ const tutorials = signs.find(sign => sign.section === 'Tutorials')!.href;
   function mountOpening() {
     disposeOpening();
     disposeOpening = () => {};
-    const frame = document.querySelector<HTMLElement>('[data-home-opening] .home-opening-frame');
+    const opening = document.querySelector<HTMLElement>('[data-home-opening]');
+    const frame = opening?.querySelector<HTMLElement>('.home-opening-frame');
     const poster = frame?.querySelector<HTMLImageElement>('.home-opening-poster');
-    if (!frame || !poster) return;
+    if (!opening || !frame || !poster) return;
 
-    const allowed = matchMedia('(min-width: 900px) and (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference)');
-    const reset = () => poster.style.removeProperty('transform');
-    const move = (event: PointerEvent) => {
-      if (!allowed.matches || event.pointerType !== 'mouse') return;
-      const bounds = frame.getBoundingClientRect();
-      const x = Math.max(-1, Math.min(1, (event.clientX - bounds.left) / bounds.width * 2 - 1));
-      const y = Math.max(-1, Math.min(1, (event.clientY - bounds.top) / bounds.height * 2 - 1));
-      poster.style.transform = `perspective(1200px) scale(1.05) rotateX(${-y * 2.5}deg) rotateY(${x * 2.5}deg)`;
+    opening.dataset.homeEnhanced = '';
+    const allowed = matchMedia('(min-width: 900px) and (any-pointer: fine) and (prefers-reduced-motion: no-preference)');
+    const abort = new AbortController();
+    const { signal } = abort;
+    let pending = 0, visible = true, x = 0, y = 0;
+    const reset = () => {
+      cancelAnimationFrame(pending);
+      pending = 0;
+      poster.style.removeProperty('transform');
     };
-    frame.addEventListener('pointermove', move);
-    frame.addEventListener('pointerleave', reset);
-    allowed.addEventListener('change', reset);
+    const move = (event: PointerEvent) => {
+      if (!visible || !allowed.matches || event.pointerType !== 'mouse') return;
+      x = (event.clientX / innerWidth * 2 - 1) * -12;
+      y = (event.clientY / innerHeight * 2 - 1) * -8;
+      if (!pending) pending = requestAnimationFrame(() => {
+        poster.style.transform = `translate3d(${x}px, ${y}px, 0) scale(1.035)`;
+        pending = 0;
+      });
+    };
+    const observer = new IntersectionObserver(([entry]) => {
+      visible = entry.isIntersecting;
+      if (!visible) reset();
+    });
+    observer.observe(frame);
+    frame.addEventListener('pointermove', move, { signal, passive: true });
+    frame.addEventListener('pointerleave', reset, { signal });
+    frame.addEventListener('focusin', event => {
+      if ((event.target as HTMLElement).matches(':focus-visible') && scrollY > 0) {
+        opening.scrollIntoView({ block: 'start', behavior: 'instant' });
+      }
+    }, { signal });
+    allowed.addEventListener('change', reset, { signal });
+    document.addEventListener('visibilitychange', () => { if (document.hidden) reset(); }, { signal });
     disposeOpening = () => {
-      frame.removeEventListener('pointermove', move);
-      frame.removeEventListener('pointerleave', reset);
-      allowed.removeEventListener('change', reset);
+      abort.abort();
+      observer.disconnect();
       reset();
+      delete opening.dataset.homeEnhanced;
     };
   }
 
