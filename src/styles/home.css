@@ -129,6 +129,10 @@
 .course-tags { display: flex; flex-wrap: wrap; gap: .5rem; margin-block: 1.5rem; padding: 0; list-style: none; }
 .course-tags li { margin: 0; padding: .25rem .65rem; border-radius: 999px; color: var(--at-text-secondary); background: var(--at-bg-alt); font-size: .9rem; }
 
+@media (min-width: 900px) and (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .home-opening-poster { transition: transform 200ms ease-out; }
+}
+
 @supports (animation-timeline: scroll(root)) {
   @media (min-width: 900px) and (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
     .home-opening { height: 150dvh; margin-bottom: -30dvh; }

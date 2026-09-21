@@ -36,3 +36,41 @@ const tutorials = signs.find(sign => sign.section === 'Tutorials')!.href;
     <p class="home-opening-scroll-hint" aria-hidden="true"><span>↓</span> Scroll</p>
   </section>
 </div>
+
+<script>
+  let disposeOpening = () => {};
+
+  function mountOpening() {
+    disposeOpening();
+    disposeOpening = () => {};
+    const frame = document.querySelector<HTMLElement>('[data-home-opening] .home-opening-frame');
+    const poster = frame?.querySelector<HTMLImageElement>('.home-opening-poster');
+    if (!frame || !poster) return;
+
+    const allowed = matchMedia('(min-width: 900px) and (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference)');
+    const reset = () => poster.style.removeProperty('transform');
+    const move = (event: PointerEvent) => {
+      if (!allowed.matches || event.pointerType !== 'mouse') return;
+      const bounds = frame.getBoundingClientRect();
+      const x = Math.max(-1, Math.min(1, (event.clientX - bounds.left) / bounds.width * 2 - 1));
+      const y = Math.max(-1, Math.min(1, (event.clientY - bounds.top) / bounds.height * 2 - 1));
+      poster.style.transform = `perspective(1200px) scale(1.05) rotateX(${-y * 2.5}deg) rotateY(${x * 2.5}deg)`;
+    };
+    frame.addEventListener('pointermove', move);
+    frame.addEventListener('pointerleave', reset);
+    allowed.addEventListener('change', reset);
+    disposeOpening = () => {
+      frame.removeEventListener('pointermove', move);
+      frame.removeEventListener('pointerleave', reset);
+      allowed.removeEventListener('change', reset);
+      reset();
+    };
+  }
+
+  document.addEventListener('astro:page-load', mountOpening);
+  document.addEventListener('astro:before-swap', () => {
+    disposeOpening();
+    disposeOpening = () => {};
+  });
+  mountOpening();
+</script>
