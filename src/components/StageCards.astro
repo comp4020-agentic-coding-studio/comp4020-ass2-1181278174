@@ -1,0 +1,62 @@
+---
+// The lectures and the tutorials as cards, one per week, grouped under the
+// five stages. Each index lists only its own kind; the semester as a whole
+// is on the home page.
+import { getPublishedCollection } from "astro-course-university/content";
+import Card from "astro-theme-university/components/Card.astro";
+import CardGrid from "astro-theme-university/components/CardGrid.astro";
+import { withBase } from "astro-theme-university/url";
+import { stageForWeek } from "../data/hill-stops";
+import { formatCourseDate } from "../lib/dates";
+import { stages } from "../workbench/learning";
+
+interface Props {
+  kind: "lectures" | "sessions";
+}
+const { kind } = Astro.props;
+const entries = (await getPublishedCollection(kind)).sort((a, b) => a.data.week - b.data.week);
+const slidesOf = (e: (typeof entries)[number]) => (e.data as { slides?: string }).slides;
+const groups = stages.map((stage) => ({
+  stage,
+  key: stageForWeek(stage.start),
+  weeks: entries.filter((e) => e.data.week >= stage.start && e.data.week <= stage.end),
+}));
+---
+
+<div class="stage-cards">
+  {groups.map(({ stage, key, weeks }) => (
+      <section class="stage-group" data-stage={key} aria-labelledby={`stage-${key}-${kind}`}>
+        <h2 class="stage-banner" id={`stage-${key}-${kind}`}>
+          <span class="stage-banner__title">{stage.title}</span>
+          <span class="stage-banner__weeks">{stage.start === stage.end ? `Week ${stage.start}` : `Weeks ${stage.start}–${stage.end}`}</span>
+        </h2>
+        <p class="stage-outcome">{stage.outcome}</p>
+        <CardGrid columns={2}>
+          {weeks.map((e) => (
+            <Card title={`Week ${e.data.week}: ${e.data.title}`} headingLevel="h3">
+              <p class="stage-card__meta"><span class="stage-card__stage">{stage.title}</span> · {formatCourseDate(e.data.date)}</p>
+              <p class="stage-card__text">{e.data.description}</p>
+              <p class="stage-card__links">
+                <a href={withBase(`/${kind}/${e.id}/`)}>{kind === "lectures" ? "Read the lecture" : "Open the tutorial"}</a>
+                {kind === "lectures" && slidesOf(e) && <a href={withBase(slidesOf(e)!)}>Slides</a>}
+                {kind === "sessions" && <a class="stage-card__lab" href={withBase(`/lab/#lab-w${e.data.week}`)}>Open in the Lab →</a>}
+              </p>
+            </Card>
+          ))}
+        </CardGrid>
+      </section>
+  ))}
+</div>
+
+<style>
+  .stage-group { margin-block: 2rem 2.5rem; }
+  .stage-banner { display: flex; align-items: baseline; gap: 0.9rem; margin: 0 0 0.4rem; padding: 0.7rem 1.1rem; border-radius: 0.6rem; border-left: 6px solid var(--stage-color); background: color-mix(in srgb, var(--stage-color) 14%, transparent); color: var(--stage-color); font-size: 1.6rem; }
+  .stage-banner__weeks { font-size: 1rem; font-weight: 500; color: var(--at-text-secondary, #6b6154); }
+  .stage-outcome { margin: 0 0 1rem 1.1rem; color: var(--at-text-secondary, #6b6154); }
+  .stage-card__meta { margin: 0 0 0.5rem; font-size: 0.85rem; color: var(--at-text-secondary, #6b6154); }
+  .stage-card__stage { color: var(--stage-color); font-weight: 600; }
+  .stage-card__text { margin: 0 0 0.75rem; }
+  .stage-card__links { display: flex; flex-wrap: wrap; gap: 0.4rem 1.2rem; margin: 0; font-weight: 600; }
+  .stage-card__lab { color: var(--at-primary, #b97d1c); }
+  @media (max-width: 600px) { .stage-banner { font-size: 1.25rem; flex-direction: column; gap: 0.15rem; } }
+</style>
