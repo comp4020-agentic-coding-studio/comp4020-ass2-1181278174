@@ -4,7 +4,9 @@ import { advance, groundPosition, nearbyTarget, walkTargets } from './navigation
 import type { createWalkScene } from './scene';
 
 export function mountWalk(root: HTMLElement) {
-  const desktop = matchMedia('(min-width: 900px) and (hover: hover) and (pointer: fine)');
+  const desktop = matchMedia('(min-width: 900px)');
+  const touch = matchMedia('(any-pointer: coarse)');
+  const canWalk = () => desktop.matches && !touch.matches && navigator.maxTouchPoints === 0;
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
   const surface = root.querySelector<HTMLElement>('[data-walk-surface]')!;
   const host = root.querySelector<HTMLElement>('[data-walk-scene]')!;
@@ -73,13 +75,13 @@ export function mountWalk(root: HTMLElement) {
     host.dataset.state = 'list';
   }
   async function ensure() {
-    root.dataset.walkMobile = String(!desktop.matches || navigator.maxTouchPoints > 0);
-    if (!desktop.matches || navigator.maxTouchPoints > 0) { release(); return; }
+    root.dataset.walkMobile = String(!canWalk());
+    if (!canWalk()) { release(); return; }
     if (scene || loading || signal.aborted) return;
     loading = true; const current = ++generation;
     try {
       const { createWalkScene } = await import('./scene');
-      if (current !== generation || signal.aborted || !desktop.matches || navigator.maxTouchPoints > 0) return;
+      if (current !== generation || signal.aborted || !canWalk()) return;
       root.dataset.walkReady = 'true';
       scene = createWalkScene(host, data, project);
       host.dataset.state = reduced.matches ? 'still' : 'walking';
@@ -114,6 +116,7 @@ export function mountWalk(root: HTMLElement) {
   document.addEventListener('visibilitychange', () => { if (document.hidden) stop(); }, { signal });
   window.addEventListener('blur', stop, { signal });
   desktop.addEventListener('change', () => { void ensure(); }, { signal });
+  touch.addEventListener('change', () => { void ensure(); }, { signal });
   reduced.addEventListener('change', () => {
     stop(); position = groundPosition(kitchen); scene?.move(position, 0, true); update();
     host.dataset.state = reduced.matches ? 'still' : 'walking';

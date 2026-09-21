@@ -27,7 +27,7 @@ body:has(.hill-walk-page) { --at-content-width: 84rem; }
 .walk-list a:hover { background: var(--at-bg-alt); text-decoration: underline; }
 .walk-list strong { color: var(--stage-color,var(--at-text)); white-space: nowrap; }
 .walk-list .walk-section a { border-top: 1px solid var(--at-border); }
-@media(max-width:899px), (hover:none), (pointer:coarse), (any-pointer:coarse) {
+@media(max-width:899px), (any-pointer:coarse) {
   .walk-intro, [data-walk-ready="true"] .walk-shell { display: none; }
   .walk-mobile-note { display: block; }
   .walk-list { grid-template-columns: 1fr; gap: .25rem; }
