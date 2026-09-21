@@ -1,0 +1,103 @@
+import { navigate } from 'astro:transitions/client';
+import type { SceneData } from '../model';
+import { advance, groundPosition, nearbyTarget, walkTargets } from './navigation';
+import type { createWalkScene } from './scene';
+
+export function mountWalk(root: HTMLElement) {
+  const desktop = matchMedia('(min-width: 900px) and (hover: hover) and (pointer: fine)');
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+  const surface = root.querySelector<HTMLElement>('[data-walk-surface]')!;
+  const host = root.querySelector<HTMLElement>('[data-walk-scene]')!;
+  const anchors = Array.from(root.querySelectorAll<HTMLAnchorElement>('[data-walk-stop]'));
+  const hint = root.querySelector<HTMLElement>('[data-walk-prompt]')!;
+  const status = root.querySelector<HTMLElement>('[data-walk-status]')!;
+  const data: SceneData = JSON.parse(root.querySelector('[data-walk-data]')!.textContent!);
+  const targets = walkTargets(data.map), kitchen = data.map.nodes.find(node => node.id === data.map.kitchen)!;
+  const abort = new AbortController(), { signal } = abort, keys = new Set<string>();
+  let scene: ReturnType<typeof createWalkScene> | undefined, position = groundPosition(kitchen);
+  let frame = 0, last = 0, generation = 0, loading = false, near = nearbyTarget(position, targets);
+  const moveKeys = new Set(['w', 'a', 's', 'd', 'arrowup', 'arrowleft', 'arrowdown', 'arrowright']);
+
+  function project() {
+    if (!scene) return;
+    const occupied: { x: number; y: number; width: number; height: number }[] = [];
+    for (const [index, anchor] of anchors.entries()) {
+      const target = targets[index], point = scene.project(target.position);
+      anchor.hidden = !point;
+      if (!point) continue;
+      const width = anchor.offsetWidth, height = anchor.offsetHeight;
+      const x = Math.max(8, Math.min(host.clientWidth - width - 8, point.x - width / 2));
+      let y = point.y - height - 12, fits = false;
+      for (let attempt = 0; attempt < 8; attempt++) {
+        y = point.y - height - 12 - Math.ceil(attempt / 2) * (height + 7) * (attempt % 2 ? 1 : -1);
+        if (y < 8 || y + height > host.clientHeight - 70) continue;
+        if (!occupied.some(box => x < box.x + box.width + 5 && x + width + 5 > box.x && y < box.y + box.height + 5 && y + height + 5 > box.y)) { fits = true; break; }
+      }
+      anchor.hidden = !fits;
+      if (!fits) continue;
+      occupied.push({ x, y, width, height });
+      anchor.style.left = x + 'px'; anchor.style.top = y + 'px';
+      const line = anchor.querySelector<HTMLElement>('[data-walk-leader]')!;
+      const dx = point.x - x - width / 2, dy = point.y - y - height;
+      line.style.width = Math.hypot(dx, dy) + 'px'; line.style.transform = `rotate(${Math.atan2(dy, dx)}rad)`;
+    }
+  }
+  function update() {
+    near = nearbyTarget(position, targets, near);
+    const index = targets.indexOf(near!);
+    anchors.forEach((anchor, i) => { anchor.dataset.near = String(i === index); });
+    hint.textContent = near ? `Enter: open ${near.label}` : 'Walk towards a stop to open its week.';
+    host.dataset.x = position.x.toFixed(2); host.dataset.y = position.y.toFixed(2); host.dataset.elevation = position.z.toFixed(3);
+  }
+  function stop() { keys.clear(); cancelAnimationFrame(frame); frame = 0; last = 0; }
+  function tick(now: number) {
+    if (!scene || reduced.matches || document.hidden) { stop(); return; }
+    const seconds = last ? Math.min((now - last) / 1000, .05) : 1 / 60; last = now;
+    if (keys.size) { position = advance(position, keys, seconds, data.map); update(); }
+    const following = scene.move(position, seconds);
+    frame = keys.size || following ? requestAnimationFrame(tick) : 0;
+    if (!frame) last = 0;
+  }
+  function release() {
+    generation++; stop(); scene?.dispose(); scene = undefined; loading = false;
+    root.dataset.walkReady = 'false'; anchors.forEach(anchor => { anchor.hidden = true; });
+    host.dataset.state = 'list';
+  }
+  async function ensure() {
+    root.dataset.walkMobile = String(!desktop.matches || navigator.maxTouchPoints > 0);
+    if (!desktop.matches || navigator.maxTouchPoints > 0) { release(); return; }
+    if (scene || loading || signal.aborted) return;
+    loading = true; const current = ++generation;
+    try {
+      const { createWalkScene } = await import('./scene');
+      if (current !== generation || signal.aborted || !desktop.matches || navigator.maxTouchPoints > 0) return;
+      root.dataset.walkReady = 'true';
+      scene = createWalkScene(host, data, project);
+      host.dataset.state = reduced.matches ? 'still' : 'walking';
+      position = groundPosition(kitchen); scene.move(position, 0, true); update(); project();
+      status.textContent = reduced.matches ? 'Motion is reduced. Choose a stop or use the list.' : 'Focus the hill, then use W A S D or the arrow keys to walk.';
+    } catch { release(); }
+    finally { if (current === generation) loading = false; }
+  }
+  surface.addEventListener('keydown', event => {
+    if (event.target !== surface || !scene) return;
+    const key = event.key.toLowerCase();
+    if (moveKeys.has(key) || key === ' ') event.preventDefault();
+    if (key === 'enter' && near) { event.preventDefault(); stop(); void navigate(anchors[targets.indexOf(near)].href); return; }
+    if (!moveKeys.has(key) || reduced.matches) return;
+    keys.add(key); if (!frame) frame = requestAnimationFrame(tick);
+  }, { signal });
+  surface.addEventListener('keyup', event => { keys.delete(event.key.toLowerCase()); }, { signal });
+  surface.addEventListener('blur', stop, { signal });
+  document.addEventListener('visibilitychange', () => { if (document.hidden) stop(); }, { signal });
+  window.addEventListener('blur', stop, { signal });
+  desktop.addEventListener('change', () => { void ensure(); }, { signal });
+  reduced.addEventListener('change', () => {
+    stop(); position = groundPosition(kitchen); scene?.move(position, 0, true); update();
+    host.dataset.state = reduced.matches ? 'still' : 'walking';
+    status.textContent = reduced.matches ? 'Motion is reduced. Choose a stop or use the list.' : 'Focus the hill, then use W A S D or the arrow keys to walk.';
+  }, { signal });
+  host.addEventListener('webglcontextlost', release, { signal });
+  void ensure();
+  return () => { abort.abort(); release(); };
+}

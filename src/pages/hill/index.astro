@@ -1,0 +1,47 @@
+---
+import ContentLayout from 'astro-theme-university/layouts/ContentLayout.astro';
+import { withBase } from 'astro-theme-university/url';
+import { siteConfig } from '../../site-config';
+import { stops, signs } from '../../data/hill-stops';
+import map from '../../data/map.json';
+import orders from '../../data/orders.json';
+import '../../lab/walk/walk.css';
+const scene = { map, orders: orders.orders, events: [], routes: [], pads: 2 };
+---
+<ContentLayout title="Walk the hill" {...siteConfig}>
+  <div class="hill-walk-page" data-walk-root data-walk-ready="false">
+    <p class="walk-intro">Twelve weeks, one evening: each stop is where that week's case happens. W A S D to walk, Enter to open.</p>
+    <p class="walk-mobile-note">Walking is for a desktop browser; the list below goes to the same places.</p>
+    <div class="walk-shell">
+      <div class="walk-surface" data-walk-surface tabindex="0" role="region" aria-label="Walk around Slop Hill" aria-describedby="walk-keyboard-help" aria-keyshortcuts="W A S D ArrowUp ArrowLeft ArrowDown ArrowRight Enter">
+        <div class="walk-scene" data-walk-scene></div>
+        <nav class="walk-stops" aria-label="Stops on Slop Hill">
+          {stops.map(stop => <a hidden class="walk-stop" data-walk-stop data-stage={stop.stage} href={withBase(stop.href)} aria-label={`Week ${stop.week} · ${stop.title}`}>W{stop.week} · {stop.title}<span class="walk-leader" data-walk-leader aria-hidden="true"></span></a>)}
+          {signs.map(sign => <a hidden class="walk-stop" data-walk-stop href={withBase(sign.href)}>{sign.section} →<span class="walk-leader" data-walk-leader aria-hidden="true"></span></a>)}
+        </nav>
+        <div class="walk-readout">
+          <p data-walk-prompt>Enter: open Week 2 · Kitchen · Dijkstra</p>
+          <p id="walk-keyboard-help" data-walk-status>Focus the hill, then use W A S D or the arrow keys to walk.</p>
+        </div>
+      </div>
+    </div>
+    <section class="hill-as-list" aria-labelledby="hill-list-title">
+      <h2 id="hill-list-title">The hill as a list</h2>
+      <ol class="walk-list">
+        {stops.map(stop => <li data-stage={stop.stage}><a href={withBase(stop.href)}><strong>W{stop.week}</strong><span>{stop.title}</span></a></li>)}
+        {signs.map(sign => <li class="walk-section"><a href={withBase(sign.href)}>{sign.section} →</a></li>)}
+      </ol>
+    </section>
+    <script is:inline type="application/json" data-walk-data set:html={JSON.stringify(scene).replace(/</g, '\u003c')} />
+  </div>
+</ContentLayout>
+<script>
+  import { mountWalk } from '../../lab/walk/client';
+  let dispose: (() => void) | undefined;
+  document.addEventListener('astro:before-swap', () => { dispose?.(); dispose = undefined; });
+  document.addEventListener('astro:page-load', () => {
+    dispose?.();
+    const root = document.querySelector<HTMLElement>('[data-walk-root]');
+    dispose = root ? mountWalk(root) : undefined;
+  });
+</script>

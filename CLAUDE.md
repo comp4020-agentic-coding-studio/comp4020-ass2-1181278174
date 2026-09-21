@@ -165,7 +165,7 @@ Bad: `fix stuff`
   JS enhances it.
 - **Mobile order:** one-line caption, result table, primary button, "open 3D" poster,
   details. WebGL does not load on its own at 390.
-- **WebGL on seven pages only:** home, W1, W4, W9, W10, W12, lab. Everywhere else the map
+- **WebGL on eight pages only:** home, W1, W4, W9, W10, W12, lab, `/hill/`. Everywhere else the map
   is an SVG.
 - **Two layers of promise.** Demo layer: runs live on the site. Materials layer: described
   as course material and labelled as such. The site never says "coming soon".
