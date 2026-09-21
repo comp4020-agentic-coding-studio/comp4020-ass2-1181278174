@@ -2,6 +2,19 @@ import { expect, it } from 'vitest';
 import { canonical } from '../../src/lab/model';
 import { advance, groundPosition, nearbyTarget, walkTargets, WALK_SPEED } from '../../src/lab/walk/navigation';
 import { terrainHeight } from '../../src/lab/terrain';
+import { supportsWalking } from '../../src/lab/walk/availability';
+
+it.each([
+  ['desktop mouse', true, true, false, 0, true],
+  ['desktop keyboard without pointer reporting', true, false, false, 0, true],
+  ['desktop mouse and touchscreen', true, true, true, 10, true],
+  ['desktop mouse with touch points only', true, true, false, 10, true],
+  ['touch-only tablet', true, false, true, 10, false],
+  ['narrow mouse and touchscreen', false, true, true, 10, false],
+  ['narrow non-touch browser', false, true, false, 0, false],
+] as const)('offers walking for %s only when desktop controls fit', (_name, wide, fine, coarse, touchPoints, expected) => {
+  expect(supportsWalking({ wide, fine, coarse, touchPoints })).toBe(expected);
+});
 
 it('keeps walking on the terrain and within all four map edges', () => {
   const map = canonical.map;

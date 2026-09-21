@@ -2,11 +2,13 @@ import { navigate } from 'astro:transitions/client';
 import type { SceneData } from '../model';
 import { advance, groundPosition, nearbyTarget, walkTargets } from './navigation';
 import type { createWalkScene } from './scene';
+import { supportsWalking } from './availability';
 
 export function mountWalk(root: HTMLElement) {
   const desktop = matchMedia('(min-width: 900px)');
   const touch = matchMedia('(any-pointer: coarse)');
-  const canWalk = () => desktop.matches && !touch.matches && navigator.maxTouchPoints === 0;
+  const mouse = matchMedia('(any-pointer: fine)');
+  const canWalk = () => supportsWalking({ wide: desktop.matches, fine: mouse.matches, coarse: touch.matches, touchPoints: navigator.maxTouchPoints });
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
   const surface = root.querySelector<HTMLElement>('[data-walk-surface]')!;
   const host = root.querySelector<HTMLElement>('[data-walk-scene]')!;
@@ -117,6 +119,7 @@ export function mountWalk(root: HTMLElement) {
   window.addEventListener('blur', stop, { signal });
   desktop.addEventListener('change', () => { void ensure(); }, { signal });
   touch.addEventListener('change', () => { void ensure(); }, { signal });
+  mouse.addEventListener('change', () => { void ensure(); }, { signal });
   reduced.addEventListener('change', () => {
     stop(); position = groundPosition(kitchen); scene?.move(position, 0, true); update();
     host.dataset.state = reduced.matches ? 'still' : 'walking';
