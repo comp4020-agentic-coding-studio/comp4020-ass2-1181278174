@@ -17,6 +17,10 @@ export function mountWalk(root: HTMLElement) {
   const anchors = Array.from(root.querySelectorAll<HTMLAnchorElement>('[data-walk-stop]'));
   const hint = root.querySelector<HTMLElement>('[data-walk-prompt]')!;
   const status = root.querySelector<HTMLElement>('[data-walk-status]')!;
+  const droneLabel = root.querySelector<HTMLElement>('[data-walk-drone]')!;
+  const nextButton = root.querySelector<HTMLButtonElement>('[data-walk-next]')!;
+  const journey = root.querySelector<HTMLElement>('[data-walk-journey]')!;
+  let nextWeek = 0;
   const data: SceneData = JSON.parse(root.querySelector('[data-walk-data]')!.textContent!);
   const courses: CourseWeek[] = JSON.parse(root.querySelector('[data-walk-courses]')!.textContent!);
   const portal = root.querySelector<HTMLDialogElement>('[data-walk-portal]')!;
@@ -32,7 +36,12 @@ export function mountWalk(root: HTMLElement) {
 
   function project() {
     if (!scene) return;
-    const occupied: { x: number; y: number; width: number; height: number }[] = [];
+    const drone = scene.project(scene.drone(), 28);
+    const droneBody = scene.project(scene.drone(), 0);
+    droneLabel.hidden = !drone;
+    if (drone) { droneLabel.style.left = drone.x + 'px'; droneLabel.style.top = drone.y + 'px'; }
+    const occupied: { x: number; y: number; width: number; height: number }[] = drone ? [{ x: drone.x - 60, y: drone.y - 24, width: 120, height: 65 }] : [];
+    if (droneBody) occupied.push({ x: droneBody.x - 75, y: droneBody.y - 50, width: 150, height: 100 });
     for (const [index, anchor] of anchors.entries()) {
       const target = targets[index], point = scene.project(target.position);
       anchor.hidden = !point;
@@ -58,15 +67,14 @@ export function mountWalk(root: HTMLElement) {
     near = nearbyTarget(position, targets, near);
     const index = targets.indexOf(near!);
     anchors.forEach((anchor, i) => { anchor.dataset.near = String(i === index); });
-    const prompt = near ? `Enter: enter ${near.label}` : 'Follow the coloured trail uphill, or choose any week.';
+    const prompt = near ? `Enter: open ${near.label}` : 'Follow the coloured trail uphill, or choose any week.';
     if (hint.textContent !== prompt) hint.textContent = prompt;
     scene?.highlight(hovered ?? near);
-    host.dataset.x = position.x.toFixed(2); host.dataset.y = position.y.toFixed(2); host.dataset.elevation = position.z.toFixed(3);
   }
   function stop() { keys.clear(); cancelAnimationFrame(frame); frame = 0; last = 0; }
   function instruction() {
     status.textContent = reduced.matches ? 'Motion is reduced. Choose a stop or use the list.'
-      : document.activeElement === surface ? 'W A S D or arrows: walk. Enter: open the nearby stop.'
+      : document.activeElement === surface ? 'W A S D or arrows: fly. Enter: open the nearby stop.'
       : 'Click the hill or Tab to it, then use W A S D or the arrow keys.';
   }
   function tick(now: number) {
@@ -79,7 +87,7 @@ export function mountWalk(root: HTMLElement) {
   }
   function release() {
     generation++; transition++; pendingHref = ''; stop(); scene?.dispose(); scene = undefined; loading = false;
-    hovered = undefined; portal.close(); delete portal.dataset.leaving; delete root.dataset.walkTransition;
+    hovered = undefined; nextButton.disabled = false; portal.close(); delete portal.dataset.leaving; delete root.dataset.walkTransition;
     root.dataset.walkReady = 'false'; anchors.forEach(anchor => { anchor.hidden = true; });
     host.dataset.state = 'list';
   }
@@ -95,7 +103,7 @@ export function mountWalk(root: HTMLElement) {
       scene = createWalkScene(host, data, project);
       host.dataset.state = reduced.matches ? 'still' : 'walking';
       position = groundPosition(kitchen); update(); project();
-      void scene.overview(reduced.matches ? 0 : 900);
+      if (reduced.matches) void scene.overview(0);
       instruction();
     } catch { release(); }
     finally { if (current === generation) loading = false; }
@@ -105,7 +113,7 @@ export function mountWalk(root: HTMLElement) {
     if (!scene) return;
     if (!targets[index].week) { await depart(anchors[index].href, index); return; }
     stop(); const current = ++transition; selected = index; returnFocus = trigger;
-    position = targets[index].position; scene.highlight(targets[index]);
+    scene.highlight(targets[index]);
     const course = courses.find(course => course.week === targets[index].week)!;
     portal.dataset.stage = course.stage;
     portal.querySelector('[data-portal-week]')!.textContent = `Week ${course.week} of 12`;
@@ -114,10 +122,16 @@ export function mountWalk(root: HTMLElement) {
     links.forEach(link => { link.href = course[link.dataset.portalLink as 'lecture' | 'tutorial' | 'lab']; });
     portal.querySelector('[data-walk-departure]')!.textContent = '';
     delete portal.dataset.leaving;
-    root.dataset.walkTransition = 'approach';
-    const completed = await scene.visit(position, reduced.matches ? 0 : 800);
+    root.dataset.walkTransition = 'approach'; nextButton.disabled = true;
+    hint.textContent = `Flying to Week ${course.week}…`;
+    journey.textContent = `Kitchen → Summit · flying to Week ${course.week}`;
+    const completed = reduced.matches ? true : await scene.visit(targets[index].position);
     if (!completed || current !== transition || signal.aborted) return;
-    delete root.dataset.walkTransition;
+    delete root.dataset.walkTransition; nextButton.disabled = false;
+    position = scene.position();
+    nextWeek = course.week === 12 ? 0 : course.week;
+    nextButton.textContent = course.week === 12 ? 'Fly back to Week 1' : `Fly to Week ${course.week + 1} ↑`;
+    journey.textContent = `Week ${course.week} / 12 · ${course.week === 1 ? 'Kitchen' : course.week === 12 ? 'Summit' : 'Climbing the hill'}`;
     update();
     portal.showModal(); portalTitle.focus({ preventScroll: true });
   }
@@ -126,18 +140,27 @@ export function mountWalk(root: HTMLElement) {
     stop(); const current = ++transition; pendingHref = href;
     portal.querySelector('[data-walk-departure]')!.textContent = `Opening ${label}…`;
     root.dataset.walkTransition = 'leaving'; portal.dataset.leaving = 'true';
-    const completed = scene ? await scene.visit(targets[index].position, reduced.matches ? 0 : 360, true) : true;
+    let completed = true;
+    if (scene && !reduced.matches) {
+      if (!targets[index].week) completed = await scene.visit(targets[index].position);
+      if (completed && current === transition) completed = await scene.visit(targets[index].position, 950, true);
+    }
     if (completed && current === transition && !signal.aborted) void navigate(href);
   }
   root.querySelector('[data-walk-overview]')!.addEventListener('click', () => {
-    transition++; pendingHref = ''; stop(); delete root.dataset.walkTransition;
+    transition++; pendingHref = ''; stop(); nextButton.disabled = false; delete root.dataset.walkTransition;
+    if (scene) { position = scene.position(); update(); }
+    journey.textContent = 'Kitchen → Summit · twelve weeks';
     void scene?.overview(reduced.matches ? 0 : 700);
   }, { signal });
+  nextButton.addEventListener('click', () => { void select(nextWeek, nextButton); }, { signal });
   portal.querySelector('[data-walk-close]')!.addEventListener('click', () => portal.close(), { signal });
   portal.addEventListener('close', () => {
     transition++; pendingHref = ''; delete portal.dataset.leaving; delete root.dataset.walkTransition;
+    scene?.cancelTravel(); nextButton.disabled = false;
+    if (scene) { position = scene.position(); update(); }
     const focus = returnFocus;
-    void scene?.overview(reduced.matches ? 0 : 650).then(completed => { if (completed && focus?.isConnected) focus.focus({ preventScroll: true }); });
+    if (!signal.aborted && scene) (focus?.isConnected && !focus.hidden ? focus : surface).focus({ preventScroll: true });
   }, { signal });
   links.forEach(link => link.addEventListener('click', event => {
     if (!ordinaryClick(event)) return;
@@ -147,9 +170,9 @@ export function mountWalk(root: HTMLElement) {
     if (event.target !== surface || !scene) return;
     const key = event.key.toLowerCase();
     if (moveKeys.has(key) || key === ' ') event.preventDefault();
-    if (key === 'enter' && near) { event.preventDefault(); void select(targets.indexOf(near), surface); return; }
+    if (key === 'enter' && near) { event.preventDefault(); if (!event.repeat) void select(targets.indexOf(near), surface); return; }
     if (!moveKeys.has(key) || reduced.matches) return;
-    transition++; delete root.dataset.walkTransition; scene.cancelTravel(); keys.add(key); if (!frame) frame = requestAnimationFrame(tick);
+    transition++; delete root.dataset.walkTransition; nextButton.disabled = false; scene.cancelTravel(); position = scene.position(); keys.add(key); if (!frame) frame = requestAnimationFrame(tick);
   }, { signal });
   surface.addEventListener('keyup', event => { keys.delete(event.key.toLowerCase()); }, { signal });
   surface.addEventListener('pointerdown', event => {
@@ -170,7 +193,13 @@ export function mountWalk(root: HTMLElement) {
     anchor.addEventListener('focus', highlight, { signal }); anchor.addEventListener('pointerenter', highlight, { signal });
     anchor.addEventListener('blur', reset, { signal }); anchor.addEventListener('pointerleave', reset, { signal });
   });
-  document.addEventListener('visibilitychange', () => { if (document.hidden) stop(); }, { signal });
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) return;
+    stop();
+    if (pendingHref) return;
+    transition++; scene?.cancelTravel(); nextButton.disabled = false; delete root.dataset.walkTransition;
+    if (scene) { position = scene.position(); update(); }
+  }, { signal });
   window.addEventListener('blur', stop, { signal });
   desktop.addEventListener('change', () => { void ensure(); }, { signal });
   touch.addEventListener('change', () => { void ensure(); }, { signal });
@@ -178,9 +207,9 @@ export function mountWalk(root: HTMLElement) {
   reduced.addEventListener('change', () => {
     stop(); scene?.cancelTravel();
     if (pendingHref) { void navigate(pendingHref); return; }
-    transition++; delete root.dataset.walkTransition;
+    transition++; delete root.dataset.walkTransition; nextButton.disabled = false;
     position = groundPosition(kitchen); scene?.move(position, 0, true); update();
-    if (portal.open) void scene?.visit(targets[selected].position, 0); else void scene?.overview(0);
+    if (reduced.matches) void scene?.overview(0);
     host.dataset.state = reduced.matches ? 'still' : 'walking';
     instruction();
   }, { signal });

@@ -5,6 +5,7 @@ import { terrainHeight } from '../terrain';
 export interface Position { x: number; y: number }
 export const WALK_SPEED = 170;
 export const OPEN_RADIUS = 100;
+export const FLIGHT_CLEARANCE = 22;
 export const groundPosition = (point: Position) => ({ ...point, z: terrainHeight(point.x, point.y) });
 
 /** Diagonals cover the same distance as straight walking; map edges are hard limits. */
@@ -23,6 +24,23 @@ export function coursePosition(map: MapData, progress: number) {
   const radius = Math.hypot(kitchen.x - sx, kitchen.y - sy) * (1 - t);
   const angle = Math.atan2(kitchen.y - sy, kitchen.x - sx) + Math.sin(t * Math.PI * 3) * .24;
   return groundPosition({ x: sx + radius * Math.cos(angle), y: sy + radius * Math.sin(angle) });
+}
+
+/** Join the course trail from the drone's current position without teleporting. */
+export function courseFlight(map: MapData, from: Position, to: Position) {
+  const [sx, sy] = map.world.summit;
+  const start = coursePosition(map, 0), radius = Math.hypot(start.x - sx, start.y - sy);
+  const progress = (p: Position) => Math.max(0, Math.min(1, 1 - Math.hypot(p.x - sx, p.y - sy) / radius));
+  const a = progress(from), b = progress(to), join = coursePosition(map, a), leave = coursePosition(map, b);
+  return {
+    duration: Math.min(3600, 1000 + Math.hypot(to.x - from.x, to.y - from.y) * 1.6),
+    at(fraction: number) {
+      const t = Math.max(0, Math.min(1, fraction)), p = coursePosition(map, a + (b - a) * t);
+      const x = p.x + (from.x - join.x) * (1 - t) + (to.x - leave.x) * t;
+      const y = p.y + (from.y - join.y) * (1 - t) + (to.y - leave.y) * t;
+      return groundPosition({ x: Math.max(16, Math.min(map.world.width - 16, x)), y: Math.max(16, Math.min(map.world.height - 16, y)) });
+    },
+  };
 }
 
 export function walkTargets(map: MapData) {

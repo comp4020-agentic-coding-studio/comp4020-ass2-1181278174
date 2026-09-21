@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest';
 import { canonical } from '../../src/lab/model';
-import { advance, coursePosition, groundPosition, nearbyTarget, walkTargets, WALK_SPEED } from '../../src/lab/walk/navigation';
+import { advance, courseFlight, coursePosition, groundPosition, nearbyTarget, walkTargets, WALK_SPEED } from '../../src/lab/walk/navigation';
 import { terrainHeight } from '../../src/lab/terrain';
 import { supportsWalking } from '../../src/lab/walk/availability';
 
@@ -56,4 +56,21 @@ it('places twelve weeks progressively uphill and keeps only two assignment miles
     expect(point.x).toBeGreaterThan(0); expect(point.x).toBeLessThan(canonical.map.world.width);
     expect(point.y).toBeGreaterThan(0); expect(point.y).toBeLessThan(canonical.map.world.height);
   }
+});
+
+it('flies along the curved trail uphill and can reverse from an interrupted flight', () => {
+  const map = canonical.map, start = coursePosition(map, 0), summit = coursePosition(map, 1);
+  const flight = courseFlight(map, start, summit);
+  let previousHeight = start.z;
+  for (let i = 0; i <= 100; i++) {
+    const point = flight.at(i / 100), trail = coursePosition(map, i / 100);
+    expect(point.x).toBeCloseTo(trail.x); expect(point.y).toBeCloseTo(trail.y);
+    expect(point.z).toBeGreaterThanOrEqual(previousHeight); previousHeight = point.z;
+  }
+  const interrupted = flight.at(.37), back = courseFlight(map, interrupted, start);
+  expect(back.at(0)).toEqual(interrupted);
+  expect(back.at(1).x).toBeCloseTo(start.x); expect(back.at(1).y).toBeCloseTo(start.y);
+  const offTrail = groundPosition({ x: 700, y: 180 });
+  expect(courseFlight(map, offTrail, summit).at(0)).toEqual(offTrail);
+  expect(flight.duration).toBeGreaterThan(courseFlight(map, start, coursePosition(map, 1 / 11)).duration);
 });
