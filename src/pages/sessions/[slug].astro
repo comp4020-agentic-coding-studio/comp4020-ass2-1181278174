@@ -9,6 +9,7 @@ import SpecList from "astro-course-university/components/SpecList.astro";
 import ContentLayout from "astro-theme-university/layouts/ContentLayout.astro";
 import TeachingTeam from "../../components/TeachingTeam.astro";
 import WeeklyExample from "../../components/WeeklyExample.astro";
+import { withBase } from "astro-theme-university/url";
 import { formatCourseDate } from "../../lib/dates";
 import { graphCollections, sessionLabels, siteConfig } from "../../site-config";
 
@@ -30,12 +31,20 @@ const { Content } = await render(session);
     <div><p><strong>{formatCourseDate(session.data.date)}</strong></p><WeekNavigation week={session.data.week} kind="sessions" /></div>
     <YouAreHere week={session.data.week} />
   </div>
+  <p class="lab-call">
+    <a class="lab-call__button" href={withBase(`/lab/#lab-w${session.data.week}`)}>Open Week {session.data.week} in the Lab →</a>
+    <span>Try your own change on this week's case.</span>
+  </p>
   <TutorialCredit week={session.data.week} />
   <details class="tutorial-guide">
     <summary>Two-hour tutorial: preparation, coding and checks</summary>
     <Content />
   </details>
   <WeeklyExample week={session.data.week} />
+  <p class="lab-call lab-call--after">
+    <a class="lab-call__button" href={withBase(`/lab/#lab-w${session.data.week}`)}>Continue in the Lab →</a>
+    <span>The same case, with every input open to change.</span>
+  </p>
   <SpecList spec={session.data.spec}>
     What you bring to the session. Written so a reader can tell whether it has
     been met without asking you.
@@ -48,6 +57,11 @@ const { Content } = await render(session);
   .tutorial-location-row { display: grid; grid-template-columns: minmax(0,1fr) 200px; align-items: center; gap: 1.5rem; }
   @media(max-width:600px) { .tutorial-location-row { grid-template-columns: minmax(0,1fr) 140px; gap: .6rem; font-size: .8rem; } }
 
+  .lab-call { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem 1rem; margin-block: 1rem 1.25rem; }
+  .lab-call__button { display: inline-block; padding: 0.6rem 1.1rem; border-radius: 0.4rem; background: var(--at-primary, #b97d1c); color: #fff; font-weight: 700; text-decoration: none; }
+  .lab-call__button:hover, .lab-call__button:focus-visible { filter: brightness(0.92); text-decoration: underline; }
+  .lab-call span { color: var(--at-text-secondary, #6b6154); }
+  .lab-call--after { margin-top: 0.5rem; }
   .tutorial-guide { padding: .75rem 1rem; border: 1px solid var(--at-border); margin-block: 1rem; }
   .tutorial-guide summary { cursor: pointer; font-weight: 600; }
   :global(body:has(.tutorial-guide) h1) { font-size: clamp(1.8rem, 3vw, 2.8rem); }
