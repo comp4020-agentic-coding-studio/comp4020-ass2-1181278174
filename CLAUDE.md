@@ -97,8 +97,8 @@ with the reason in the message.
   the title, it is two commits.
 - **Message shape:** lowercase, `topic: what changed`, one line, under 60 characters. A
   second paragraph only when the reason is not obvious, in plain words, two or three lines.
-- **My voice.** The message describes what changed in the repo, as I would say it. It does
-  not mention Claude, the agent, the session, or the prompt. No `Co-Authored-By` trailer.
+- **My voice.** The message describes what changed in the repo, as I would say it, and
+  nothing about how the change was made.
 - **Plain words.** No adjectives like robust, clean, comprehensive, elegant. No metaphors.
   No abbreviations or names that someone outside this repo would not understand.
 - **English.** Always, even when we are talking in Chinese.
@@ -110,7 +110,7 @@ Good: `engine: half-open intervals for corridor occupancy`
 Good: `w4: two routes to #07, label table, dominance toggle`
 Good: `spec: pin the scenario file hashes`
 Bad: `Implement robust conflict detection with comprehensive tests`
-Bad: `Claude added the W4 page`
+Bad: `update files and fix things`
 Bad: `fix stuff`
 
 ## Rules for this site
