@@ -55,6 +55,9 @@ The marked thing is my directing. A fix I never saw is not evidence.
 - **Design decisions are mine.** More than one reasonable answer: at most two options with
   trade-offs and a recommendation, then wait. The decision goes into the design doc, with
   the date.
+- **More than one agent, one lead.** A second agent works on a branch of its own; nothing
+  from that branch reaches `main` until I have judged it against the design and said so.
+  Neither agent settles a design disagreement with the other; I do.
 - **Do not edit without asking:** the canonical data files in `src/data/` and their hashes
   in `spec/`, the rules file (energy, charging, ticks, cutoff), `src/course-config.ts`, the
   assessment weights and dates. A number that does not hold is a finding, not a number to

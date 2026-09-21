@@ -27,3 +27,4 @@ rule added to `CLAUDE.md`, a design reversal. Date, what happened, what I decide
 | 2026-09-21 | A legend edit introduced a type error after an earlier successful check. | Correct it, rerun the full check and amend the unpublished commit. | 3cefa94 |
 | 2026-09-21 | Replay tests found missing ground, parcel, hover and queue states. | Derive those display states from recorded events. | 8aa0544 |
 | 2026-09-21 | A route curve and its replay differed by 9.238 metres in elevation. | Interpolate both by distance along the recorded polyline. | 68f2539 |
+| 2026-09-21 | Two agents worked on the site at once, one on `main` and one on a branch, and disagreed about what the lab is; neither could settle it. | One agent leads and the other tries things on a branch; nothing merges until I have judged it against the ten presentation rules. Took the branch after three fixes; the other line stays as `claude/map-and-lab`. | acc0e27 |
