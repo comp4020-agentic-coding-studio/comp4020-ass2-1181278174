@@ -212,3 +212,15 @@ Windows `chrome.exe --headless --window-size=390,844` lays the page out at 526 p
 crops the PNG to 390, so the screenshot lies. A1 fixed it with a Linux headless Chromium
 (`scripts/shot.ts`, `~/chromium-libs`). Port that script before trusting any 390 screenshot
 from this machine.
+
+### A screenshot of a port nothing answers on is a blank PNG
+
+**What happened.** Two rounds of home-page screenshots came back white. `astro preview` had
+refused to start because another preview of the same `dist` was already running (it says so
+and exits), and headless Chromium exits 0 on a refused connection, writing a blank image.
+
+**What is true.** One preview per `dist`. Before any screenshot, wait until the URL answers
+200; a blank PNG is a failed capture, not an empty page.
+
+**How it was measured.** 2026-09-21: `curl` against the port got no response while the
+capture reported success.
